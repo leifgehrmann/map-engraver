@@ -1,7 +1,9 @@
 import math
+from typing import List
 from random import random
 from shapely.ops import unary_union
 from shapely.ops import polygonize
+from shapely.ops import polygonize_full
 from shapely import affinity
 
 import cairocffi as cairo
@@ -16,7 +18,7 @@ surface = cairo.PDFSurface("output/noisy_polygon.pdf", 400, 400)
 ctx = cairo.Context(surface)
 
 
-def complexify_linestring(linestring: LineString, tolerance: float):
+def complexify_linestring(linestring: LineString, tolerance: float) -> LineString:
     coords = linestring.coords
     coords_count = len(coords)
     new_coords = []
@@ -29,7 +31,7 @@ def complexify_linestring(linestring: LineString, tolerance: float):
     return LineString(new_coords)
 
 
-def complexify_polygon(polygon: Polygon, tolerance: float):
+def complexify_polygon(polygon: Polygon, tolerance: float) -> Polygon:
     exterior_linestring = LineString(polygon.exterior.coords)
     complex_exterior = complexify_linestring(exterior_linestring, tolerance)
     complex_interior = []
@@ -39,11 +41,40 @@ def complexify_polygon(polygon: Polygon, tolerance: float):
 
 
 # Apply noise to line string here
-def apply_noise(linestring: LineString):
+def apply_noise(linestring: LineString, distance: float) -> LineString:
     new_linestring_coords = []
     for x, y in linestring.coords:
-        new_linestring_coords.append((random() * 12 - 6 + x, random() * 12 - 6 + y))
+        new_linestring_coords.append((random() * distance - distance / 2 + x, random() * distance - distance / 2 + y))
     return LineString(new_linestring_coords)
+
+
+def polygon_noise(polygon: Polygon, distance: float) -> List[Polygon]:
+    exterior_noisy_linestring = apply_noise(LineString(polygon.exterior.coords), distance)
+    exterior_polygons = []
+    if not exterior_noisy_linestring.is_simple:
+        print("NOT SIMPLE")
+        exterior_noisy_multi_line_string = unary_union(exterior_noisy_linestring)
+        print("UNARY_UNION", exterior_noisy_multi_line_string)
+        for line_string in exterior_noisy_multi_line_string.geoms:
+            print("NOT SIMPLE", line_string)
+            exterior_polygons.append(Polygon(line_string.coords))
+    else:
+        exterior_polygons.append(Polygon(exterior_noisy_linestring.coords))
+
+    # interior_polygons = []
+    # for interior in polygon.interiors:
+    #     interior_noisy_linestring = apply_noise(LineString(interior.coords))
+    #     if not exterior_noisy_linestring.is_simple:
+    #         exterior_noisy_multi_line_string = unary_union(exterior_noisy_linestring)
+    #         for polygon in polygonize(exterior_noisy_multi_line_string):
+    #             exterior_polygons.append(polygon)
+    #     else:
+    #         exterior_polygons.append(Polygon(exterior_noisy_linestring.coords))
+    #
+    #
+
+    return exterior_polygons
+
 
 coordinates = []
 
@@ -53,7 +84,7 @@ for i in range(0, 20 * 10):
 # original data
 line_string = LineString(coordinates)
 
-line_string = apply_noise(line_string)
+line_string = apply_noise(line_string, 12)
 # closed, non-simple
 linear_ring = LineString(line_string.coords[:] + line_string.coords[0:1])
 
@@ -71,18 +102,32 @@ else:
 
 lines2 = LineString([[10,10],[10,90],[90,90],[90,10]])
 ctx.set_source_rgba(random(), random(), random(), 1)
-CairoHelper.draw_line_string(ctx, apply_noise(complexify_linestring(lines2, 10)))
+CairoHelper.draw_line_string(ctx, apply_noise(complexify_linestring(lines2, 10), 12))
 ctx.stroke()
 
 polygon = Polygon([[10,10],[10,90],[90,90],[90,10]])
 polygon = affinity.translate(polygon, 100, 0)
 complex_polygon = complexify_polygon(polygon, 10)
+ctx.set_source_rgba(random(), random(), random(), 1)
 CairoHelper.draw_polygon(ctx, complex_polygon)
-ctx.stroke()
+ctx.fill()
 
+ctx.set_source_rgba(random(), random(), random(), 1)
 for exterior_coord in complex_polygon.exterior.coords:
     CairoHelper.draw_point(ctx, Point(exterior_coord), 5)
     ctx.fill()
+
+complex_polygon = affinity.translate(complex_polygon, 100, 0)
+noisy_polygons = polygon_noise(complex_polygon, 18)
+for noisy_polygon in noisy_polygons:
+    ctx.set_source_rgba(random(), random(), random(), 1)
+    CairoHelper.draw_polygon(ctx, noisy_polygon)
+    ctx.fill()
+    ctx.set_source_rgba(random(), random(), random(), 1)
+    for exterior_coord in noisy_polygon.exterior.coords:
+        CairoHelper.draw_point(ctx, Point(exterior_coord), 5)
+        ctx.fill()
+
 
 surface.flush()
 surface.finish()
