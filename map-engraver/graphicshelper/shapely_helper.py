@@ -1,11 +1,11 @@
-from shapely.geometry import Point, Polygon, MultiPolygon
-from shapely.ops import cascaded_union
-from typing import Union, List
+from shapely.geometry import Point, Polygon, MultiPolygon, LineString
+from shapely.ops import cascaded_union, polygonize, unary_union
+from typing import List, Callable
 import math
+from random import random
 
 
 class ShapelyHelper:
-
     debug = False
 
     @staticmethod
@@ -66,3 +66,72 @@ class ShapelyHelper:
             index += 1
 
         return polygons_clone
+
+    @staticmethod
+    def interpolate_line_string(line_string: LineString, distance: float):
+        coordinates = line_string.coords
+        coordinates_count = len(coordinates)
+        new_coordinates = []
+        for i in range(coordinates_count):
+            coord_a = coordinates[i]
+            coord_b = coordinates[(i + 1) % coordinates_count]
+            short_linestring = LineString([coord_a, coord_b])
+            for d in range(int(math.ceil(short_linestring.length / distance))):
+                new_coordinates.append(short_linestring.interpolate(d * distance))
+        return LineString(new_coordinates)
+
+    @staticmethod
+    def interpolate_polygon(polygon: Polygon, distance: float):
+        exterior_linestring = LineString(polygon.exterior.coords)
+        complex_exterior = ShapelyHelper.interpolate_line_string(exterior_linestring, distance)
+        complex_interior = []
+        for interior in polygon.interiors:
+            complex_interior.append(ShapelyHelper.interpolate_line_string(LineString(interior.coords), distance))
+        return Polygon(complex_exterior, complex_interior)
+
+    @staticmethod
+    def convert_non_simple_polygon_to_multi_polygon(polygon: Polygon) -> MultiPolygon:
+        polygon_exterior = polygon.exterior
+        multi_line_string = polygon_exterior.intersection(polygon_exterior)
+        polygons = polygonize(multi_line_string)
+        multi_polygon = MultiPolygon(polygons)
+
+        for polygon_interior in polygon.interiors:
+            multi_polygon = multi_polygon.difference(Polygon(polygon_interior))
+
+        if isinstance(multi_polygon, Polygon):
+            multi_polygon = MultiPolygon([multi_polygon])
+
+        return multi_polygon
+
+    @staticmethod
+    def linestring_noise_random_square(line_string: LineString, distance: float) -> LineString:
+        new_line_string_coords = []
+        for x, y in line_string.coords:
+            new_line_string_coords.append(
+                (random() * distance - distance / 2 + x, random() * distance - distance / 2 + y))
+        return LineString(new_line_string_coords)
+
+    @staticmethod
+    def polygon_noise(polygon: Polygon, line_string_noise_function: Callable[[LineString, float], LineString],
+                      distance: float) -> List[Polygon]:
+        exterior_noisy_linestring = line_string_noise_function(LineString(polygon.exterior.coords), distance)
+        exterior_polygons = []
+        if not exterior_noisy_linestring.is_simple:
+            exterior_noisy_multi_polygon = ShapelyHelper.convert_non_simple_polygon_to_multi_polygon(
+                Polygon(exterior_noisy_linestring)
+            )
+            for exterior_noisy_multi_polygon_geom in exterior_noisy_multi_polygon.geoms:
+                exterior_polygons.append(exterior_noisy_multi_polygon_geom)
+        else:
+            exterior_polygons.append(Polygon(exterior_noisy_linestring.coords))
+
+        # Merge exterior polygons into one
+        exterior_polygons = unary_union(exterior_polygons)
+
+        for interior in polygon.interiors:
+            exterior_polygons = exterior_polygons.difference(
+                line_string_noise_function(LineString(interior.coords), distance)
+            )
+
+        return exterior_polygons

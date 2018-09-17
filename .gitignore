@@ -211,3 +211,5 @@ __pycache__
 
 data/cache/*.pkl
 data/osm/*.osm
+
+tests/output/
