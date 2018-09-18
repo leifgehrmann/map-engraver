@@ -13,7 +13,7 @@ from shapely.geometry import Polygon
 from shapely.geometry import Point
 from shapely.geometry import LineString
 
-surface = cairo.PDFSurface("output/noisy_polygon.pdf", 400, 400)
+surface = cairo.PDFSurface("output/graphicshelper_shapely_helper_polygon_noise.pdf", 400, 400)
 ctx = cairo.Context(surface)
 
 coordinates = []

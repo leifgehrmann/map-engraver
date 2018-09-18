@@ -5,7 +5,7 @@ from shapely.geometry import LineString
 
 from map.features import Text
 
-surface = cairo.PDFSurface("../data/output/draw_text.pdf", 40, 60)
+surface = cairo.PDFSurface("output/map_features_text.pdf", 40, 60)
 ctx = cairo.Context(surface)
 
 

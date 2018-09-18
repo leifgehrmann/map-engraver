@@ -4,11 +4,10 @@ import math
 import cairocffi as cairo
 import osmparser
 from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString
-from shapely.geometry.polygon import orient
 from shapely.ops import cascaded_union
-from typing import Optional, Union, List
+from typing import Union, List, Tuple
 
-filePath = '../data/DonaldsonsCollege.osm'
+filePath = '../../antique-map/data/osm/DonaldsonsCollege.osm'
 
 osm_map = osmparser.Map()
 osm_map.add_osm_file(filePath)
@@ -61,8 +60,7 @@ max_lon = -3.21659
 # Coordinates should be transformed from the OSM parser
 WIDTH, HEIGHT = 4560, 4560
 
-surface = cairo.PDFSurface("../data/example.pdf", WIDTH, HEIGHT)
-# surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, WIDTH, HEIGHT)
+surface = cairo.PDFSurface("output/example.pdf", WIDTH, HEIGHT)
 ctx = cairo.Context(surface)
 
 ctx.scale(WIDTH, HEIGHT)  # Normalizing the canvas
@@ -72,8 +70,8 @@ pat.add_color_stop_rgba(1, 0.7, 0, 0, 0.5)  # First stop, 50% opacity
 pat.add_color_stop_rgba(0, 0.9, 0.7, 0.2, 1)  # Last stop, 100% opacity
 
 
-def transform_node(node: osmparser.Node):
-    return transform_coordinate(node.lon, node.lat)
+def transform_node(node: Tuple[float, float]):
+    return transform_coordinate(node[0], node[1])
 
 
 def transform_coordinate(lon, lat):
@@ -87,10 +85,7 @@ def draw_relation_way(osmmap: osmparser.map, relation: osmparser.Relation):
         if member.type == osmparser.MemberTypes.WAY:
             way_nodes = osmmap.get_nodes_for_way(member.ref)
             if member.role == "inner":
-                print(member.role)
-                print(way_nodes)
                 way_nodes = reversed(way_nodes)
-                print(way_nodes)
 
             start = True
             for node in way_nodes:
@@ -117,10 +112,7 @@ def draw_way(osmmap: osmparser.map, way: osmparser.Way):
             ctx.line_to(x, y)
 
         start = False
-    # ctx.fill()
-    # ctx.fill_preserve()
     ctx.stroke()
-    # ctx.fill()
 
 
 def draw_line_string(line_string: LineString):
@@ -132,19 +124,16 @@ def draw_line_string(line_string: LineString):
             ctx.line_to(x, y)
 
         start = False
-    # ctx.fill()
-    # ctx.fill_preserve()
     ctx.stroke()
-    # ctx.fill()
+
 
 def draw_line_string_segmented(line_string: LineString):
-
-    old_x = line_string.coords[len(line_string.coords)-1][0]
-    old_y = line_string.coords[len(line_string.coords)-1][1]
+    old_x = line_string.coords[len(line_string.coords) - 1][0]
+    old_y = line_string.coords[len(line_string.coords) - 1][1]
 
     for x, y in line_string.coords:
-        angle = math.atan2(y-old_y, x-old_x)
-        ctx.set_source_rgb((angle + math.pi)/(math.pi*2), 0, 0)
+        angle = math.atan2(y - old_y, x - old_x)
+        ctx.set_source_rgb((angle + math.pi) / (math.pi * 2), 0, 0)
 
         ctx.line_to(x, y)
 
@@ -154,15 +143,13 @@ def draw_line_string_segmented(line_string: LineString):
         ctx.stroke()
 
         ctx.move_to(old_x, old_y)
-    # ctx.fill()
     ctx.stroke()
 
 
-def draw_polygon(polygon: Polygon):
+def draw_polygon(polygon_to_draw: Polygon):
     start = True
-    if hasattr(polygon.exterior, 'coords'):
-        print("p", polygon.exterior.is_ccw)
-        for x, y in polygon.exterior.coords:
+    if hasattr(polygon_to_draw.exterior, 'coords'):
+        for x, y in polygon_to_draw.exterior.coords:
             if start:
                 ctx.move_to(x, y)
             else:
@@ -170,7 +157,7 @@ def draw_polygon(polygon: Polygon):
 
             start = False
 
-    for interior in polygon.interiors:
+    for interior in polygon_to_draw.interiors:
         start = True
         for x, y in interior.coords:
             if start:
@@ -180,28 +167,15 @@ def draw_polygon(polygon: Polygon):
 
             start = False
 
-    # ctx.fill()
-    #ctx.fill_preserve()
     ctx.stroke()
-    # ctx.fill()
 
 
 def draw_multipolygon(multipolygon: MultiPolygon):
-    start = True
     index = 0
     for geom in multipolygon.geoms:
         draw_polygon(geom)
         index += 1
-        #if start:
-        #    ctx.move_to(x, y)
-        #else:
-        #    ctx.line_to(x, y)
-
-        #start = False
-    # ctx.fill()
-    # ctx.fill_preserve()
     ctx.stroke()
-    # ctx.fill()
 
 
 def draw_way_stroke(osmmap: osmparser.map, way: osmparser.Way):
@@ -216,20 +190,14 @@ def draw_way_stroke(osmmap: osmparser.map, way: osmparser.Way):
             ctx.line_to(x, y)
 
         start = False
-    # ctx.fill()
-    # ctx.fill_preserve()
     ctx.stroke()
-    # ctx.fill()
 
 
 def get_line_strings_from_line_string(line_string: LineString, min_angle, max_angle) -> List[LineString]:
-
     line_strings = []
     line_string_piece = []
     coordinates = line_string.coords
     coordinates_count = len(coordinates)
-    # coord_a = None
-    # coord_b = None
 
     for coord_i in range(coordinates_count):
         coord_a = coordinates[coord_i % (coordinates_count - 1)]
@@ -250,23 +218,21 @@ def get_line_strings_from_line_string(line_string: LineString, min_angle, max_an
     return line_strings
 
 
-def get_line_strings_from_polygon(polygon: Polygon, min_angle, max_angle) -> List[LineString]:
-
+def get_line_strings_from_polygon(polygon_to_read: Polygon, min_angle, max_angle) -> List[LineString]:
     line_strings = []
 
-    if hasattr(polygon.exterior, 'coords'):
-        line_strings.extend(get_line_strings_from_line_string(polygon.exterior, min_angle, max_angle))
+    if hasattr(polygon_to_read.exterior, 'coords'):
+        line_strings.extend(get_line_strings_from_line_string(polygon_to_read.exterior, min_angle, max_angle))
     else:
         return []
 
-    for interior in polygon.interiors:
+    for interior in polygon_to_read.interiors:
         line_strings.extend(get_line_strings_from_line_string(interior, min_angle, max_angle))
 
     return line_strings
 
 
 def get_line_strings_from_multipolygon(multi_polygon: MultiPolygon, min_angle, max_angle) -> List[LineString]:
-
     line_strings = []
 
     for geom in multi_polygon.geoms:
@@ -289,7 +255,7 @@ def unionize_polygon_array(polygons: List[Polygon]) -> List[Union[Polygon, Multi
             a = polygons_clone[index_a]
             b = polygons_clone[index_b]
             if a.intersects(b):
-                polygons_clone[index_a] = cascaded_union([a,b])
+                polygons_clone[index_a] = cascaded_union([a, b])
                 del polygons_clone[index_b]
                 count -= 1
                 index_b = index_a + 1
@@ -299,26 +265,20 @@ def unionize_polygon_array(polygons: List[Polygon]) -> List[Union[Polygon, Multi
 
     return polygons_clone
 
+
 buildings_poly = list(map((lambda x: osmparser.Convert.way_to_polygon(osm_map, x, transform_node)), buildings.values()))
-rel_buildings_poly = list(map((lambda x: osmparser.Convert.relation_to_polygon(osm_map, x, transform_node)), buildings_rel.values()))
+rel_buildings_poly = list(
+    map((lambda x: osmparser.Convert.relation_to_polygon(osm_map, x, transform_node)), buildings_rel.values()))
 buildings_poly.extend(rel_buildings_poly)
 
 reduced_buildings_poly = unionize_polygon_array(buildings_poly)
 
 water_poly = list(map((lambda x: osmparser.Convert.way_to_polygon(osm_map, x, transform_node)), water.values()))
-print(len(water_poly))
 reduced_water_poly = unionize_polygon_array(water_poly)
-print(len(reduced_water_poly))
 
-natural_water_poly = list(map((lambda x: osmparser.Convert.way_to_polygon(osm_map, x, transform_node)), natural_water.values()))
+natural_water_poly = list(
+    map((lambda x: osmparser.Convert.way_to_polygon(osm_map, x, transform_node)), natural_water.values()))
 reduced_natural_water_poly = unionize_polygon_array(natural_water_poly)
-
-
-# ctx.set_source_rgb(0, 0, 0)
-# ctx.set_line_width(0.0005)
-# for way_ref, way in buildings.items():
-#     draw_way(osm_map, way)
-
 
 ctx.set_source_rgb(0, 0, 0)
 ctx.set_line_width(0.0005)
@@ -327,11 +287,6 @@ for polygon in reduced_buildings_poly:
         draw_multipolygon(polygon)
     elif isinstance(polygon, Polygon):
         draw_polygon(polygon)
-
-# ctx.set_source_rgb(0, 0, 0)
-# ctx.set_line_width(0.0005)
-# for relation_ref, relation in buildings_rel.items():
-#     draw_relation_way(osm_map, relation)
 
 ctx.set_source_rgb(0, 0, 0)
 ctx.set_line_width(0.0001)
@@ -347,7 +302,9 @@ for i in range(0, 20):
         elif isinstance(polygon, Polygon):
             draw_polygon(polygon)
     for polygon_i in range(len(reduced_water_poly)):
-        reduced_water_poly[polygon_i] = reduced_water_poly[polygon_i].buffer(-0.0005 * math.sqrt(i), cap_style=3, join_style=cairo.LINE_JOIN_MITER, mitre_limit=1)
+        reduced_water_poly[polygon_i] = reduced_water_poly[polygon_i].buffer(-0.0005 * math.sqrt(i), cap_style=3,
+                                                                             join_style=cairo.LINE_JOIN_MITER,
+                                                                             mitre_limit=1)
 
 for i in range(0, 20):
     ctx.set_source_rgb(0, 0, 0)
@@ -358,8 +315,10 @@ for i in range(0, 20):
         elif isinstance(polygon, Polygon):
             draw_polygon(polygon)
     for polygon_i in range(len(natural_water_poly)):
-        natural_water_poly[polygon_i] = natural_water_poly[polygon_i].buffer(-0.0005 * math.sqrt(i), cap_style=cairo.LINE_CAP_SQUARE, join_style=cairo.LINE_JOIN_MITER, mitre_limit=1)
-
+        natural_water_poly[polygon_i] = natural_water_poly[polygon_i].buffer(-0.0005 * math.sqrt(i),
+                                                                             cap_style=cairo.LINE_CAP_SQUARE,
+                                                                             join_style=cairo.LINE_JOIN_MITER,
+                                                                             mitre_limit=1)
 
 ctx.set_line_width(0.0015)
 ctx.set_line_cap(cairo.LINE_CAP_BUTT)
@@ -367,11 +326,10 @@ for polygon in reduced_buildings_poly:
     polygon = polygon.buffer(-0.0005, cap_style=cairo.LINE_CAP_BUTT, join_style=cairo.LINE_JOIN_BEVEL, mitre_limit=10)
     lss = []
     if isinstance(polygon, MultiPolygon):
-        lss = get_line_strings_from_multipolygon(polygon, -math.pi/6*2, math.pi/6)
+        lss = get_line_strings_from_multipolygon(polygon, -math.pi / 6 * 2, math.pi / 6)
     elif isinstance(polygon, Polygon):
-        lss = get_line_strings_from_polygon(polygon, -math.pi/6*4, math.pi/6)
+        lss = get_line_strings_from_polygon(polygon, -math.pi / 6 * 4, math.pi / 6)
     for ls in lss:
-        # ls = ls.parallel_offset(0.0005, 'right', join_style=cairo.LINE_JOIN_BEVEL, mitre_limit=10)
         if ls is not None and isinstance(ls, LineString):
             if ls.length > 0.001:
                 draw_line_string(ls)
@@ -379,10 +337,9 @@ for polygon in reduced_buildings_poly:
 ctx.set_line_width(0.0005)
 q = 0
 for polygon in reduced_buildings_poly:
-    q+=1
-    print(q)
-    for i in range(-125,250): # Can be optimised
-        line = LineString([(0, i*4/1000), (1, 0.5 + i*4/1000)])
+    q += 1
+    for i in range(-125, 250):  # Can be optimised
+        line = LineString([(0, i * 4 / 1000), (1, 0.5 + i * 4 / 1000)])
         lines = line.intersection(polygon)
         if isinstance(lines, MultiLineString):
             for sub_line in lines.geoms:
@@ -391,30 +348,5 @@ for polygon in reduced_buildings_poly:
         elif isinstance(lines, LineString):
             draw_line_string(lines)
 
-
-# Get all the nodes from the osm file
-
-# write something in plotdevice to print all the points from an extracted json
-
-
-# ctx.rectangle (0, 0, 1, 1) # Rectangle(x0, y0, x1, y1)
-# ctx.set_source (pat)
-# ctx.fill ()
-#
-# ctx.translate (0.1, 0.1) # Changing the current transformation matrix
-#
-# ctx.move_to (0, 0)
-# # Arc(cx, cy, radius, start_angle, stop_angle)
-# ctx.arc (0.2, 0.1, 0.1, -math.pi/2, 0)
-# ctx.line_to (0.5, 0.1) # Line to (x,y)
-# # Curve(x1, y1, x2, y2, x3, y3)
-# ctx.curve_to (0.5, 0.2, 0.5, 0.4, 0.2, 0.8)
-# ctx.close_path ()
-#
-# ctx.set_source_rgb (0.3, 0.2, 0.5) # Solid color
-# ctx.set_line_width (0.02)
-# ctx.stroke ()
-
 surface.flush()
 surface.finish()
-# surface.write_to_png("../data/example.png")  # Output to PNG
