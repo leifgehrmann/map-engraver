@@ -1,4 +1,5 @@
 from graphicshelper import CairoHelper
+from graphicshelper import ShapelyHelper
 from shapely.geometry import Polygon, MultiPolygon
 from cairocffi import Context
 from typing import List, Union, Callable, no_type_check
@@ -72,16 +73,16 @@ class WaterDrawer(ProgressController):
 
     def _buffer_ripple(self, ripple: Polygon, iteration: int):
         # Fuzzy up the original ripple
-        new_lines = []
-        interpolation_distance = ripple.length
-        # ripple.interpolate()
+        ripple = ShapelyHelper.interpolate_polygon(ripple, 0.3)
+        ripple_polygons = ShapelyHelper.polygon_noise(ripple, ShapelyHelper.linestring_noise_random_square, 0.1)
+        new_ripples = []
+        for ripple_polygon in ripple_polygons:
+            # Buffer from the now fuzzy ripple
+            buffer_distance = self._iteration_distance(iteration)
+            ripple_buffered = ripple_polygon.buffer(-buffer_distance).simplify(self.line_width)
+            new_ripples.append(ripple_buffered)
 
-
-        # Buffer from the now fuzzy ripple
-        buffer_distance = self._iteration_distance(iteration)
-        ripple_buffered = ripple.buffer(-buffer_distance).simplify(self.line_width)
-
-        return ripple_buffered
+        return MultiPolygon(new_ripples)
 
     def _iteration_distance(self, iteration) -> float:
         return self.line_width * ((math.atan((iteration - 4) / 2) / math.pi + 1 / 2) * 4 + 2) * 3 / 2
