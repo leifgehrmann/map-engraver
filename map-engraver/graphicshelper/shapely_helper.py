@@ -131,7 +131,11 @@ class ShapelyHelper:
 
         for interior in polygon.interiors:
             exterior_polygons = exterior_polygons.difference(
-                line_string_noise_function(LineString(interior.coords), distance)
+                ShapelyHelper.polygon_noise(
+                    Polygon(interior.coords),
+                    line_string_noise_function,
+                    distance
+                )
             )
 
         return exterior_polygons
