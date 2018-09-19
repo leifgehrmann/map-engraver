@@ -1,4 +1,4 @@
-from shapely.geometry import Point, Polygon, MultiPolygon, LineString
+from shapely.geometry import Point, Polygon, MultiPolygon, LineString, LinearRing
 from shapely.ops import cascaded_union, polygonize, unary_union
 from typing import List, Callable
 import math
@@ -120,7 +120,7 @@ class ShapelyHelper:
     ) -> MultiPolygon:
         exterior_noisy_linestring = line_string_noise_function(LineString(polygon.exterior.coords), distance)
         exterior_polygons = []
-        if not exterior_noisy_linestring.is_simple:
+        if not exterior_noisy_linestring.is_simple or not LinearRing(exterior_noisy_linestring.coords).is_valid:
             exterior_noisy_multi_polygon = ShapelyHelper.convert_non_simple_polygon_to_multi_polygon(
                 Polygon(exterior_noisy_linestring)
             )
@@ -143,7 +143,5 @@ class ShapelyHelper:
 
         if isinstance(exterior_polygons, Polygon):
             exterior_polygons = MultiPolygon([exterior_polygons])
-
-        print(exterior_polygons)
 
         return exterior_polygons
