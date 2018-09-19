@@ -11,9 +11,9 @@ class WaterDrawer(ProgressController):
 
     water_shadow = 0.08
     line_width = 0.05
-    ripple_noise_function = ShapelyHelper.linestring_noise_random_square
-    ripple_noise_distance = 2
+    interpolation_distance = 1
     high_quality = True
+    buffer_resolution = 16
 
     def draw(self, ctx: Context, polygons: List[Union[Polygon, MultiPolygon]]):
         if self.high_quality:
@@ -50,12 +50,11 @@ class WaterDrawer(ProgressController):
     def _draw_ripples(self, ctx: Context, ripple: Union[Polygon, MultiPolygon], iteration: int=0):
 
         if iteration > 100:
-            print("BAD BAD SHAPELY")
+            print("MAX ITERATIONS EXCEEDED")
             return
 
         if isinstance(ripple, Polygon):
             # Draw current iteration of ripple
-            print(iteration)
             if iteration > 0:
                 self._draw_ripple(ctx, ripple, iteration)
 
@@ -78,12 +77,14 @@ class WaterDrawer(ProgressController):
         buffer_distance = self._iteration_distance(iteration)
         noise_distance = self._iteration_noise_distance(iteration)
         # Fuzzy up the original ripple
-        ripple = ShapelyHelper.interpolate_polygon(ripple, 0.3)
+        ripple = ShapelyHelper.interpolate_polygon(ripple, self.interpolation_distance)
         ripple_multi_polygon = ShapelyHelper.polygon_noise(ripple, self._noise_function(), noise_distance)
         new_ripples = []
         for ripple_polygon in ripple_multi_polygon:
             # Buffer from the now fuzzy ripple
-            ripple_buffered = ripple_polygon.buffer(-buffer_distance).simplify(self.line_width)
+            ripple_buffered = ripple_polygon\
+                .buffer(-buffer_distance, resolution=self.buffer_resolution)\
+                .simplify(self.line_width * 0.01)
             if isinstance(ripple_buffered, MultiPolygon):
                 for ripple_buffered_polygon in ripple_buffered:
                     new_ripples.append(ripple_buffered_polygon)
@@ -96,7 +97,7 @@ class WaterDrawer(ProgressController):
         return self.line_width * ((math.atan((iteration - 4) / 2) / math.pi + 1 / 2) * 4 + 2) * 3 / 2
 
     def _iteration_noise_distance(self, iteration) -> float:
-        return self.line_width * ((math.atan((iteration - 4) / 2) / math.pi + 1 / 2) * 4 + 2) * 3 / 2
+        return 0.1
 
     @staticmethod
     def _noise_function() -> Callable[[LineString, float], LineString]:

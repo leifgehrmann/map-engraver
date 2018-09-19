@@ -8,8 +8,6 @@ hole = Point(60, 50).buffer(10)
 circle = circle.difference(bite)
 circle = circle.difference(hole)
 
-print(circle)
-
 surface = cairo.PDFSurface("output/map_features_nature_water.pdf", 100, 100)
 ctx = cairo.Context(surface)
 
