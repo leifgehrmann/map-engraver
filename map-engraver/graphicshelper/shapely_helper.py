@@ -117,7 +117,7 @@ class ShapelyHelper:
             polygon: Polygon,
             line_string_noise_function: Callable[[LineString, float], LineString],
             distance: float
-    ) -> List[Polygon]:
+    ) -> MultiPolygon:
         exterior_noisy_linestring = line_string_noise_function(LineString(polygon.exterior.coords), distance)
         exterior_polygons = []
         if not exterior_noisy_linestring.is_simple:
@@ -140,8 +140,10 @@ class ShapelyHelper:
                     distance
                 )
             )
-        #
-        # if isinstance(exterior_polygons, Polygon):
-        #     exterior_polygons = [exterior_polygons]
+
+        if isinstance(exterior_polygons, Polygon):
+            exterior_polygons = MultiPolygon([exterior_polygons])
+
+        print(exterior_polygons)
 
         return exterior_polygons

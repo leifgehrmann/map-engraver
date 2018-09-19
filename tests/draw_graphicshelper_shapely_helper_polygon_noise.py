@@ -89,6 +89,13 @@ for bowtie_multi_polygon_geom in bowtie_multi_polygons.geoms:
         ctx.fill()
 
 bowtie_polygon = affinity.translate(bowtie_polygon, 0, 100)
+noisy_bowtie_polygons = ShapelyHelper.polygon_noise(bowtie_polygon, ShapelyHelper.linestring_noise_random_square, 2)
+for noisy_bowtie_polygon in noisy_bowtie_polygons:
+    ctx.set_source_rgba(random(), random(), random(), 1)
+    CairoHelper.draw_polygon(ctx, noisy_bowtie_polygon)
+    ctx.fill()
+
+bowtie_polygon = affinity.translate(bowtie_polygon, 0, 100)
 noisy_bowtie_polygons = ShapelyHelper.polygon_noise(bowtie_polygon, ShapelyHelper.linestring_noise_random_square, 18)
 for noisy_bowtie_polygon in noisy_bowtie_polygons:
     ctx.set_source_rgba(random(), random(), random(), 1)
@@ -124,8 +131,22 @@ for interior_multi_polygons_geom in interior_multi_polygons.geoms:
             ctx.fill()
 
 interior_polygon = affinity.translate(interior_polygon, 0, 100)
-noisy_interior_polygons = ShapelyHelper.polygon_noise(interior_polygon, ShapelyHelper.linestring_noise_random_square,
-                                                      18)
+noisy_interior_polygons = ShapelyHelper.polygon_noise(
+    interior_polygon,
+    ShapelyHelper.linestring_noise_random_square,
+    2
+)
+for noisy_interior_polygon in noisy_interior_polygons:
+    ctx.set_source_rgba(random(), random(), random(), 1)
+    CairoHelper.draw_polygon(ctx, noisy_interior_polygon)
+    ctx.fill()
+
+interior_polygon = affinity.translate(interior_polygon, 0, 100)
+noisy_interior_polygons = ShapelyHelper.polygon_noise(
+    interior_polygon,
+    ShapelyHelper.linestring_noise_random_square,
+    18
+)
 for noisy_interior_polygon in noisy_interior_polygons:
     ctx.set_source_rgba(random(), random(), random(), 1)
     CairoHelper.draw_polygon(ctx, noisy_interior_polygon)

@@ -1,6 +1,6 @@
 from graphicshelper import CairoHelper
 from graphicshelper import ShapelyHelper
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon, MultiPolygon, LineString
 from cairocffi import Context
 from typing import List, Union, Callable, no_type_check
 from ..utilities import ProgressController
@@ -11,6 +11,8 @@ class WaterDrawer(ProgressController):
 
     water_shadow = 0.08
     line_width = 0.05
+    ripple_noise_function = ShapelyHelper.linestring_noise_random_square
+    ripple_noise_distance = 2
     high_quality = True
 
     def draw(self, ctx: Context, polygons: List[Union[Polygon, MultiPolygon]]):
@@ -53,6 +55,7 @@ class WaterDrawer(ProgressController):
 
         if isinstance(ripple, Polygon):
             # Draw current iteration of ripple
+            print(iteration)
             if iteration > 0:
                 self._draw_ripple(ctx, ripple, iteration)
 
@@ -72,17 +75,29 @@ class WaterDrawer(ProgressController):
         ctx.stroke()
 
     def _buffer_ripple(self, ripple: Polygon, iteration: int):
+        buffer_distance = self._iteration_distance(iteration)
+        noise_distance = self._iteration_noise_distance(iteration)
         # Fuzzy up the original ripple
         ripple = ShapelyHelper.interpolate_polygon(ripple, 0.3)
-        ripple_polygons = ShapelyHelper.polygon_noise(ripple, ShapelyHelper.linestring_noise_random_square, 0.1)
+        ripple_multi_polygon = ShapelyHelper.polygon_noise(ripple, self._noise_function(), noise_distance)
         new_ripples = []
-        for ripple_polygon in ripple_polygons:
+        for ripple_polygon in ripple_multi_polygon:
             # Buffer from the now fuzzy ripple
-            buffer_distance = self._iteration_distance(iteration)
             ripple_buffered = ripple_polygon.buffer(-buffer_distance).simplify(self.line_width)
-            new_ripples.append(ripple_buffered)
+            if isinstance(ripple_buffered, MultiPolygon):
+                for ripple_buffered_polygon in ripple_buffered:
+                    new_ripples.append(ripple_buffered_polygon)
+            else:
+                new_ripples.append(ripple_buffered)
 
         return MultiPolygon(new_ripples)
 
     def _iteration_distance(self, iteration) -> float:
         return self.line_width * ((math.atan((iteration - 4) / 2) / math.pi + 1 / 2) * 4 + 2) * 3 / 2
+
+    def _iteration_noise_distance(self, iteration) -> float:
+        return self.line_width * ((math.atan((iteration - 4) / 2) / math.pi + 1 / 2) * 4 + 2) * 3 / 2
+
+    @staticmethod
+    def _noise_function() -> Callable[[LineString, float], LineString]:
+        return ShapelyHelper.linestring_noise_random_square
