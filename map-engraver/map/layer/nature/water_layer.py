@@ -29,6 +29,11 @@ class WaterLayer(OsmLayer):
             except WayToPolygonError:
                 continue
 
+        for relation in filtered_map_data['relations'].values():
+            polygon = OsmConvert.relation_to_polygon(map_data, relation, map_projection)
+            if isinstance(polygon, Polygon):
+                polygons.append(polygon)
+
         context = map.get_context()
         drawer = WaterDrawer()
         drawer.draw(context, polygons)
