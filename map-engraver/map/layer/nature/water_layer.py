@@ -1,5 +1,6 @@
 from shapely.geometry import Polygon
 
+from graphicshelper import ShapelyHelper
 from map.features.nature import WaterDrawer
 from map.layer import OsmLayer, ILayer
 from osmparser.convert import Convert as OsmConvert, WayToPolygonError
@@ -33,6 +34,8 @@ class WaterLayer(OsmLayer):
             polygon = OsmConvert.relation_to_polygon(map_data, relation, map_projection)
             if isinstance(polygon, Polygon):
                 polygons.append(polygon)
+
+        polygons = ShapelyHelper.unionize_polygon_array(polygons)
 
         context = map.get_context()
         drawer = WaterDrawer()
