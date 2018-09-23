@@ -1,0 +1,45 @@
+name: Main
+layers:
+  - type: Buildings
+    mode: basic
+    line angle: 0.5236 # math.pi / 6
+    line separation: 0.3
+    high quality: True
+    union: True
+    filter:
+      file: layer-filters.py
+      func: all_buildings
+    cache:
+      name: buildings_all
+  - type: Walls
+    filter:
+      file: layer-filters.py
+      func: all_barriers
+  - type: Railways
+    filter:
+      file: layer-filters.py
+      func: all_railways
+  - type: LabelPaths
+    font: sans-serif
+    custom sheet: custom.yml
+    filter:
+      file: layer-filters.py
+      func: all_road_names
+  - type: Grass
+    filter:
+      file: layer-filters.py
+      func: all_nature_areas
+  - type: Water
+    custom ripple:
+      file: nature/custom.py
+      func: stuff
+    filter:
+      file: layer-filters.py
+      func: all_riverbanks
+  - type: Water
+    filter:
+      file: layer-filters.py
+      func: all_lakes
+  - type: Margin
+    margin: [8, 8, 8, 8]
+    legend: [8, 8, 8, 8]

@@ -7,6 +7,7 @@ import cairocffi as cairo
 import osmparser
 from map.imap import IMap
 from map.layer import Layer
+import os
 
 
 class Map(IMap):
@@ -89,6 +90,8 @@ class Map(IMap):
             pdf_scale /= mm_in_an_inch
 
         output_dir = self.map_config.get_output_directory()
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
         output_file = output_dir + self.map_config.get_name() + ".pdf"
 
         surface = cairo.PDFSurface(output_file, pdf_width, pdf_height)

@@ -137,7 +137,7 @@ class Text:
             if not trimmed:
                 ctx.set_source_rgba(0, 0, 0, 1)
             else:
-                ctx.set_source_rgba(0, 0, 1, 1)
+                ctx.set_source_rgba(0, 0, 0.2, 1)
             ctx.show_text(char)
             ctx.fill()
             ctx.restore()

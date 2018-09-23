@@ -28,7 +28,7 @@ class GrassDrawer(ProgressController):
             if 'leisure' in tags and tags['leisure'] == 'park':
                 ctx.set_source_rgba(0, 0, 0, 0.03)
             elif 'leisure' in tags and tags['leisure'] == 'garden':
-                ctx.set_source_rgba(0, 0, 1, 0.1)
+                ctx.set_source_rgba(0, 0, 0, 0.1)
             elif 'leisure' in tags and tags['leisure'] == 'common':
                 ctx.set_source_rgba(0, 0, 0, 0.03)
             elif 'leisure' in tags and tags['leisure'] == 'recreation_ground':
