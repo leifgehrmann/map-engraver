@@ -1,4 +1,4 @@
-from graphicshelper import CairoHelper
+from graphicshelper import CairoHelper, ShapelyHelper
 from shapely.geometry import Polygon, MultiPolygon, Point, LineString, MultiLineString
 from cairocffi import Context
 from typing import List, Union, Callable, no_type_check
@@ -235,9 +235,9 @@ class Basic(ProgressController):
         offset_amount = -(self.outline_line_width - self.shadow_line_width / 2)
 
         if isinstance(p, Polygon):
-            line_strings = Basic.get_line_strings_from_polygon(p, min_angle, max_angle)
+            line_strings = ShapelyHelper.get_directional_line_strings_from_polygon(p, min_angle, max_angle)
         elif isinstance(p, MultiPolygon):
-            line_strings = Basic.get_line_strings_from_multipolygon(p, min_angle, max_angle)
+            line_strings = ShapelyHelper.get_directional_line_strings_from_multipolygon(p, min_angle, max_angle)
 
         buffered_line_strings = []
         for line_string in line_strings:
@@ -254,56 +254,3 @@ class Basic(ProgressController):
                 print('hmmmm', buffered_line_string)
 
         return buffered_line_strings
-
-    @staticmethod
-    def get_line_strings_from_multipolygon(multi_polygon: MultiPolygon, min_angle, max_angle) -> List[LineString]:
-
-        line_strings = []
-
-        for geom in multi_polygon.geoms:
-            line_strings.extend(Basic.get_line_strings_from_polygon(geom, min_angle, max_angle))
-
-        return line_strings
-
-    @staticmethod
-    def get_line_strings_from_polygon(polygon: Polygon, min_angle, max_angle) -> List[LineString]:
-
-        line_strings = []
-
-        if hasattr(polygon.exterior, 'coords'):
-            line_strings.extend(Basic.get_line_strings_from_line_string(polygon.exterior, min_angle, max_angle))
-        else:
-            return []
-
-        for interior in polygon.interiors:
-            line_strings.extend(Basic.get_line_strings_from_line_string(interior, min_angle, max_angle))
-
-        return line_strings
-
-    @staticmethod
-    def get_line_strings_from_line_string(line_string: LineString, min_angle, max_angle) -> List[LineString]:
-
-        line_strings = []
-        line_string_piece = []
-        coordinates = line_string.coords
-        coordinates_count = len(coordinates)
-        # coord_a = None
-        # coord_b = None
-
-        for coord_i in range(coordinates_count):
-            coord_a = coordinates[coord_i % (coordinates_count - 1)]
-            coord_b = coordinates[(coord_i + 1) % (coordinates_count - 1)]
-            angle = math.atan2(coord_b[1] - coord_a[1], coord_b[0] - coord_a[0])
-            if min_angle <= angle <= max_angle:
-                line_string_piece.append(coord_a)
-            else:
-                if len(line_string_piece) > 0:
-                    line_string_piece.append(coord_a)
-                if len(line_string_piece) >= 2:
-                    line_strings.append(LineString(line_string_piece))
-                    line_string_piece = []
-
-        if len(line_string_piece) >= 2:
-            line_strings.append(LineString(line_string_piece))
-
-        return line_strings

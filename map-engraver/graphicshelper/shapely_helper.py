@@ -145,3 +145,76 @@ class ShapelyHelper:
             exterior_polygons = MultiPolygon([exterior_polygons])
 
         return exterior_polygons
+
+    @staticmethod
+    def get_directional_line_strings_from_multipolygon(
+            multi_polygon: MultiPolygon,
+            min_angle: float,
+            max_angle: float
+    ) -> List[LineString]:
+
+        line_strings = []
+
+        for geom in multi_polygon.geoms:
+            line_strings.extend(ShapelyHelper.get_directional_line_strings_from_polygon(geom, min_angle, max_angle))
+
+        return line_strings
+
+    @staticmethod
+    def get_directional_line_strings_from_polygon(
+            polygon: Polygon,
+            min_angle: float,
+            max_angle: float
+    ) -> List[LineString]:
+        line_strings = []
+
+        if hasattr(polygon.exterior, 'coords'):
+            line_strings.extend(
+                ShapelyHelper.get_directional_line_strings_from_line_string(
+                    polygon.exterior,
+                    min_angle,
+                    max_angle
+                )
+            )
+        else:
+            return []
+
+        for interior in polygon.interiors:
+            line_strings.extend(
+                ShapelyHelper.get_directional_line_strings_from_line_string(
+                    interior,
+                    min_angle,
+                    max_angle
+                )
+            )
+
+        return line_strings
+
+    @staticmethod
+    def get_directional_line_strings_from_line_string(
+            line_string: LineString,
+            min_angle: float,
+            max_angle: float
+    ) -> List[LineString]:
+        line_strings = []
+        line_string_piece = []
+        coordinates = line_string.coords
+        coordinates_count = len(coordinates)
+
+        for coord_i in range(coordinates_count):
+            coord_a = coordinates[coord_i % (coordinates_count - 1)]
+            coord_b = coordinates[(coord_i + 1) % (coordinates_count - 1)]
+            angle = math.atan2(coord_b[1] - coord_a[1], coord_b[0] - coord_a[0])
+            if min_angle <= angle <= max_angle:
+                line_string_piece.append(coord_a)
+            else:
+                if len(line_string_piece) > 0:
+                    line_string_piece.append(coord_a)
+                if len(line_string_piece) >= 2:
+                    line_strings.append(LineString(line_string_piece))
+                    line_string_piece = []
+
+        if len(line_string_piece) >= 2:
+            line_strings.append(LineString(line_string_piece))
+
+        return line_strings
