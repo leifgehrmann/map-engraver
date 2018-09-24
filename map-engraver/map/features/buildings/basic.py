@@ -1,8 +1,10 @@
-from graphicshelper import CairoHelper, ShapelyHelper
+from graphicshelper import CairoHelper
 from shapely.geometry import Polygon, MultiPolygon, Point, LineString, MultiLineString
 from cairocffi import Context
 from typing import List, Union, Callable, no_type_check
 import math
+
+from map.features.generic import ShadowInsetDrawer
 from ..utilities import ProgressController
 
 
@@ -14,6 +16,11 @@ class Basic(ProgressController):
     outline_line_width = 0.05
     shadow_line_width = 0.2
     high_quality = True
+
+    def __init__(self):
+        self.shadow_inset_drawer = ShadowInsetDrawer()
+        self.shadow_inset_drawer.outline_line_width = self.outline_line_width
+        self.shadow_inset_drawer.shadow_line_width = self.shadow_line_width
 
     def set_high_quality(self, high_quality: bool) -> 'Basic':
         self.high_quality = high_quality
@@ -88,19 +95,7 @@ class Basic(ProgressController):
         pass
 
     def _draw_building_shadow(self, ctx: Context, outline: Union[Polygon, MultiPolygon]):
-        if isinstance(outline, MultiPolygon):
-            shadow_line_strings = []
-            for sub_outline in outline.geoms:
-                shadow_line_string = self._draw_building_shadow(ctx, sub_outline)
-                shadow_line_strings.append(shadow_line_string)
-            return shadow_line_strings
-        buffered_outline = outline.buffer(-self.outline_line_width / 2, cap_style=3, join_style=2)
-
-        shadow_line_strings = self.get_shadow_lines(buffered_outline)
-        for shadow_line_string in shadow_line_strings:
-            CairoHelper.draw_line_string(ctx, shadow_line_string)
-            ctx.stroke()
-        pass
+        self.shadow_inset_drawer.draw(ctx, outline)
 
     @staticmethod
     def get_lines_within_bounds(origin: Point, angle: float, separation: float, bounds) -> List[LineString]:
@@ -227,30 +222,3 @@ class Basic(ProgressController):
             return None
         return 1 / math.tan(angle) * (x_axis_offset - origin.y) + origin.x
         pass
-
-    def get_shadow_lines(self, p: Union[Polygon, MultiPolygon]) -> List[LineString]:
-        line_strings = []
-        min_angle = -math.pi / 6 * 4
-        max_angle = math.pi / 6
-        offset_amount = -(self.outline_line_width - self.shadow_line_width / 2)
-
-        if isinstance(p, Polygon):
-            line_strings = ShapelyHelper.get_directional_line_strings_from_polygon(p, min_angle, max_angle)
-        elif isinstance(p, MultiPolygon):
-            line_strings = ShapelyHelper.get_directional_line_strings_from_multipolygon(p, min_angle, max_angle)
-
-        buffered_line_strings = []
-        for line_string in line_strings:
-            if not isinstance(line_string, LineString):
-                print(line_string)
-                continue
-            try:
-                buffered_line_string = line_string.parallel_offset(offset_amount, join_style=2, mitre_limit=5)
-            except ValueError:
-                continue
-            if isinstance(buffered_line_string, LineString):
-                buffered_line_strings.append(buffered_line_string)
-            else:
-                print('hmmmm', buffered_line_string)
-
-        return buffered_line_strings
