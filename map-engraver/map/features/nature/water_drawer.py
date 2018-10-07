@@ -3,23 +3,32 @@ from graphicshelper import ShapelyHelper
 from shapely.geometry import Polygon, MultiPolygon, LineString
 from cairocffi import Context
 from typing import List, Union, Callable, no_type_check
+
+from map.features.generic import ShadowInsetDrawer
 from ..utilities import ProgressController
 import math
 
 
 class WaterDrawer(ProgressController):
 
-    water_shadow = 0.08
     line_width = 0.05
+    line_width_water_shadow = 0.08
     interpolation_distance = 1
     high_quality = True
     buffer_resolution = 16
+    shadow_inset_drawer = None
 
     def draw(self, ctx: Context, polygons: List[Union[Polygon, MultiPolygon]]):
+        self.shadow_inset_drawer = ShadowInsetDrawer()
+        self.shadow_inset_drawer.outline_line_width = self.line_width
+        self.shadow_inset_drawer.shadow_line_width = self.line_width_water_shadow
+
         if self.high_quality:
             ctx.set_source_rgb(0, 0, 0)
             ctx.set_line_width(self.line_width)
             self._draw_iterator(ctx, polygons, self._draw_water)
+            ctx.set_line_width(self.line_width_water_shadow)
+            self._draw_iterator(ctx, polygons, self._draw_water_shadow)
         else:
             ctx.set_source_rgba(0, 0, 0, 0.3)
             self._draw_iterator(ctx, polygons, self._draw_water_area)
@@ -46,6 +55,9 @@ class WaterDrawer(ProgressController):
         ctx.stroke()
 
         self._draw_ripples(ctx, outline)
+
+    def _draw_water_shadow(self, ctx: Context, outline: Union[Polygon, MultiPolygon]):
+        self.shadow_inset_drawer.draw(ctx, outline)
 
     def _draw_ripples(self, ctx: Context, ripple: Union[Polygon, MultiPolygon], iteration: int=0):
 
