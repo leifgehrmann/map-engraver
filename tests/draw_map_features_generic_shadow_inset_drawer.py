@@ -1,6 +1,5 @@
 import math
 import cairocffi as cairo
-import map.features.buildings
 from shapely.geometry import Point
 
 from graphicshelper import CairoHelper
