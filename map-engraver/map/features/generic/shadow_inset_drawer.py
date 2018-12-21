@@ -29,24 +29,24 @@ class ShadowInsetDrawer:
         pass
 
     def _get_shadow_lines(self, geometry: Union[Polygon, MultiPolygon]) -> List[LineString]:
-        line_strings = []
+        multi_line_string = []
         offset_amount = -(self.outline_line_width - self.shadow_line_width / 2)
 
         if isinstance(geometry, Polygon):
-            line_strings = ShapelyHelper.get_directional_line_strings_from_polygon(
+            multi_line_string = ShapelyHelper.get_directional_line_strings_from_polygon(
                 geometry,
                 self.min_angle,
                 self.max_angle
             )
         elif isinstance(geometry, MultiPolygon):
-            line_strings = ShapelyHelper.get_directional_line_strings_from_multipolygon(
+            multi_line_string = ShapelyHelper.get_directional_line_strings_from_multipolygon(
                 geometry,
                 self.min_angle,
                 self.max_angle
             )
 
         buffered_line_strings = []
-        for line_string in line_strings:
+        for line_string in multi_line_string.geoms:
             if not isinstance(line_string, LineString):
                 print(line_string)
                 continue

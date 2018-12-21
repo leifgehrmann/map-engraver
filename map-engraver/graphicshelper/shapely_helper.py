@@ -1,5 +1,5 @@
-from shapely.geometry import Point, Polygon, MultiPolygon, LineString, LinearRing
-from shapely.ops import cascaded_union, polygonize, unary_union
+from shapely.geometry import Point, Polygon, MultiPolygon, LineString, LinearRing, MultiLineString
+from shapely.ops import cascaded_union, polygonize, unary_union, linemerge
 from typing import List, Callable
 import math
 from random import random
@@ -151,36 +151,36 @@ class ShapelyHelper:
             multi_polygon: MultiPolygon,
             min_angle: float,
             max_angle: float
-    ) -> List[LineString]:
+    ) -> MultiLineString:
 
-        line_strings = []
+        multi_line_strings = []
 
         for geom in multi_polygon.geoms:
-            line_strings.extend(ShapelyHelper.get_directional_line_strings_from_polygon(geom, min_angle, max_angle))
+            multi_line_strings.append(ShapelyHelper.get_directional_line_strings_from_polygon(geom, min_angle, max_angle))
 
-        return line_strings
+        return ShapelyHelper.group_multi_line_strings(multi_line_strings)
 
     @staticmethod
     def get_directional_line_strings_from_polygon(
             polygon: Polygon,
             min_angle: float,
             max_angle: float
-    ) -> List[LineString]:
-        line_strings = []
+    ) -> MultiLineString:
+        multi_line_strings = []
 
         if hasattr(polygon.exterior, 'coords'):
-            line_strings.extend(
+            multi_line_strings.append(
                 ShapelyHelper.get_directional_line_strings_from_line_string(
-                    polygon.exterior,
+                    LineString(polygon.exterior),
                     min_angle,
                     max_angle
                 )
             )
         else:
-            return []
+            return MultiLineString([])
 
         for interior in polygon.interiors:
-            line_strings.extend(
+            multi_line_strings.append(
                 ShapelyHelper.get_directional_line_strings_from_line_string(
                     interior,
                     min_angle,
@@ -188,24 +188,24 @@ class ShapelyHelper:
                 )
             )
 
-        return line_strings
+        return ShapelyHelper.group_multi_line_strings(multi_line_strings)
 
     @staticmethod
     def get_directional_line_strings_from_line_string(
             line_string: LineString,
             min_angle: float,
             max_angle: float
-    ) -> List[LineString]:
+    ) -> MultiLineString:
         line_strings = []
         line_string_piece = []
         coordinates = line_string.coords
         coordinates_count = len(coordinates)
 
         for coord_i in range(coordinates_count):
-            coord_a = coordinates[coord_i % (coordinates_count - 1)]
-            coord_b = coordinates[(coord_i + 1) % (coordinates_count - 1)]
-            angle = math.atan2(coord_b[1] - coord_a[1], coord_b[0] - coord_a[0])
-            if min_angle <= angle <= max_angle:
+            coord_a = Point(coordinates[coord_i % (coordinates_count - 1)])
+            coord_b = Point(coordinates[(coord_i + 1) % (coordinates_count - 1)])
+            angle = ShapelyHelper.get_direction(coord_a, coord_b)
+            if ShapelyHelper.is_angle_between_two_angles(angle, min_angle, max_angle):
                 line_string_piece.append(coord_a)
             else:
                 if len(line_string_piece) > 0:
@@ -217,4 +217,38 @@ class ShapelyHelper:
         if len(line_string_piece) >= 2:
             line_strings.append(LineString(line_string_piece))
 
-        return line_strings
+        merged_lines = linemerge(line_strings)
+        if isinstance(merged_lines, LineString):
+            return MultiLineString([merged_lines])
+        else:
+            return merged_lines
+
+    @staticmethod
+    def is_angle_between_two_angles(angle: float, start_angle: float, end_angle: float):
+        while start_angle < -math.pi:
+            start_angle += math.pi * 2
+            end_angle += math.pi * 2
+        while angle < start_angle:
+            angle += math.pi * 2
+        # if start_angle < -math.pi:
+        #     offset = (start_angle + math.pi) / (- 2 * math.pi)
+        #     start_angle += offset * math.pi * 2
+        #     end_angle += offset * math.pi * 2
+        # if angle < start_angle:
+        #     offset = (angle - start_angle) / (- 2 * math.pi)
+        #     angle += offset * math.pi * 2
+        return angle < end_angle
+
+    @staticmethod
+    def get_direction(start: Point, end: Point) -> float:
+        return math.atan2(end.y - start.y, end.x - start.x)
+
+    @staticmethod
+    def group_multi_line_strings(multi_line_strings: List[MultiLineString]) -> MultiLineString:
+        geoms = []
+        for multi_line_string in multi_line_strings:
+            if multi_line_string.is_empty:
+                continue
+            geoms.extend(multi_line_string.geoms)
+        return MultiLineString(geoms)
+

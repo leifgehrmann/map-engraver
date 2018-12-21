@@ -22,6 +22,8 @@ class WaterDrawer(ProgressController):
         self.shadow_inset_drawer = ShadowInsetDrawer()
         self.shadow_inset_drawer.outline_line_width = self.line_width
         self.shadow_inset_drawer.shadow_line_width = self.line_width_water_shadow
+        self.shadow_inset_drawer.min_angle = -math.pi / 6 * 4 + math.pi
+        self.shadow_inset_drawer.max_angle = math.pi / 6 + math.pi
 
         if self.high_quality:
             ctx.set_source_rgb(0, 0, 0)
