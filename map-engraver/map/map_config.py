@@ -13,7 +13,7 @@ class MapConfig:
     @staticmethod
     def create_from_yaml(file_path: str) -> 'MapConfig':
         file = open(file_path, 'r')
-        config = yaml.load(file)
+        config = yaml.safe_load(file)
         map_config = MapConfig(config)
         file_dir = os.path.dirname(file_path)
         map_config.set_relative_directory(file_dir)
