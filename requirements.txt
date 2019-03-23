@@ -1,5 +1,5 @@
 CairoSVG==2.1.1
-PyYAML==3.12
+PyYAML==5.1
 Shapely==1.7a1
 cairocffi==0.8.0
 pyproj==1.9.5.1

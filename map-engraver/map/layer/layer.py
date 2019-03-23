@@ -24,7 +24,7 @@ class Layer(ILayer):
     @staticmethod
     def create_from_yaml(file_path: str, parent: Union[IMap, 'Layer']):
         file = open(file_path, 'r')
-        config = yaml.load(file)
+        config = yaml.safe_load(file)
         directory = os.path.dirname(file_path)
         return Layer().set_config(config)\
             .set_relative_directory(directory)\
