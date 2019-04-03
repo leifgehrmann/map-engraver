@@ -72,7 +72,8 @@ class BuildingLayer(OsmLayer, CacheableLayer):
             result = self.cache_load_result()
         else:
             result = self.cache_generate_result()
-            self.cache_store_result(result)
+            if self.cache_is_enabled():
+                self.cache_store_result(result)
 
         context = map.get_context()
         drawer = BuildingDrawer()\
