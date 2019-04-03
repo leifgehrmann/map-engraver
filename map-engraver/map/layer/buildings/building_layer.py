@@ -39,21 +39,31 @@ class BuildingLayer(OsmLayer, CacheableLayer):
         map_projection = self.parent.get_map().get_map_projection_function()
 
         polygons = []
-        for way in filtered_map_data['ways'].values():
-            try:
-                polygon = OsmConvert.way_to_polygon(map_data, way, map_projection)
-                if isinstance(polygon, Polygon):
-                    polygons.append(polygon)
-            except WayToPolygonError:
-                continue
+        if 'ways' in filtered_map_data:
+            for way in filtered_map_data['ways'].values():
+                try:
+                    polygon = OsmConvert.way_to_polygon(
+                        map_data,
+                        way,
+                        map_projection
+                    )
+                    if isinstance(polygon, Polygon):
+                        polygons.append(polygon)
+                except WayToPolygonError:
+                    continue
 
-        for way in filtered_map_data['relations'].values():
-            try:
-                polygon = OsmConvert.relation_to_polygon(map_data, way, map_projection)
-                if isinstance(polygon, Polygon):
-                    polygons.append(polygon)
-            except WayToPolygonError:
-                continue
+        if 'relations' in filtered_map_data:
+            for way in filtered_map_data['relations'].values():
+                try:
+                    polygon = OsmConvert.relation_to_polygon(
+                        map_data,
+                        way,
+                        map_projection
+                    )
+                    if isinstance(polygon, Polygon):
+                        polygons.append(polygon)
+                except WayToPolygonError:
+                    continue
 
         # Unionization of polygons
         if self.unionize:
