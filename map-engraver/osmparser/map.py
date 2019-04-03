@@ -19,15 +19,28 @@ class Map:
         self.ways = dict()
         self.relations = dict()
 
-    def add(self, osm_root: ElementTree):
-        self.nodes = {**self.nodes, **Parser.get_nodes(osm_root)}
-        self.ways = {**self.ways, **Parser.get_ways(osm_root)}
-        self.relations = {**self.relations, **Parser.get_relations(osm_root)}
+    def add(self, osm_root: ElementTree, osm_file: str):
+        new_nodes = Parser.get_nodes(osm_root)
+        new_ways = Parser.get_ways(osm_root)
+        new_relations = Parser.get_relations(osm_root)
+
+        for node in new_nodes.values():
+            node.osm_file = osm_file
+
+        for way in new_ways.values():
+            way.osm_file = osm_file
+
+        for relation in new_relations.values():
+            relation.osm_file = osm_file
+
+        self.nodes = {**self.nodes, **new_nodes}
+        self.ways = {**self.ways, **new_ways}
+        self.relations = {**self.relations, **new_relations}
 
     def add_osm_file(self, osm_file: str):
         tree = ElementTree.parse(osm_file)
         root = tree.getroot()
-        self.add(root)
+        self.add(root, osm_file)
 
     def get_node(self, ref: str) -> Node:
         return self.nodes[ref]

@@ -17,7 +17,7 @@ class Parser:
         return key_values
 
     @staticmethod
-    def get_nodes(osm_root: ElementTree) -> object:
+    def get_nodes(osm_root: ElementTree) -> Dict[str, type(osmparser.Node)]:
         """Get all the nodes from the osm file indexed by node id"""
         nodes = dict()
         for osm_element in osm_root:
