@@ -61,11 +61,41 @@ class Map(IMap):
 
         wgs84_projection = pyproj.Proj(init='epsg:4326')
         mc_projection = self.map_config.get_map_projection()
+        mc_extents = self.map_config.get_map_projection_extents()
         mc_origin = self.map_config.get_map_projection_origin()
         mc_scale = self.map_config.get_map_scale()
 
+        if mc_extents is not None:
+            extent_min_lon, extent_min_lat = pyproj.transform(
+                mc_projection,
+                wgs84_projection,
+                mc_extents[0],
+                mc_extents[1]
+            )
+
+            extent_max_lon, extent_max_lat = pyproj.transform(
+                mc_projection,
+                wgs84_projection,
+                mc_extents[2],
+                mc_extents[3]
+            )
+        else:
+            extent_min_lon, extent_min_lat, extent_max_lon, extent_max_lat = (
+                None, None, None, None
+            )
+
         def project_to_canvas(wgs84_coordinate: Tuple[float, float]):
-            x, y = pyproj.transform(wgs84_projection, mc_projection, wgs84_coordinate[0], wgs84_coordinate[1])
+            lon = wgs84_coordinate[0]
+            lat = wgs84_coordinate[1]
+            if extent_max_lon is not None and lon >= extent_max_lon:
+                lon = extent_max_lon
+            if extent_min_lon is not None and lon <= extent_min_lon:
+                lon = extent_min_lon
+            if extent_max_lat is not None and lat >= extent_max_lat:
+                lat = extent_max_lat
+            if extent_min_lat is not None and lat <= extent_min_lat:
+                lat = extent_min_lat
+            x, y = pyproj.transform(wgs84_projection, mc_projection, lon, lat)
             x -= mc_origin[0]
             y -= mc_origin[1]
             x /= mc_scale

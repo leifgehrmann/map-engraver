@@ -1,7 +1,7 @@
 import yaml
 import os
 import pyproj
-from typing import List
+from typing import List, Tuple, Optional
 
 from serializer import Serializer
 
@@ -43,6 +43,13 @@ class MapConfig:
 
     def get_map_projection_origin(self) -> tuple:
         return self.config['projection']['origin']
+
+    def get_map_projection_extents(
+            self
+    ) -> Optional[Tuple[float, float, float, float]]:
+        if self.config['projection'].get('extents') is None:
+            return None
+        return self.config['projection']['extents']
 
     def get_map_projection(self) -> pyproj.Proj:
         return pyproj.Proj(init=self.config['projection']['proj init'])
