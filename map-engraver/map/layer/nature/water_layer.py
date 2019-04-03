@@ -22,18 +22,28 @@ class WaterLayer(OsmLayer):
         filtered_map_data = self.osm_map_filter(map_data)
 
         polygons = []
-        for way in filtered_map_data['ways'].values():
-            try:
-                polygon = OsmConvert.way_to_polygon(map_data, way, map_projection)
-                if isinstance(polygon, Polygon):
-                    polygons.append(polygon)
-            except WayToPolygonError:
-                continue
+        if 'ways' in filtered_map_data:
+            for way in filtered_map_data['ways'].values():
+                try:
+                    polygon = OsmConvert.way_to_polygon(
+                        map_data,
+                        way,
+                        map_projection
+                    )
+                    if isinstance(polygon, Polygon) and polygon.is_valid:
+                        polygons.append(polygon)
+                except WayToPolygonError:
+                    continue
 
-        for relation in filtered_map_data['relations'].values():
-            polygon = OsmConvert.relation_to_polygon(map_data, relation, map_projection)
-            if isinstance(polygon, Polygon):
-                polygons.append(polygon)
+        if 'relations' in filtered_map_data:
+            for relation in filtered_map_data['relations'].values():
+                polygon = OsmConvert.relation_to_polygon(
+                    map_data,
+                    relation,
+                    map_projection
+                )
+                if isinstance(polygon, Polygon) and polygon.is_valid:
+                    polygons.append(polygon)
 
         polygons = ShapelyHelper.unionize_polygon_array(polygons)
 
