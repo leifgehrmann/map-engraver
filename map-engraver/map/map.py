@@ -1,4 +1,4 @@
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Optional, Union
 
 from map import MapConfig
 import pyproj
@@ -54,10 +54,16 @@ class Map(IMap):
     def get_map_data(self) -> osmparser.Map:
         return self.map_data
 
-    def get_map_projection_function(self) -> Callable[[Tuple[float, float]], Tuple[float, float]]:
+    def get_map_projection_function(self) -> Callable[
+        [float, float, Optional[float]],
+        Union[Tuple[float, float], Tuple[float, float, float]]
+    ]:
         return self.projection_function
 
-    def _generate_projection_function(self) -> Callable[[Tuple[float, float]], Tuple[float, float]]:
+    def _generate_projection_function(self) -> Callable[
+        [float, float, Optional[float]],
+        Union[Tuple[float, float], Tuple[float, float, float]]
+    ]:
 
         wgs84_projection = pyproj.Proj(init='epsg:4326')
         mc_projection = self.map_config.get_map_projection()
@@ -84,9 +90,11 @@ class Map(IMap):
                 None, None, None, None
             )
 
-        def project_to_canvas(wgs84_coordinate: Tuple[float, float]):
-            lon = wgs84_coordinate[0]
-            lat = wgs84_coordinate[1]
+        def project_to_canvas(
+                lon: float,
+                lat: float,
+                alt: Optional[float] = None
+        ) -> Union[Tuple[float, float], Tuple[float, float, float]]:
             if extent_max_lon is not None and lon >= extent_max_lon:
                 lon = extent_max_lon
             if extent_min_lon is not None and lon <= extent_min_lon:
@@ -101,7 +109,11 @@ class Map(IMap):
             x /= mc_scale
             y /= mc_scale
             y *= -1  # positive y values in PDFs go downwards
-            return x, y
+
+            if alt is None:
+                return x, y
+            else:
+                return x, y, alt
 
         return project_to_canvas
 

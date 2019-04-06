@@ -1,4 +1,4 @@
-from typing import Callable, Tuple, Optional, List
+from typing import Callable, Tuple, Optional, List, Union
 from shapely.ops import transform
 
 from typing import TypeVar
@@ -14,7 +14,10 @@ class ShapelyTransformer:
     def __init__(
             self,
             func: Optional[
-                Callable[[Tuple[float, float]], Tuple[float, float]]
+                Callable[
+                    [float, float, Optional[float]],
+                    Union[Tuple[float, float], Tuple[float, float, float]]
+                ]
             ] = None
     ):
         self.func = func

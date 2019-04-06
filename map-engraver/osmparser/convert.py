@@ -1,5 +1,5 @@
 from shapely.geometry import Polygon, LineString
-from typing import Optional, List, Callable, Tuple, Dict
+from typing import Optional, List, Callable, Tuple, Dict, Union
 
 from osmparser import Node
 from osmparser import Way
@@ -13,12 +13,15 @@ class Convert:
     def way_to_linestring(
             osmmap: Map,
             way: Way,
-            transform: Callable[[Tuple[float, float]], Tuple[float, float]]
+            transform: Callable[
+                [float, float, Optional[float]],
+                Union[Tuple[float, float], Tuple[float, float, float]]
+            ]
     ) -> Optional[LineString]:
         nodes = osmmap.get_nodes_for_way(way.id)
         linestring_array = []
         for node in nodes:
-            linestring_array.append(transform((node.lon, node.lat)))
+            linestring_array.append(transform(node.lon, node.lat, None))
         line_string = LineString(linestring_array)
         line_string.osm_tags = way.tags
         return line_string
@@ -27,12 +30,15 @@ class Convert:
     def way_to_polygon(
             osmmap: Map,
             way: Way,
-            transform: Callable[[Tuple[float, float]], Tuple[float, float]]
+            transform: Callable[
+                [float, float, Optional[float]],
+                Union[Tuple[float, float], Tuple[float, float, float]]
+            ]
     ) -> Optional[Polygon]:
         nodes = osmmap.get_nodes_for_way(way.id)
         polygon_array = []
         for node in nodes:
-            polygon_array.append(transform((node.lon, node.lat)))
+            polygon_array.append(transform(node.lon, node.lat, None))
         if polygon_array[len(polygon_array)-1] == polygon_array[0] and len(polygon_array) > 2:
             p = Polygon(polygon_array)
             if p.exterior.is_ccw:
@@ -115,7 +121,10 @@ class Convert:
     def relation_to_polygon(
             osmmap: Map,
             relation: Relation,
-            transform: Callable[[Tuple[float, float]], Tuple[float, float]]
+            transform: Callable[
+                [float, float, Optional[float]],
+                Union[Tuple[float, float], Tuple[float, float, float]]
+            ]
     ) -> Optional[Polygon]:
         outer_way_refs = []
         outer_way_all_nodes = {}
@@ -170,7 +179,7 @@ class Convert:
         # create exterior of polygon
         exterior = []
         for node in outer_ways_nodes[0]:
-            exterior.append(transform((node.lon, node.lat)))
+            exterior.append(transform(node.lon, node.lat, None))
 
         # now piece together the inner way
         incomplete_way_refs, inner_ways_nodes = Convert.piece_together_ways(
@@ -188,7 +197,7 @@ class Convert:
         for inner_way_nodes in inner_ways_nodes:
             interior_coordinates = []
             for node in inner_way_nodes:
-                interior_coordinates.append(transform((node.lon, node.lat)))
+                interior_coordinates.append(transform(node.lon, node.lat, None))
             interior_polygon = Polygon(interior_coordinates)
             if not interior_polygon.exterior.is_ccw:
                 interior_coordinates = list(reversed(interior_coordinates))

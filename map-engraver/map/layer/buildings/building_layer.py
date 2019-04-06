@@ -7,6 +7,7 @@ from graphicshelper import ShapelyHelper
 from map.layer import OsmLayer, CacheableLayer, ILayer
 from map.features.buildings import Basic as BuildingDrawer
 from osmparser.convert import Convert as OsmConvert, WayToPolygonError
+from osmshapely.ops import ConverterPipeline, ShapelyTransformer
 
 
 class BuildingLayer(OsmLayer, CacheableLayer):
@@ -38,32 +39,15 @@ class BuildingLayer(OsmLayer, CacheableLayer):
         filtered_map_data = self.osm_map_filter(map_data)
         map_projection = self.parent.get_map().get_map_projection_function()
 
-        polygons = []
-        if 'ways' in filtered_map_data:
-            for way in filtered_map_data['ways'].values():
-                try:
-                    polygon = OsmConvert.way_to_polygon(
-                        map_data,
-                        way,
-                        map_projection
-                    )
-                    if isinstance(polygon, Polygon):
-                        polygons.append(polygon)
-                except WayToPolygonError:
-                    continue
+        ways = filtered_map_data['ways'].values()
+        relations = filtered_map_data['relations'].values()
 
-        if 'relations' in filtered_map_data:
-            for way in filtered_map_data['relations'].values():
-                try:
-                    polygon = OsmConvert.relation_to_polygon(
-                        map_data,
-                        way,
-                        map_projection
-                    )
-                    if isinstance(polygon, Polygon):
-                        polygons.append(polygon)
-                except WayToPolygonError:
-                    continue
+        pipeline = ConverterPipeline(map_data)
+        pipeline.set_transformer(ShapelyTransformer(func=map_projection))
+
+        polygons = []
+        polygons.extend(pipeline.ways_to_polygons(ways))
+        polygons.extend(pipeline.relations_to_polygons(relations))
 
         # Unionization of polygons
         if self.unionize:
