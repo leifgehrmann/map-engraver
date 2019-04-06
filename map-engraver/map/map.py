@@ -70,7 +70,7 @@ class Map(IMap):
         wgs84_projection = pyproj.Proj(init='epsg:4326')
         mc_projection = self.map_config.get_map_projection()
         mc_origin = self.map_config.get_map_projection_origin()
-        mc_scale = self.map_config.get_map_scale()
+        mc_scale = self.map_config.get_map_projection_units_per_canvas_unit()
 
         def project_to_canvas(
                 lon: float,
@@ -91,29 +91,81 @@ class Map(IMap):
 
         return project_to_canvas
 
+    def _get_output_directory(self):
+        return self.map_config.get_output_directory()
+
+    def _get_output_filename(self):
+        output_name = self.map_config.get_name()
+        canvas_format = self.map_config.get_canvas_format()
+        return "%s.%s" % (output_name, canvas_format)
+
+    def _get_output_filepath(self):
+        return "%s%s" % (
+            self._get_output_directory(),
+            self._get_output_filename()
+        )
+
     def _create_map_surface(self) -> Tuple[cairo.Surface, cairo.Context]:
-        pdf_inch = 72
+        pixels_per_point = 0.75
+        points_per_inch = 72
+        mm_per_inch = 25.4
 
-        canvas_width, canvas_height = self.map_config.get_dimensions()
-        pdf_width = canvas_width * pdf_inch
-        pdf_height = canvas_height * pdf_inch
-        pdf_scale = pdf_inch
+        canvas_dimensions = self.map_config.get_canvas_unit_dimensions()
+        canvas_width, canvas_height = canvas_dimensions
+        canvas_format = self.map_config.get_canvas_format()
+        canvas_scale = 1
 
-        if self.map_config.get_units() == 'mm':
-            mm_in_an_inch = 25.4
-            pdf_width /= mm_in_an_inch
-            pdf_height /= mm_in_an_inch
-            pdf_scale /= mm_in_an_inch
+        if canvas_format in ['pdf', 'ps']:
+            canvas_width *= points_per_inch
+            canvas_height *= points_per_inch
+            canvas_scale *= points_per_inch
 
-        output_dir = self.map_config.get_output_directory()
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        output_file = output_dir + self.map_config.get_name() + ".pdf"
+            if self.map_config.get_canvas_units() == 'pt':
+                canvas_width /= points_per_inch
+                canvas_height /= points_per_inch
+                canvas_scale /= points_per_inch
+            elif self.map_config.get_canvas_units() == 'mm':
+                canvas_width /= mm_per_inch
+                canvas_height /= mm_per_inch
+                canvas_scale /= mm_per_inch
+        else:
+            canvas_width *= self.map_config.get_canvas_pixels_per_unit()
+            canvas_height *= self.map_config.get_canvas_pixels_per_unit()
+            canvas_scale *= self.map_config.get_canvas_pixels_per_unit()
 
-        surface = cairo.PDFSurface(output_file, pdf_width, pdf_height)
+            canvas_width *= pixels_per_point
+            canvas_height *= pixels_per_point
+            canvas_scale *= pixels_per_point
+
+        output_directory = self.map_config.get_output_directory()
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+        output_filepath = self._get_output_filepath()
+
+        if canvas_format == 'pdf':
+            surface = cairo.PDFSurface(
+                output_filepath,
+                canvas_width,
+                canvas_height
+            )
+        elif canvas_format == 'svg':
+            surface = cairo.SVGSurface(
+                output_filepath,
+                canvas_width,
+                canvas_height
+            )
+        elif canvas_format == 'png':
+            surface = cairo.ImageSurface(
+                cairo.FORMAT_ARGB32,
+                int(canvas_width),
+                int(canvas_height)
+            )
+        else:
+            raise Exception('Unexpected Format: %s' % canvas_format)
+
         context = cairo.Context(surface)
 
-        context.scale(pdf_scale, pdf_scale)  # Normalizing the canvas
+        context.scale(canvas_scale, canvas_scale)  # Normalizing the canvas
         return surface, context
 
     def get_osm_shapely_conversion_pipeline(self) -> ConverterPipeline:
@@ -134,4 +186,9 @@ class Map(IMap):
         self.surface, self.context = self._create_map_surface()
         Layer.create_from_yaml(self.map_config.get_main_layer_file(), self).draw_layers()
         self.surface.flush()
+
+        # Special edge case for ImageSurfaces
+        if isinstance(self.surface, cairo.ImageSurface):
+            self.surface.write_to_png(self._get_output_filepath())
+
         self.surface.finish()

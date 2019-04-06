@@ -1,12 +1,14 @@
 name: example
 canvas:
-  units: 'mm'
-  dimensions: [110, 125]
+  format: png
+  units: mm
+  unit dimensions: [110, 125]
+  pixels per unit: 20
 map data: [./data.osm]
 projection:
   proj init: epsg:27700 # Ordnance Survey GB 36
   origin: [323116,674232] # Take into account margins: 323276 - (8 + 8) * 10, 674072 + (8 + 8) * 10
-  meters per millimeter: 10
+  units per canvas unit: 10
 main layer: ./layer-main.yml
 cache directory: ./cache
-output directory: ./output/
+output directory: ../

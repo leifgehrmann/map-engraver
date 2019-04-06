@@ -31,7 +31,7 @@ class MarginLayer:
         return self
 
     def draw(self):
-        canvas = self.parent.get_map().get_map_config().get_dimensions()
+        canvas = self.parent.get_map().get_map_config().get_canvas_unit_dimensions()
         margins = self.margin_dimensions
         legend = self.legend_dimensions
 

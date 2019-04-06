@@ -16,4 +16,4 @@ wget -O example/data.osm https://api.openstreetmap.org/api/0.6/map?bbox=-3.23028
 python3 map-engraver/map-engraver.py ./example/map.yml
 ```
 
-![An example of the output](example.jpg)
+![An example of the output](example.png)

@@ -55,6 +55,8 @@ class ConverterPipeline:
         for relation in relations:
             try:
                 polygon = self.converter.relation_to_polygon(relation)
+                if polygon is None:
+                    continue
                 polygons = self.clipper.clip_polygon(polygon)
                 polygons = self.transformer.transform_list(polygons)
                 for polygon in polygons:

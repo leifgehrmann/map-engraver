@@ -29,20 +29,33 @@ class MapConfig:
     def get_name(self) -> str:
         return self.config['name']
 
-    def get_dimensions(self) -> tuple:
-        return self.config['canvas']['dimensions']
-
-    def get_units(self) -> str:
+    def get_canvas_format(self) -> str:
         try:
-            return self.config['canvas']['units']
+            return self.config['canvas']['format']
         except KeyError:
-            return 'mm'
+            raise Exception('Missing canvas.format')
 
-    def get_map_scale(self) -> float:
-        """Returns the number of meters per unit scale (typically millimeters or inches)"""
-        return self.config['projection']['meters per millimeter']
+    def get_canvas_unit_dimensions(self) -> Tuple[float, float]:
+        return self.config['canvas']['unit dimensions']
 
-    def get_map_projection_origin(self) -> tuple:
+    def get_canvas_units(self) -> str:
+        return self.config['canvas']['units']
+
+    def get_canvas_pixels_per_unit(self) -> int:
+        try:
+            return self.config['canvas']['pixels per unit']
+        except KeyError:
+            raise Exception(
+                'Missing canvas."pixels per unit" for output format'
+            )
+
+    def get_map_projection_units_per_canvas_unit(self) -> float:
+        """
+        Returns the number of meters/feet/km per canvas unit scale (mm, px, in)
+        """
+        return self.config['projection']['units per canvas unit']
+
+    def get_map_projection_origin(self) -> Tuple[float, float]:
         return self.config['projection']['origin']
 
     def get_map_projection(self) -> pyproj.Proj:
@@ -77,5 +90,5 @@ class MapConfig:
     def get_cache_serializer(self) -> Serializer:
         return Serializer(self.get_cache_directory())
 
-    def get_output_directory(self):
+    def get_output_directory(self) -> str:
         return self._normalize_path(self.config['output directory'])
