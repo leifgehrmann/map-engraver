@@ -9,6 +9,8 @@ from map.imap import IMap
 from map.layer import Layer
 import os
 
+from osmshapely.ops import ConverterPipeline, ShapelyTransformer
+
 
 class Map(IMap):
 
@@ -141,6 +143,13 @@ class Map(IMap):
 
         context.scale(pdf_scale, pdf_scale)  # Normalizing the canvas
         return surface, context
+
+    def get_osm_shapely_conversion_pipeline(self) -> ConverterPipeline:
+        pipeline = ConverterPipeline(self.get_map_data())
+        pipeline.set_transformer(
+            ShapelyTransformer(func=self.get_map_projection_function())
+        )
+        return pipeline
 
     def draw(self):
         self.surface, self.context = self._create_map_surface()

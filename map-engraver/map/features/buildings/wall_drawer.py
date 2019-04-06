@@ -1,7 +1,8 @@
 from graphicshelper import CairoHelper
-from shapely.geometry import LineString
 from cairocffi import Context
-from typing import List, Union, Callable, no_type_check
+from typing import List, Callable, no_type_check
+
+from osmshapely import LineString
 from ..utilities import ProgressController
 
 
@@ -15,8 +16,8 @@ class WallDrawer(ProgressController):
     def _draw_iterator(
             self,
             ctx: Context,
-            line_strings: List[Union[LineString]],
-            render_function: Callable[[Context, Union[LineString]], no_type_check]
+            line_strings: List[LineString],
+            render_function: Callable[[Context, LineString], no_type_check]
     ):
         total = len(line_strings)
         for line_string in line_strings:
@@ -24,6 +25,6 @@ class WallDrawer(ProgressController):
             if self.progress_callable is not None:
                 self.progress_callable(render_function.__name__, 1, total)
 
-    def _draw_wall(self, ctx: Context, line_string: Union[LineString]):
+    def _draw_wall(self, ctx: Context, line_string: LineString):
         CairoHelper.draw_line_string(ctx, line_string)
         ctx.stroke()

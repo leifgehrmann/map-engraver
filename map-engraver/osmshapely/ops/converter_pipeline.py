@@ -41,7 +41,7 @@ class ConverterPipeline:
                 polygons = self.transformer.transform_list(polygons)
                 for polygon in polygons:
                     osm_polygon = OsmPolygon.from_shapely(polygon)
-                    osm_polygon.set_tags(way.tags)
+                    osm_polygon.set_osm_tags(way.tags)
                     osm_polygons.append(osm_polygon)
             except WayToPolygonError:
                 continue
@@ -59,7 +59,7 @@ class ConverterPipeline:
                 polygons = self.transformer.transform_list(polygons)
                 for polygon in polygons:
                     osm_polygon = OsmPolygon.from_shapely(polygon)
-                    osm_polygon.set_tags(relation.tags)
+                    osm_polygon.set_osm_tags(relation.tags)
                     osm_polygons.append(osm_polygon)
             except WayToPolygonError:
                 continue

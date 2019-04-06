@@ -1,20 +1,21 @@
 from graphicshelper import CairoHelper
-from shapely.geometry import Polygon, MultiPolygon
 from cairocffi import Context
-from typing import List, Union, Callable, no_type_check
+from typing import List, Callable, no_type_check
+
+from osmshapely import Polygon
 from ..utilities import ProgressController
 
 
 class GrassDrawer(ProgressController):
 
-    def draw(self, ctx: Context, grasses: List[Union[Polygon, MultiPolygon]]):
+    def draw(self, ctx: Context, grasses: List[Polygon]):
         self._draw_grasses_iterator(ctx, grasses, self._draw_grass_area)
 
     def _draw_grasses_iterator(
             self,
             ctx: Context,
-            polygons: List[Union[Polygon, MultiPolygon]],
-            render_function: Callable[[Context, Union[Polygon, MultiPolygon]], no_type_check]
+            polygons: List[Polygon],
+            render_function: Callable[[Context, Polygon], no_type_check]
     ):
         total = len(polygons)
         for polygon in polygons:
@@ -22,9 +23,8 @@ class GrassDrawer(ProgressController):
             if self.progress_callable is not None:
                 self.progress_callable(render_function.__name__, 1, total)
 
-    def _draw_grass_area(self, ctx: Context, outline: Union[Polygon, MultiPolygon]):
-        if hasattr(outline, 'osm_tags'):
-            tags = outline.osm_tags
+    def _draw_grass_area(self, ctx: Context, outline: Polygon):
+            tags = outline.get_osm_tags()
             if 'leisure' in tags and tags['leisure'] == 'park':
                 ctx.set_source_rgba(0, 0, 0, 0.03)
             elif 'leisure' in tags and tags['leisure'] == 'garden':

@@ -1,8 +1,5 @@
-from shapely.geometry import Polygon
-
 from map.features.nature import GrassDrawer
 from map.layer import OsmLayer, ILayer
-from osmparser.convert import Convert as OsmConvert, WayToPolygonError
 
 
 class GrassLayer(OsmLayer):
@@ -17,17 +14,13 @@ class GrassLayer(OsmLayer):
     def draw(self):
         map = self.parent.get_map()
         map_data = map.get_map_data()
-        map_projection = self.parent.get_map().get_map_projection_function()
         filtered_map_data = self.osm_map_filter(map_data)
+        pipeline = map.get_osm_shapely_conversion_pipeline()
+
+        ways = filtered_map_data['ways'].values()
 
         polygons = []
-        for way in filtered_map_data['ways'].values():
-            try:
-                polygon = OsmConvert.way_to_polygon(map_data, way, map_projection)
-                if isinstance(polygon, Polygon):
-                    polygons.append(polygon)
-            except WayToPolygonError:
-                continue
+        polygons.extend(pipeline.ways_to_polygons(ways))
 
         context = map.get_context()
         drawer = GrassDrawer()

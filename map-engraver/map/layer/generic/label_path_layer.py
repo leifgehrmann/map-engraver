@@ -1,9 +1,5 @@
-from shapely.geometry import LineString
-
 from map.features.highway import LabelDrawer
 from map.layer import OsmLayer, ILayer
-
-from osmparser.convert import Convert as OsmConvert, WayToLineStringError
 
 
 class LabelPathLayer(OsmLayer):
@@ -18,17 +14,13 @@ class LabelPathLayer(OsmLayer):
     def draw(self):
         map = self.parent.get_map()
         map_data = map.get_map_data()
-        map_projection = self.parent.get_map().get_map_projection_function()
         filtered_map_data = self.osm_map_filter(map_data)
+        pipeline = map.get_osm_shapely_conversion_pipeline()
+
+        ways = filtered_map_data['ways'].values()
 
         line_strings = []
-        for way in filtered_map_data['ways'].values():
-            try:
-                line_string = OsmConvert.way_to_linestring(map_data, way, map_projection)
-                if isinstance(line_string, LineString):
-                    line_strings.append(line_string)
-            except WayToLineStringError:
-                continue
+        line_strings.extend(pipeline.ways_to_line_strings(ways))
 
         context = map.get_context()
 

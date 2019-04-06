@@ -1,9 +1,5 @@
-from shapely.geometry import LineString
-
 from map.features.buildings import WallDrawer
 from map.layer import ILayer, OsmLayer
-from osmparser.convert import Convert as OsmConvert, WayToLineStringError
-from osmshapely.ops import ConverterPipeline, ShapelyTransformer
 
 
 class WallLayer(OsmLayer):
@@ -18,13 +14,10 @@ class WallLayer(OsmLayer):
     def draw(self):
         map = self.parent.get_map()
         map_data = map.get_map_data()
-        map_projection = self.parent.get_map().get_map_projection_function()
         filtered_map_data = self.osm_map_filter(map_data)
+        pipeline = map.get_osm_shapely_conversion_pipeline()
 
         ways = filtered_map_data['ways'].values()
-
-        pipeline = ConverterPipeline(map_data)
-        pipeline.set_transformer(ShapelyTransformer(func=map_projection))
 
         line_strings = []
         line_strings.extend(pipeline.ways_to_line_strings(ways))

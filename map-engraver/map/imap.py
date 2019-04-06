@@ -3,6 +3,7 @@ import cairocffi as cairo
 
 from map import MapConfig
 import osmparser
+from osmshapely.ops import ConverterPipeline
 
 
 class IMap:
@@ -24,6 +25,9 @@ class IMap:
         [float, float, Optional[float]],
         Union[Tuple[float, float], Tuple[float, float, float]]
     ]:
+        pass
+
+    def get_osm_shapely_conversion_pipeline(self) -> ConverterPipeline:
         pass
 
     def draw(self):

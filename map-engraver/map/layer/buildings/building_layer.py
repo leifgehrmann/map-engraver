@@ -6,8 +6,6 @@ from shapely.geometry import Polygon
 from graphicshelper import ShapelyHelper
 from map.layer import OsmLayer, CacheableLayer, ILayer
 from map.features.buildings import Basic as BuildingDrawer
-from osmparser.convert import Convert as OsmConvert, WayToPolygonError
-from osmshapely.ops import ConverterPipeline, ShapelyTransformer
 
 
 class BuildingLayer(OsmLayer, CacheableLayer):
@@ -37,13 +35,10 @@ class BuildingLayer(OsmLayer, CacheableLayer):
         map = self.parent.get_map()
         map_data = map.get_map_data()
         filtered_map_data = self.osm_map_filter(map_data)
-        map_projection = self.parent.get_map().get_map_projection_function()
+        pipeline = map.get_osm_shapely_conversion_pipeline()
 
         ways = filtered_map_data['ways'].values()
         relations = filtered_map_data['relations'].values()
-
-        pipeline = ConverterPipeline(map_data)
-        pipeline.set_transformer(ShapelyTransformer(func=map_projection))
 
         polygons = []
         polygons.extend(pipeline.ways_to_polygons(ways))
