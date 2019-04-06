@@ -1,9 +1,6 @@
-from shapely.geometry import Polygon
-
 from graphicshelper import ShapelyHelper
 from map.features.nature import WaterDrawer
 from map.layer import OsmLayer, ILayer
-from osmparser.convert import Convert as OsmConvert, WayToPolygonError
 
 
 class WaterLayer(OsmLayer):
@@ -18,32 +15,15 @@ class WaterLayer(OsmLayer):
     def draw(self):
         map = self.parent.get_map()
         map_data = map.get_map_data()
-        map_projection = self.parent.get_map().get_map_projection_function()
         filtered_map_data = self.osm_map_filter(map_data)
+        pipeline = map.get_osm_shapely_conversion_pipeline()
+
+        ways = filtered_map_data['ways'].values()
+        relations = filtered_map_data['relations'].values()
 
         polygons = []
-        if 'ways' in filtered_map_data:
-            for way in filtered_map_data['ways'].values():
-                try:
-                    polygon = OsmConvert.way_to_polygon(
-                        map_data,
-                        way,
-                        map_projection
-                    )
-                    if isinstance(polygon, Polygon) and polygon.is_valid:
-                        polygons.append(polygon)
-                except WayToPolygonError:
-                    continue
-
-        if 'relations' in filtered_map_data:
-            for relation in filtered_map_data['relations'].values():
-                polygon = OsmConvert.relation_to_polygon(
-                    map_data,
-                    relation,
-                    map_projection
-                )
-                if isinstance(polygon, Polygon) and polygon.is_valid:
-                    polygons.append(polygon)
+        polygons.extend(pipeline.ways_to_polygons(ways))
+        polygons.extend(pipeline.relations_to_polygons(relations))
 
         polygons = ShapelyHelper.unionize_polygon_array(polygons)
 

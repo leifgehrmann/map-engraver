@@ -1,8 +1,9 @@
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Optional, Union
 import cairocffi as cairo
 
 from map import MapConfig
 import osmparser
+from osmshapely.ops import ConverterPipeline
 
 
 class IMap:
@@ -20,7 +21,13 @@ class IMap:
     def get_map_data(self) -> osmparser.Map:
         pass
 
-    def get_map_projection_function(self) -> Callable[[Tuple[float, float]], Tuple[float, float]]:
+    def get_map_projection_function(self) -> Callable[
+        [float, float, Optional[float]],
+        Union[Tuple[float, float], Tuple[float, float, float]]
+    ]:
+        pass
+
+    def get_osm_shapely_conversion_pipeline(self) -> ConverterPipeline:
         pass
 
     def draw(self):

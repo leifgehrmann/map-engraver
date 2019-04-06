@@ -1,5 +1,5 @@
-from shapely.geometry import Polygon, LineString
-from typing import Optional, List, Callable, Tuple, Dict, Union
+from shapely.geometry import LineString, Polygon
+from typing import Optional, List, Tuple, Dict
 
 from osmparser import Node
 from osmparser import Way
@@ -8,42 +8,31 @@ from osmparser import MemberTypes
 from osmparser import Map
 
 
-class Convert:
-    @staticmethod
-    def way_to_linestring(
-            osmmap: Map,
-            way: Way,
-            transform: Callable[
-                [float, float, Optional[float]],
-                Union[Tuple[float, float], Tuple[float, float, float]]
-            ]
-    ) -> Optional[LineString]:
-        nodes = osmmap.get_nodes_for_way(way.id)
+class ShapelyConverter:
+    """
+    Converts OSM objects into Shapely objects
+    """
+
+    def __init__(self, osmmap: Map):
+        self.osmmap = osmmap
+
+    def way_to_linestring(self, way: Way) -> LineString:
+        nodes = self.osmmap.get_nodes_for_way(way.id)
         linestring_array = []
         for node in nodes:
-            linestring_array.append(transform(node.lon, node.lat, None))
+            linestring_array.append((node.lon, node.lat))
         line_string = LineString(linestring_array)
-        line_string.osm_tags = way.tags
         return line_string
 
-    @staticmethod
-    def way_to_polygon(
-            osmmap: Map,
-            way: Way,
-            transform: Callable[
-                [float, float, Optional[float]],
-                Union[Tuple[float, float], Tuple[float, float, float]]
-            ]
-    ) -> Optional[Polygon]:
-        nodes = osmmap.get_nodes_for_way(way.id)
+    def way_to_polygon(self, way: Way) -> Polygon:
+        nodes = self.osmmap.get_nodes_for_way(way.id)
         polygon_array = []
         for node in nodes:
-            polygon_array.append(transform(node.lon, node.lat, None))
+            polygon_array.append((node.lon, node.lat))
         if polygon_array[len(polygon_array)-1] == polygon_array[0] and len(polygon_array) > 2:
             p = Polygon(polygon_array)
             if p.exterior.is_ccw:
                 p = Polygon(reversed(polygon_array))
-            p.osm_tags = way.tags
             return p
         raise WayToPolygonError("Could not convert way to polygon: " + way.id)
 
@@ -117,15 +106,7 @@ class Convert:
 
         return way_refs, output_ways
 
-    @staticmethod
-    def relation_to_polygon(
-            osmmap: Map,
-            relation: Relation,
-            transform: Callable[
-                [float, float, Optional[float]],
-                Union[Tuple[float, float], Tuple[float, float, float]]
-            ]
-    ) -> Optional[Polygon]:
+    def relation_to_polygon(self, relation: Relation) -> Optional[Polygon]:
         outer_way_refs = []
         outer_way_all_nodes = {}
         outer_way_start_nodes = {}
@@ -136,7 +117,7 @@ class Convert:
         inner_way_end_node = {}
         for member in relation.members:
             if member.type == MemberTypes.WAY:
-                way_nodes = osmmap.get_nodes_for_way(member.ref)
+                way_nodes = self.osmmap.get_nodes_for_way(member.ref)
                 if len(way_nodes) == 0:
                     continue
                 if member.role == "inner":
@@ -151,7 +132,7 @@ class Convert:
                     outer_way_refs.append(member.ref)
 
         # now piece together the outer way
-        incomplete_way_refs, outer_ways_nodes = Convert.piece_together_ways(
+        incomplete_way_refs, outer_ways_nodes = self.piece_together_ways(
             outer_way_refs,
             outer_way_all_nodes,
             outer_way_start_nodes,
@@ -162,7 +143,7 @@ class Convert:
         if len(incomplete_way_refs) > 0:
             for member in relation.members:
                 if member.type == MemberTypes.WAY:
-                    test_way_nodes = osmmap.get_nodes_for_way(member.ref)
+                    test_way_nodes = self.osmmap.get_nodes_for_way(member.ref)
                     if member.role == "outer":
                         print("Relation Members for id: " + str(member.ref), test_way_nodes)
             print("Relation Id: " + str(relation.id))
@@ -179,10 +160,10 @@ class Convert:
         # create exterior of polygon
         exterior = []
         for node in outer_ways_nodes[0]:
-            exterior.append(transform(node.lon, node.lat, None))
+            exterior.append((node.lon, node.lat))
 
         # now piece together the inner way
-        incomplete_way_refs, inner_ways_nodes = Convert.piece_together_ways(
+        incomplete_way_refs, inner_ways_nodes = self.piece_together_ways(
             inner_way_refs,
             inner_way_all_nodes,
             inner_way_start_node,
@@ -197,7 +178,7 @@ class Convert:
         for inner_way_nodes in inner_ways_nodes:
             interior_coordinates = []
             for node in inner_way_nodes:
-                interior_coordinates.append(transform(node.lon, node.lat, None))
+                interior_coordinates.append((node.lon, node.lat))
             interior_polygon = Polygon(interior_coordinates)
             if not interior_polygon.exterior.is_ccw:
                 interior_coordinates = list(reversed(interior_coordinates))
@@ -206,7 +187,6 @@ class Convert:
         polygon = Polygon(exterior, interiors)
         if polygon.exterior.is_ccw:
             polygon = Polygon(reversed(exterior), interiors)
-        polygon.osm_tags = relation.tags
         return polygon
 
 
