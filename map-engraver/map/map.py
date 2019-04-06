@@ -9,7 +9,7 @@ from map.imap import IMap
 from map.layer import Layer
 import os
 
-from osmshapely.ops import ConverterPipeline, ShapelyTransformer
+from osmshapely.ops import ConverterPipeline, ShapelyTransformer, ShapelyClipper
 
 
 class Map(IMap):
@@ -69,42 +69,14 @@ class Map(IMap):
 
         wgs84_projection = pyproj.Proj(init='epsg:4326')
         mc_projection = self.map_config.get_map_projection()
-        mc_extents = self.map_config.get_map_projection_extents()
         mc_origin = self.map_config.get_map_projection_origin()
         mc_scale = self.map_config.get_map_scale()
-
-        if mc_extents is not None:
-            extent_min_lon, extent_min_lat = pyproj.transform(
-                mc_projection,
-                wgs84_projection,
-                mc_extents[0],
-                mc_extents[1]
-            )
-
-            extent_max_lon, extent_max_lat = pyproj.transform(
-                mc_projection,
-                wgs84_projection,
-                mc_extents[2],
-                mc_extents[3]
-            )
-        else:
-            extent_min_lon, extent_min_lat, extent_max_lon, extent_max_lat = (
-                None, None, None, None
-            )
 
         def project_to_canvas(
                 lon: float,
                 lat: float,
                 alt: Optional[float] = None
         ) -> Union[Tuple[float, float], Tuple[float, float, float]]:
-            if extent_max_lon is not None and lon >= extent_max_lon:
-                lon = extent_max_lon
-            if extent_min_lon is not None and lon <= extent_min_lon:
-                lon = extent_min_lon
-            if extent_max_lat is not None and lat >= extent_max_lat:
-                lat = extent_max_lat
-            if extent_min_lat is not None and lat <= extent_min_lat:
-                lat = extent_min_lat
             x, y = pyproj.transform(wgs84_projection, mc_projection, lon, lat)
             x -= mc_origin[0]
             y -= mc_origin[1]
@@ -146,9 +118,16 @@ class Map(IMap):
 
     def get_osm_shapely_conversion_pipeline(self) -> ConverterPipeline:
         pipeline = ConverterPipeline(self.get_map_data())
+
         pipeline.set_transformer(
             ShapelyTransformer(func=self.get_map_projection_function())
         )
+
+        clip_boundaries = self.map_config.get_map_data_clip_boundaries()
+        if clip_boundaries is not None:
+            clipper = ShapelyClipper(clip_boundaries)
+            pipeline.set_clipper(clipper)
+
         return pipeline
 
     def draw(self):

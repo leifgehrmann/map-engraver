@@ -1,6 +1,7 @@
 import yaml
 import os
 import pyproj
+from shapely.geometry import MultiPolygon, Polygon
 from typing import List, Tuple, Optional
 
 from serializer import Serializer
@@ -44,13 +45,6 @@ class MapConfig:
     def get_map_projection_origin(self) -> tuple:
         return self.config['projection']['origin']
 
-    def get_map_projection_extents(
-            self
-    ) -> Optional[Tuple[float, float, float, float]]:
-        if self.config['projection'].get('extents') is None:
-            return None
-        return self.config['projection']['extents']
-
     def get_map_projection(self) -> pyproj.Proj:
         return pyproj.Proj(init=self.config['projection']['proj init'])
 
@@ -62,6 +56,20 @@ class MapConfig:
 
     def get_osm_map_data_files(self) -> List[str]:
         return list(map(self._normalize_path, self.config['map data']))
+
+    def get_map_data_clip_boundaries(
+            self
+    ) -> Optional[MultiPolygon]:
+        if self.config.get('map data clip boundaries') is None:
+            return None
+        clip_boundaries_data = self.config['map data clip boundaries']
+        polygons = []
+        for boundary_data in clip_boundaries_data.values():
+            coordinates = []
+            for coordinates_data in boundary_data:
+                coordinates.append(coordinates_data)
+            polygons.append(Polygon(coordinates))
+        return MultiPolygon(polygons)
 
     def get_cache_directory(self) -> str:
         return self._normalize_path(self.config['cache directory'])
