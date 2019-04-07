@@ -12,7 +12,7 @@ class BackgroundLayer:
     def create_from_dict(data: Dict, parent: 'ILayer') -> 'BackgroundLayer':
         layer = BackgroundLayer().set_parent(parent)
         if 'color' in data:
-            layer.fill_color = data['color']
+            layer.color = data['color']
         return layer
 
     def set_parent(self, parent: 'ILayer') -> 'BackgroundLayer':

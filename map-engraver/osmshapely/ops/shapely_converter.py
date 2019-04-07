@@ -1,4 +1,4 @@
-from shapely.geometry import LineString, Polygon
+from shapely.geometry import LineString, Polygon, Point
 from typing import Optional, List, Tuple, Dict
 
 from osmparser import Node
@@ -15,6 +15,10 @@ class ShapelyConverter:
 
     def __init__(self, osmmap: Map):
         self.osmmap = osmmap
+
+    def node_to_point(self, node: Node) -> Point:
+        node = self.osmmap.get_node(node.id)
+        return Point(node.lon, node.lat)
 
     def way_to_linestring(self, way: Way) -> LineString:
         nodes = self.osmmap.get_nodes_for_way(way.id)

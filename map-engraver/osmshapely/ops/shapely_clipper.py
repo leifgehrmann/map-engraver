@@ -1,4 +1,4 @@
-from shapely.geometry import MultiPolygon, LineString, MultiLineString, Polygon
+from shapely.geometry import MultiPolygon, LineString, MultiLineString, Polygon, Point
 from shapely.geometry.base import BaseGeometry
 from typing import List, Optional
 
@@ -14,6 +14,27 @@ class ShapelyClipper:
             the geometry to apply the intersection of geometry on
         """
         self.clipping_geometry = clipping_geometry
+
+    def clip_point(
+            self,
+            point: Point
+    ) -> [Point]:
+        """
+        Returns an array of Points that are a result of intersecting a
+        Point with the clipping geometry.
+
+        :param point:
+            the Point to clip
+        :return:
+            a list of Points that are within the clipping boundary
+        """
+        if self.clipping_geometry is None:
+            return [point]
+
+        if point.intersects(self.clipping_geometry):
+            return [point]
+
+        return []
 
     def clip_line_string(
             self,

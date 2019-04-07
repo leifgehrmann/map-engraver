@@ -9,6 +9,10 @@ class CairoHelper:
         ctx.fill()
 
     @staticmethod
+    def draw_circle(ctx: Context, point: Point, size):
+        ctx.arc(point.x, point.y, size / 2, 0, 2 * 3.1416)
+
+    @staticmethod
     def draw_line_string(ctx: Context, line_string: LineString):
         start = True
         for x, y in line_string.coords:

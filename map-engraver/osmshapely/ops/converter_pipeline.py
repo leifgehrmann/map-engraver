@@ -1,8 +1,10 @@
 from typing import List
 
-from osmparser import Map, Way, Relation
+from osmparser import Map, Way, Relation, Node
 from osmshapely.ops import ShapelyClipper, ShapelyConverter, ShapelyTransformer
-from osmshapely import LineString as OsmLineString, Polygon as OsmPolygon
+from osmshapely import Point as OsmPoint
+from osmshapely import LineString as OsmLineString
+from osmshapely import Polygon as OsmPolygon
 from osmshapely.ops.shapely_converter import WayToPolygonError
 
 
@@ -19,6 +21,18 @@ class ConverterPipeline:
 
     def set_transformer(self, transformer: ShapelyTransformer):
         self.transformer = transformer
+
+    def nodes_to_points(self, nodes: List[Node]) -> List[OsmPoint]:
+        osm_points = []
+        for node in nodes:
+            point = self.converter.node_to_point(node)
+            points = self.clipper.clip_point(point)
+            points = self.transformer.transform_list(points)
+            for point in points:
+                osm_point = OsmPoint.from_shapely(point)
+                osm_point.set_osm_tags(node.tags)
+                osm_points.append(osm_point)
+        return osm_points
 
     def ways_to_line_strings(self, ways: List[Way]) -> List[OsmLineString]:
         osm_line_strings = []
