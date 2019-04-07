@@ -5,12 +5,13 @@ from typing import List, Union
 
 from map.layer.buildings import WallLayer
 from map.layer.buildings import BuildingLayer
-from map.layer.generic import LabelPathLayer
+from map.layer.generic import LabelPathLayer, PolygonLayer
 from map.layer.nature import GrassLayer
 from map.layer.highway import RailwayLayer
 from map.layer.nature import WaterLayer
 from map.layer.svg_layer import SvgLayer
 from map.layer.ilayer import ILayer
+from ..layer.background_layer import BackgroundLayer
 from ..layer.margin_layer import MarginLayer
 from ..map import IMap
 
@@ -80,6 +81,10 @@ class Layer(ILayer):
         if layer_type == 'SubLayer':
             file_path = os.path.join(self.relative_directory, layer['file'])
             Layer.create_from_yaml(file_path, self).draw_layers()
+        elif layer_type == 'Background':
+            BackgroundLayer.create_from_dict(layer, self).draw()
+        elif layer_type == 'Polygons':
+            PolygonLayer.create_from_dict(layer, self).draw()
         elif layer_type == 'Margin':
             MarginLayer.create_from_dict(layer, self).draw()
         elif layer_type == 'Svg':

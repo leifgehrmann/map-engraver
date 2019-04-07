@@ -1,5 +1,7 @@
 name: Main
 layers:
+  - type: Background
+    color: [1,1,1]
   - type: Buildings
     mode: basic
     line angle: 0.5236 # math.pi / 6
