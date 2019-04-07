@@ -43,3 +43,5 @@ layers:
   - type: Margin
     margin: [8, 8, 8, 8]
     legend: [8, 8, 8, 8]
+    exterior stroke width: 0.05
+    interior stroke width: 0.05

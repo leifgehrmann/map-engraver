@@ -18,6 +18,8 @@ class Margins:
         self.canvas_set = False
         self.canvas_width = None
         self.canvas_height = None
+        self.interior_stroke_width = 1
+        self.exterior_stroke_width = 1
 
     def set_canvas_size(self, width: float, height: float) -> 'Margins':
         self.canvas_width = width
@@ -39,6 +41,14 @@ class Margins:
         self.legend_bottom = bottom
         self.legend_left = left
         self.legend_set = True
+        return self
+
+    def set_exterior_stroke_width(self, width: float) -> 'Margins':
+        self.exterior_stroke_width = width
+        return self
+
+    def set_interior_stroke_width(self, width: float) -> 'Margins':
+        self.interior_stroke_width = width
         return self
 
     def draw(self, ctx: Context):
@@ -116,8 +126,10 @@ class Margins:
         CairoHelper.draw_polygon(ctx, margin_and_legend)
         ctx.fill()
 
+        # ctx.set_line_width(self.exterior_stroke_width)
         ctx.set_source_rgb(0, 0, 0)
         CairoHelper.draw_polygon(ctx, legend_exterior)
         ctx.stroke()
+        # ctx.set_line_width(self.interior_stroke_width)
         CairoHelper.draw_polygon(ctx, legend_interior)
         ctx.stroke()
