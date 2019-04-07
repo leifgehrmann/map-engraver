@@ -41,7 +41,7 @@ layers:
       file: layer-filters.py
       func: all_lakes
   - type: Margin
-    margin: [8, 8, 8, 8]
-    legend: [8, 8, 8, 8]
+    margin dimensions: [8, 8, 8, 8]
+    legend dimensions: [8, 8, 8, 8]
     exterior stroke width: 0.05
     interior stroke width: 0.05
