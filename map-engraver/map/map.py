@@ -71,13 +71,17 @@ class Map(IMap):
         mc_projection = self.map_config.get_map_projection()
         mc_origin = self.map_config.get_map_projection_origin()
         mc_scale = self.map_config.get_map_projection_units_per_canvas_unit()
+        transformer = pyproj.Transformer.from_proj(
+            wgs84_projection,
+            mc_projection
+        )
 
         def project_to_canvas(
                 lon: float,
                 lat: float,
                 alt: Optional[float] = None
         ) -> Union[Tuple[float, float], Tuple[float, float, float]]:
-            x, y = pyproj.transform(wgs84_projection, mc_projection, lon, lat)
+            x, y = transformer.transform(lon, lat)
             x -= mc_origin[0]
             y -= mc_origin[1]
             x /= mc_scale
