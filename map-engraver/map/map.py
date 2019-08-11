@@ -137,9 +137,10 @@ class Map(IMap):
             canvas_height *= self.map_config.get_canvas_pixels_per_unit()
             canvas_scale *= self.map_config.get_canvas_pixels_per_unit()
 
-            canvas_width *= pixels_per_point
-            canvas_height *= pixels_per_point
-            canvas_scale *= pixels_per_point
+            if self.map_config.get_canvas_units() != 'px':
+                canvas_width *= pixels_per_point
+                canvas_height *= pixels_per_point
+                canvas_scale *= pixels_per_point
 
         output_directory = self.map_config.get_output_directory()
         if not os.path.exists(output_directory):
