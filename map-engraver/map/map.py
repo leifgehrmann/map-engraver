@@ -171,6 +171,15 @@ class Map(IMap):
         context = cairo.Context(surface)
 
         context.scale(canvas_scale, canvas_scale)  # Normalizing the canvas
+
+        antialias_mode = self.map_config.get_canvas_antialias_mode()
+        if antialias_mode == 'default':
+            context.set_antialias(cairo.ANTIALIAS_DEFAULT)
+        elif antialias_mode == 'none':
+            context.set_antialias(cairo.ANTIALIAS_NONE)
+        else:
+            raise Exception('Unexpected antialias mode: %s' % antialias_mode)
+
         return surface, context
 
     def get_osm_shapely_conversion_pipeline(self) -> ConverterPipeline:

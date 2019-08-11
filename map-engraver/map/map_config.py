@@ -41,6 +41,12 @@ class MapConfig:
     def get_canvas_units(self) -> str:
         return self.config['canvas']['units']
 
+    def get_canvas_antialias_mode(self) -> str:
+        try:
+            return self.config['canvas']['antialias mode']
+        except KeyError:
+            return 'default'
+
     def get_canvas_pixels_per_unit(self) -> int:
         try:
             return self.config['canvas']['pixels per unit']
