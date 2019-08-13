@@ -5,7 +5,10 @@ from typing import List, Union
 
 from map.layer.buildings import WallLayer
 from map.layer.buildings import BuildingLayer
-from map.layer.generic import LabelPathLayer, PolygonLayer, PointLayer
+from map.layer.generic import LabelPathLayer,\
+    PolygonLayer, \
+    PointLayer, \
+    LineStringLayer
 from map.layer.nature import GrassLayer
 from map.layer.highway import RailwayLayer
 from map.layer.nature import WaterLayer
@@ -87,6 +90,8 @@ class Layer(ILayer):
             PointLayer.create_from_dict(layer, self).draw()
         elif layer_type == 'Polygons':
             PolygonLayer.create_from_dict(layer, self).draw()
+        elif layer_type == 'LineStrings':
+            LineStringLayer.create_from_dict(layer, self).draw()
         elif layer_type == 'Margin':
             MarginLayer.create_from_dict(layer, self).draw()
         elif layer_type == 'Svg':
