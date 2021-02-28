@@ -1,3 +1,13 @@
+Hello! `map-engraver` is currently being refurbished for 2021. This means it'll
+be going through a lot of changes which means a lot of the functionality shown
+below won't be relevant anymore. When refurbishments are complete, the README
+will be updated. If you want to check out the old functionality, use the
+following branch:
+
+https://github.com/leifgehrmann/map-engraver/tree/old-master
+
+----
+
 Tool for creating maps in the style of engraved maps.
 
 ### Usage
@@ -17,6 +27,12 @@ python3 map-engraver/map-engraver.py ./example/map.yml
 ```
 
 ![An example of the output](example.png)
+
+---
+
+## The new map-engraver
+
+These are the instructions for the NEW map-engraver:
 
 ### Installing
 
