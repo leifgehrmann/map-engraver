@@ -17,3 +17,12 @@ python3 map-engraver/map-engraver.py ./example/map.yml
 ```
 
 ![An example of the output](example.png)
+
+### Installing
+
+1. Install poetry
+2. `poetry install`
+
+### Runnings tests
+
+1. `poetry run pytest --cov`
