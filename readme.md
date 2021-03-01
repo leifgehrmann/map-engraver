@@ -1,3 +1,6 @@
+[![Build Status](https://github.com/leifgehrmann/map-engraver/workflows/Build/badge.svg?branch=master)](https://github.com/leifgehrmann/map-engraver/actions)
+[![Code Coverage](https://codecov.io/gh/leifgehrmann/map-engraver/branch/master/graph/badge.svg)](https://codecov.io/gh/leifgehrmann/map-engraver)
+
 Hello! `map-engraver` is currently being refurbished for 2021. This means it'll
 be going through a lot of changes which means a lot of the functionality shown
 below won't be relevant anymore. When refurbishments are complete, the README
