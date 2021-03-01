@@ -7,7 +7,8 @@ from mapengraver.canvas import CanvasBuilder
 
 class TestCanvas(unittest.TestCase):
     def setUp(self):
-        Path(__file__).parent.joinpath('output/').mkdir(parents=True, exist_ok=True)
+        Path(__file__).parent.joinpath('output/')\
+            .mkdir(parents=True, exist_ok=True)
 
     def test_svg(self):
         path = Path(__file__).parent.joinpath('output/canvas_builder.pdf')

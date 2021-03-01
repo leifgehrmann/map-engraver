@@ -8,7 +8,13 @@ class Canvas:
     width: int
     path_as_posix: str
 
-    def __init__(self, path: Path, surface_type: str, width: int, height: int):
+    def __init__(
+            self,
+            path: Path,
+            surface_type: str,
+            width: float,
+            height: float
+    ):
         self.path_as_posix = path.as_posix()
 
         if surface_type == 'pdf':

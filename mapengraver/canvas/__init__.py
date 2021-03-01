@@ -1,2 +1,2 @@
-from .canvas import Canvas
-from .canvas_builder import CanvasBuilder
+from .canvas import Canvas  # noqa
+from .canvas_builder import CanvasBuilder  # noqa

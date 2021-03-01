@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 import cairocffi as cairo
 from pathlib import Path
@@ -103,7 +103,9 @@ class CanvasBuilder:
 
     def validate_antialias_mode(self):
         if self.antialias_mode < 0 or self.antialias_mode > 6:
-            raise RuntimeError('Invalid antialias mode: %d' % self.antialias_mode)
+            raise RuntimeError(
+                'Invalid antialias mode: %d' % self.antialias_mode
+            )
 
     def validate_surface_type(self):
         if self.surface_type not in ['pdf', 'png', 'svg']:
@@ -121,7 +123,3 @@ class CanvasBuilder:
             return inch_per_mm * points_per_inch
         if self.units == 'px':
             return points_per_pixel * self.pixel_scale_factor
-
-
-
-
