@@ -7,6 +7,8 @@ class Canvas:
     height: int
     width: int
     path_as_posix: str
+    surface: cairo.surfaces.Surface
+    context: cairo.context.Context
 
     def __init__(
             self,
@@ -40,6 +42,8 @@ class Canvas:
 
         context = cairo.Context(surface)
 
+        self.width = width
+        self.height = height
         self.surface = surface
         self.context = context
 

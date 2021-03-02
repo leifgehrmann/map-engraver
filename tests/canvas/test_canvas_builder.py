@@ -5,7 +5,7 @@ import unittest
 from mapengraver.canvas import CanvasBuilder
 
 
-class TestCanvas(unittest.TestCase):
+class TestCanvasBuilder(unittest.TestCase):
     def setUp(self):
         Path(__file__).parent.joinpath('output/')\
             .mkdir(parents=True, exist_ok=True)
