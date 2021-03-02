@@ -9,6 +9,7 @@ license = "LGPL-3.0-only"
 python = "^3.9"
 cairocffi = "^1.2.0"
 tqdm = "^4.58.0"
+Shapely = "^1.7.1"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.4"
