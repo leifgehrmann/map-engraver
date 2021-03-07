@@ -4,6 +4,7 @@ import cairocffi as cairo
 from pathlib import Path
 
 from mapengraver.canvas import Canvas
+from mapengraver.canvas.canvas_unit import CanvasUnit
 
 pixels_per_point = 0.75
 points_per_inch = 72
@@ -36,7 +37,8 @@ class CanvasBuilder:
         self.validate_surface_type()
         self.validate_antialias_mode()
 
-        canvas_scale = self._calculate_units_in_points()
+        pixel_scale = self._calculate_pixel_scale_factor()
+        canvas_scale = self._calculate_units_in_points() * pixel_scale
         width_in_points = self.width * canvas_scale
         height_in_points = self.height * canvas_scale
 
@@ -47,7 +49,7 @@ class CanvasBuilder:
             height_in_points,
         )
 
-        canvas.set_scale(canvas_scale)
+        canvas.set_scale(pixel_scale)
         canvas.set_antialias_mode(self.antialias_mode)
 
         return canvas
@@ -56,7 +58,6 @@ class CanvasBuilder:
         self.path = path
         file_extension = path.suffix
         file_extension = file_extension.lower()
-        print(file_extension)
         if self.surface_type is None and file_extension != '':
             if file_extension == '.png':
                 self.surface_type = 'png'
@@ -73,7 +74,16 @@ class CanvasBuilder:
         self.height = height
         self.units = units
 
-    def set_pixel_scale_factor(self, pixel_scale_factor):
+    def set_pixel_scale_factor(self, pixel_scale_factor) -> None:
+        """
+        Sets the pixel scale factor. This is useful if one wants to achieve
+        graphics that look pixel perfect on high-DPI displays or
+        "Retina-Displays".
+
+        :param pixel_scale_factor:
+            For example: `2` to scale the image twice as large. `0.5` for an
+            image half the size.
+        """
         self.pixel_scale_factor = pixel_scale_factor
 
     def validate_path(self):
@@ -118,8 +128,16 @@ class CanvasBuilder:
         if self.units == 'pt':
             return 1.0
         if self.units == 'in':
-            return points_per_inch
+            return CanvasUnit.from_in(1).pt
         if self.units == 'mm':
-            return inch_per_mm * points_per_inch
+            return CanvasUnit.from_mm(1).pt
+        if self.units == 'cm':
+            return CanvasUnit.from_cm(1).pt
         if self.units == 'px':
-            return points_per_pixel * self.pixel_scale_factor
+            return CanvasUnit.from_px(1).pt
+        return 1.0
+
+    def _calculate_pixel_scale_factor(self) -> float:
+        if self.is_surface_type_vector():
+            return 1
+        return self.pixel_scale_factor
