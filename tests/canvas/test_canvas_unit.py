@@ -51,10 +51,15 @@ class TestCanvasUnit(unittest.TestCase):
                     'output/canvas_unit_%s_%s_x%s.%s' %
                     (surface_type, unit, pixel_scale_factor, surface_type)
                 )
+                print((unit, pixel_scale_factor, surface_type))
                 path.unlink(missing_ok=True)
                 canvas_builder = CanvasBuilder()
                 canvas_builder.set_path(path)
-                canvas_builder.set_size(100, 100, unit)
+                if unit in ['in', 'cm']:
+                    # Setting to a smaller size to avoid disk space issues
+                    canvas_builder.set_size(4, 4, unit)
+                else:
+                    canvas_builder.set_size(100, 100, unit)
                 canvas_builder.set_pixel_scale_factor(pixel_scale_factor)
 
                 canvas = canvas_builder.build()
@@ -64,8 +69,12 @@ class TestCanvasUnit(unittest.TestCase):
                 assert path.exists()
 
     @staticmethod
-    def draw_rectangle_top_left(canvas: Canvas, units: str):
-        midpoint = CanvasUnit.from_unit(50, units).pt
+    def draw_rectangle_top_left(canvas: Canvas, unit: str):
+        if unit in ['in', 'cm']:
+            # Setting to a smaller size to avoid disk space issues
+            midpoint = CanvasUnit.from_unit(2, unit).pt
+        else:
+            midpoint = CanvasUnit.from_unit(50, unit).pt
         top_left = (0, 0)
         top_right = (midpoint, 0)
         bottom_left = (0, midpoint)
