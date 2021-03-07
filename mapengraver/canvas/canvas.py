@@ -4,8 +4,8 @@ import cairocffi as cairo
 
 
 class Canvas:
-    height: int
-    width: int
+    height: float
+    width: float
     path_as_posix: str
     surface: cairo.surfaces.Surface
     context: cairo.context.Context

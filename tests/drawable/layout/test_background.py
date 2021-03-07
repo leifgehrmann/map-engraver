@@ -12,11 +12,11 @@ class TestBackground(unittest.TestCase):
             .mkdir(parents=True, exist_ok=True)
 
     def test_outputs_color(self):
-        path = Path(__file__).parent.joinpath('output/background.svg')
+        path = Path(__file__).parent.joinpath('output/background.png')
         path.unlink(missing_ok=True)
         canvas_builder = CanvasBuilder()
         canvas_builder.set_path(path)
-        canvas_builder.set_size(100, 100, 'mm')
+        canvas_builder.set_size(100, 100, 'px')
 
         canvas = canvas_builder.build()
 

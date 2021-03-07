@@ -4,6 +4,7 @@ import cairocffi as cairo
 from pathlib import Path
 
 from mapengraver.canvas import Canvas
+from mapengraver.canvas.canvas_unit import CanvasUnit
 
 pixels_per_point = 0.75
 points_per_inch = 72
@@ -47,7 +48,7 @@ class CanvasBuilder:
             height_in_points,
         )
 
-        canvas.set_scale(canvas_scale)
+        canvas.set_scale(self._calculate_pixel_scale_factor())
         canvas.set_antialias_mode(self.antialias_mode)
 
         return canvas
@@ -73,7 +74,16 @@ class CanvasBuilder:
         self.height = height
         self.units = units
 
-    def set_pixel_scale_factor(self, pixel_scale_factor):
+    def set_pixel_scale_factor(self, pixel_scale_factor) -> None:
+        """
+        Sets the pixel scale factor. This is useful if one wants to achieve
+        graphics that look pixel perfect on high-DPI displays or
+        "Retina-Displays".
+
+        :param pixel_scale_factor:
+            For example: `2` to scale the image twice as large. `0.5` for an
+            image half the size.
+        """
         self.pixel_scale_factor = pixel_scale_factor
 
     def validate_path(self):
@@ -118,8 +128,31 @@ class CanvasBuilder:
         if self.units == 'pt':
             return 1.0
         if self.units == 'in':
-            return points_per_inch
+            return CanvasUnit.from_in(1).pt
         if self.units == 'mm':
-            return inch_per_mm * points_per_inch
+            return CanvasUnit.from_mm(1).pt
+        if self.units == 'cm':
+            return CanvasUnit.from_cm(1).pt
         if self.units == 'px':
-            return points_per_pixel * self.pixel_scale_factor
+            return self._calculate_pixel_scale_factor()
+        return 1.0
+
+    def _calculate_pixel_scale_factor(self) -> float:
+        if self.units == 'px':
+            """
+            For SVGs in Safari, Firefox and Chrome, a point (pt) is smaller
+            than a pixel.
+            
+            But in Cairo, the default unit of a point is equal to a pixel for
+            bitmap surfaces.
+            
+            To make sure the output SVG matches the pixel dimensions.
+            
+            If a user is setting the units of the canvas to pixels, it
+            shouldn't surprise them that the surface units
+            """
+            if self.surface_type == 'svg':
+                return pixels_per_point
+            else:
+                return self.pixel_scale_factor
+        return 1
