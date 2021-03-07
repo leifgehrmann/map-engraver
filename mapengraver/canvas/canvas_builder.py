@@ -37,7 +37,8 @@ class CanvasBuilder:
         self.validate_surface_type()
         self.validate_antialias_mode()
 
-        canvas_scale = self._calculate_units_in_points()
+        pixel_scale = self._calculate_pixel_scale_factor()
+        canvas_scale = self._calculate_units_in_points() * pixel_scale
         width_in_points = self.width * canvas_scale
         height_in_points = self.height * canvas_scale
 
@@ -48,7 +49,7 @@ class CanvasBuilder:
             height_in_points,
         )
 
-        canvas.set_scale(self._calculate_pixel_scale_factor())
+        canvas.set_scale(pixel_scale)
         canvas.set_antialias_mode(self.antialias_mode)
 
         return canvas
@@ -57,7 +58,6 @@ class CanvasBuilder:
         self.path = path
         file_extension = path.suffix
         file_extension = file_extension.lower()
-        print(file_extension)
         if self.surface_type is None and file_extension != '':
             if file_extension == '.png':
                 self.surface_type = 'png'
@@ -134,25 +134,10 @@ class CanvasBuilder:
         if self.units == 'cm':
             return CanvasUnit.from_cm(1).pt
         if self.units == 'px':
-            return self._calculate_pixel_scale_factor()
+            return CanvasUnit.from_px(1).pt
         return 1.0
 
     def _calculate_pixel_scale_factor(self) -> float:
-        if self.units == 'px':
-            """
-            For SVGs in Safari, Firefox and Chrome, a point (pt) is smaller
-            than a pixel.
-            
-            But in Cairo, the default unit of a point is equal to a pixel for
-            bitmap surfaces.
-            
-            To make sure the output SVG matches the pixel dimensions.
-            
-            If a user is setting the units of the canvas to pixels, it
-            shouldn't surprise them that the surface units
-            """
-            if self.surface_type == 'svg':
-                return pixels_per_point
-            else:
-                return self.pixel_scale_factor
-        return 1
+        if self.is_surface_type_vector():
+            return 1
+        return self.pixel_scale_factor

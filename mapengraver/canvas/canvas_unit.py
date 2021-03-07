@@ -1,7 +1,6 @@
-pixels_per_point = 0.75
 points_per_inch = 72
 mm_per_inch = 25.4
-points_per_pixel = 1 / pixels_per_point
+points_per_pixel = 0.75
 inch_per_mm = 1 / mm_per_inch
 mm_per_cm = 10
 
@@ -46,11 +45,11 @@ class CanvasUnit:
 
     @property
     def px(self) -> float:
-        return self._points
+        return self._points / points_per_pixel
 
     @classmethod
     def from_px(cls, pixels: float) -> 'CanvasUnit':
-        return CanvasUnit(pixels)
+        return CanvasUnit(pixels * points_per_pixel)
 
     @classmethod
     def from_unit(cls, value: float, unit: str) -> 'CanvasUnit':

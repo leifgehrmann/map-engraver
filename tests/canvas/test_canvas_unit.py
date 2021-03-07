@@ -5,6 +5,7 @@ from shapely.geometry import Polygon
 
 from mapengraver.canvas import CanvasBuilder, Canvas
 from mapengraver.canvas.canvas_unit import CanvasUnit
+from tests.canvas.unit_scale import UnitScale
 from mapengraver.graphicshelper import CairoHelper
 
 
@@ -46,7 +47,10 @@ class TestCanvasUnit(unittest.TestCase):
         for (surface_type, pixel_scale_factor) in surface_types:
             for unit in units:
                 path = Path(__file__).parent\
-                    .joinpath('output/canvas_unit_%s_%s_x%s.%s' % (surface_type, unit, pixel_scale_factor, surface_type))
+                    .joinpath(
+                    'output/canvas_unit_%s_%s_x%s.%s' %
+                    (surface_type, unit, pixel_scale_factor, surface_type)
+                )
                 path.unlink(missing_ok=True)
                 canvas_builder = CanvasBuilder()
                 canvas_builder.set_path(path)
@@ -90,3 +94,21 @@ class TestCanvasUnit(unittest.TestCase):
         canvas.context.set_source_rgb(1, 0, 0)
         CairoHelper.draw_polygon(canvas.context, point_unit_shape)
         canvas.context.fill()
+
+    def test_unit_scale(self):
+        surface_types = ['png', 'svg', 'pdf']
+        for surface_type in surface_types:
+            path = Path(__file__).parent\
+                .joinpath('output/canvas_unit_unit_scale.%s' % surface_type)
+            path.unlink(missing_ok=True)
+            canvas_builder = CanvasBuilder()
+            canvas_builder.set_path(path)
+            canvas_builder.set_size(1, 1, 'in')
+
+            canvas = canvas_builder.build()
+
+            UnitScale().draw(canvas)
+
+            canvas.close()
+
+            assert path.exists()
