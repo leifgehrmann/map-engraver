@@ -6,10 +6,9 @@ from mapengraver.canvas import Canvas
 from mapengraver.canvas.canvas_unit import CanvasUnit
 from mapengraver.drawable.drawable import Drawable
 from mapengraver.graphicshelper.svg_surface import SvgSurface
-from mapengraver.logging.progressable import ProgressObservable
 
 
-class Svg(Drawable, ProgressObservable):
+class Svg(Drawable):
 
     def __init__(self, path: Path):
         self.path = path
@@ -24,9 +23,6 @@ class Svg(Drawable, ProgressObservable):
             CanvasUnit.from_pt(svg_surface.svg_width),
             CanvasUnit.from_pt(svg_surface.svg_height)
         )
-
-    def progress(self):
-        pass
 
     def draw(self, canvas: Canvas):
         svg_surface = SvgSurface(self.path)

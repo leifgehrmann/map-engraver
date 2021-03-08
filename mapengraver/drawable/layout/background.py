@@ -3,19 +3,15 @@ from typing import Tuple
 from mapengraver.canvas import Canvas
 from mapengraver.drawable.drawable import Drawable
 from mapengraver.graphicshelper import CairoHelper
-from mapengraver.logging.progressable import ProgressObservable
 
 from shapely.geometry import Polygon
 
 
-class Background(Drawable, ProgressObservable):
+class Background(Drawable):
     color: Tuple[int, int, int]
 
     def __init__(self):
         self.color = (0, 0, 0)
-
-    def progress(self):
-        pass
 
     def draw(self, canvas: Canvas):
         top_left = (0, 0)

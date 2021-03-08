@@ -5,10 +5,9 @@ from mapengraver.canvas import Canvas
 from mapengraver.canvas.canvas_unit import CanvasUnit
 from mapengraver.drawable.drawable import Drawable
 from mapengraver.graphicshelper import CairoHelper
-from mapengraver.logging.progressable import ProgressObservable
 
 
-class Margins(Drawable, ProgressObservable):
+class Margins(Drawable):
     stroke_width: Optional[CanvasUnit]
     margin_bottom: Optional[CanvasUnit]
     margin_top: Optional[CanvasUnit]
@@ -29,9 +28,6 @@ class Margins(Drawable, ProgressObservable):
         self.margin_right = margin
         self.margin_top = margin
         self.margin_bottom = margin
-
-    def progress(self):
-        pass
 
     def draw(self, canvas: Canvas):
         min_x = self.margin_left.pt
