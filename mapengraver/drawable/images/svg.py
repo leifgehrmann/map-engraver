@@ -14,11 +14,11 @@ class Svg(Drawable, ProgressObservable):
     def __init__(self, path: Path):
         self.path = path
         self.canvas_origin = (0, 0)
-        self.svg_origin = (0, 0)
-        self.width = None
-        self.height = None
+        self.origin_on_canvas = (0, 0)
+        self.width_on_canvas = None
+        self.height_on_canvas = None
 
-    def parse_svg_size(self) -> Tuple[CanvasUnit, CanvasUnit]:
+    def read_svg_size(self) -> Tuple[CanvasUnit, CanvasUnit]:
         svg_surface = SvgSurface(self.path)
         return (
             CanvasUnit.from_pt(svg_surface.svg_width),
@@ -30,8 +30,13 @@ class Svg(Drawable, ProgressObservable):
 
     def draw(self, canvas: Canvas):
         svg_surface = SvgSurface(self.path)
-        svg_surface.set_width(100)
-        # Read dimensions
+        svg_surface.set_position(*self.origin_on_canvas)
+        if self.width_on_canvas is not None and \
+                self.height_on_canvas is not None:
+            svg_surface.set_width(self.width_on_canvas, preserve_ratio=False)
+            svg_surface.set_height(self.height_on_canvas, preserve_ratio=False)
+        elif self.width_on_canvas is not None:
+            svg_surface.set_width(self.width_on_canvas, preserve_ratio=True)
+        elif self.height_on_canvas is not None:
+            svg_surface.set_height(self.height_on_canvas, preserve_ratio=True)
         svg_surface.draw(canvas.context, canvas.surface)
-
-
