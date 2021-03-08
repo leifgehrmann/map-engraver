@@ -210,7 +210,7 @@ class Surface(object):
         if output_cairo is not None:
             self.cairo = output_cairo
         else:
-            self.cairo = self._create_surface(self.width,self.height)
+            self.cairo = self._create_surface(self.width, self.height)
         # ## END OF FORK ## #
 
         if 0 in (self.width, self.height):

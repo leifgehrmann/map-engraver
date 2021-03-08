@@ -1,5 +1,3 @@
-import cairocffi
-import cairosvg
 from cairosvg.helpers import (node_format)
 from cairosvg import parser as parser
 from cairocffi import Context, Surface
