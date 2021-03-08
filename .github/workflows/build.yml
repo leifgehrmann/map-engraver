@@ -28,6 +28,7 @@ jobs:
       - name: Install System Dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
+          brew install pkg-config
           brew install libffi
       - name: Install dependencies
         run: |
