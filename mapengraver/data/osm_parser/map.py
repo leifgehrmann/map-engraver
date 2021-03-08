@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from typing import Dict, List
 import xml.etree.ElementTree as ElementTree
 
@@ -19,28 +21,20 @@ class Map:
         self.ways = dict()
         self.relations = dict()
 
-    def add(self, osm_root: ElementTree, osm_file: str):
+    @staticmethod
+    def parse(self, osm_file: Path):
+        tree = ElementTree.parse(osm_file.as_posix())
+        root = tree.getroot()
+        self.add(root)
+
+    def add(self, osm_root: ElementTree):
         new_nodes = Parser.get_nodes(osm_root)
         new_ways = Parser.get_ways(osm_root)
         new_relations = Parser.get_relations(osm_root)
 
-        for node in new_nodes.values():
-            node.osm_file = osm_file
-
-        for way in new_ways.values():
-            way.osm_file = osm_file
-
-        for relation in new_relations.values():
-            relation.osm_file = osm_file
-
         self.nodes = {**self.nodes, **new_nodes}
         self.ways = {**self.ways, **new_ways}
         self.relations = {**self.relations, **new_relations}
-
-    def add_osm_file(self, osm_file: str):
-        tree = ElementTree.parse(osm_file)
-        root = tree.getroot()
-        self.add(root, osm_file)
 
     def get_node(self, ref: str) -> Node:
         return self.nodes[ref]
@@ -56,9 +50,3 @@ class Map:
             print("Unknown Way id: " + str(ref) + " . Returning []")
             return []
         return [self.nodes[node_ref] for node_ref in self.ways[ref].node_refs]
-
-    # Index nodes to ways
-    def index(self):
-        print("Indexing")
-        for way in self.ways:
-            way.index_nodes(self)
