@@ -22,6 +22,13 @@ class TestMargins(unittest.TestCase):
         canvas = canvas_builder.build()
 
         margins = Margins()
+        margins.set_margins(CanvasUnit.from_cm(4))
+        margins.margin_top = CanvasUnit.from_cm(3)
+        margins.margin_bottom = CanvasUnit.from_cm(3)
+        margins.fill_color = (1, 0.9, 1, 1)
+        margins.draw(canvas)
+
+        margins = Margins()
         margins.set_margins(CanvasUnit.from_cm(3))
         margins.margin_top = CanvasUnit.from_cm(2)
         margins.margin_bottom = CanvasUnit.from_cm(2)
