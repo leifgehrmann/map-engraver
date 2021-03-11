@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' generator='JOSM'>
+  <bounds minlat='55.9228065' minlon='3.1622601' maxlat='55.9249705' maxlon='3.1670237' origin='CGImap 0.8.3 (1625712 spike-07.openstreetmap.org)' />
+  <bounds minlat='55.9228065' minlon='3.1622601' maxlat='55.9249705' maxlon='3.1670237' origin='OpenStreetMap server' />
+  <node id='-101758' action='modify' visible='true' lat='59.01328584519' lon='5.71666872951' />
+  <node id='-101759' action='modify' visible='true' lat='59.01333209396' lon='5.73319773074' />
+  <node id='-101760' action='modify' visible='true' lat='59.00616275303' lon='5.73327340446' />
+  <node id='-101761' action='modify' visible='true' lat='59.00611649462' lon='5.71674440323' />
+  <node id='-101762' action='modify' visible='true' lat='59.0096782496' lon='5.70561945152'>
+    <tag k='amenity' v='bank' />
+  </node>
+  <node id='-101763' action='modify' visible='true' lat='59.01319334747' lon='5.73921644314' />
+  <node id='-101764' action='modify' visible='true' lat='59.0063015675' lon='5.73912661162' />
+  <node id='-101765' action='modify' visible='true' lat='59.00625219859' lon='5.75341159278' />
+  <node id='-101766' action='modify' visible='true' lat='59.01296272491' lon='5.75349906139' />
+  <node id='-101768' action='modify' visible='true' lat='59.01051080523' lon='5.74469616638' />
+  <node id='-101769' action='modify' visible='true' lat='59.00847563368' lon='5.74469616638' />
+  <node id='-101770' action='modify' visible='true' lat='59.00847563368' lon='5.7491877428' />
+  <node id='-101771' action='modify' visible='true' lat='59.01051080523' lon='5.7491877428' />
+  <node id='-101813' action='modify' visible='true' lat='59.00609795619' lon='5.71135378422' />
+  <node id='-101814' action='modify' visible='true' lat='59.01678200227' lon='5.71135378422'>
+    <tag k='name' v='Beta' />
+    <tag k='bus' v='yes' />
+    <tag k='highway' v='bus_stop' />
+  </node>
+  <node id='-101815' action='modify' visible='true' lat='59.01675888021' lon='5.72491834501' />
+  <node id='-101818' action='modify' visible='true' lat='59.0163426805' lon='5.75348477105'>
+    <tag k='bus' v='yes' />
+    <tag k='highway' v='bus_stop' />
+    <tag k='name' v='Alpha' />
+  </node>
+  <node id='-101821' action='modify' visible='true' lat='59.00399313181' lon='5.75326019223' />
+  <node id='-101822' action='modify' visible='true' lat='59.00406252368' lon='5.71144361575' />
+  <way id='-101787' action='modify' visible='true'>
+    <nd ref='-101758' />
+    <nd ref='-101759' />
+    <nd ref='-101760' />
+    <nd ref='-101761' />
+    <nd ref='-101758' />
+    <tag k='building' v='yes' />
+  </way>
+  <way id='-101791' action='modify' visible='true'>
+    <nd ref='-101763' />
+    <nd ref='-101764' />
+    <nd ref='-101765' />
+    <nd ref='-101766' />
+    <nd ref='-101763' />
+  </way>
+  <way id='-101795' action='modify' visible='true'>
+    <nd ref='-101768' />
+    <nd ref='-101769' />
+    <nd ref='-101770' />
+    <nd ref='-101771' />
+    <nd ref='-101768' />
+  </way>
+  <way id='-101873' action='modify' visible='true'>
+    <nd ref='-101813' />
+    <nd ref='-101814' />
+    <nd ref='-101815' />
+    <tag k='highway' v='service' />
+  </way>
+  <way id='-101889' action='modify' visible='true'>
+    <nd ref='-101818' />
+    <nd ref='-101815' />
+    <tag k='highway' v='service' />
+  </way>
+  <way id='-101931' action='modify' visible='true'>
+    <nd ref='-101821' />
+    <nd ref='-101822' />
+    <nd ref='-101813' />
+    <tag k='highway' v='service' />
+  </way>
+  <relation id='-99750' action='modify' visible='true'>
+    <member type='way' ref='-101795' role='inner' />
+    <member type='way' ref='-101791' role='outer' />
+    <tag k='building' v='yes' />
+    <tag k='type' v='multipolygon' />
+  </relation>
+  <relation id='-99775' action='modify' visible='true'>
+    <member type='node' ref='-101814' role='stop' />
+    <member type='way' ref='-101873' role='' />
+    <member type='way' ref='-101889' role='' />
+    <member type='node' ref='-101818' role='stop' />
+    <tag k='route' v='bus' />
+    <tag k='type' v='route' />
+  </relation>
+</osm>

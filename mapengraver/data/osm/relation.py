@@ -11,7 +11,6 @@ class Relation:
 
     def __init__(self, osm_element):
         self.id = osm_element.attrib['id']
-        self.tags = Parser.get_element_tags(osm_element)
         self.members = Relation.get_relation_members(osm_element)
         self.nodes = []
         self.relations = []

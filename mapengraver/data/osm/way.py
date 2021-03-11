@@ -12,7 +12,6 @@ class Way:
 
     def __init__(self, osm_element):
         self.id = osm_element.attrib['id']
-        self.tags = Parser.get_element_tags(osm_element)
         self.node_refs = Way.get_way_node_refs(osm_element)
         self.nodes = None
 
