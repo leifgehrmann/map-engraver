@@ -3,7 +3,10 @@ from pathlib import Path
 from typing import Dict
 import xml.etree.ElementTree as ElementTree
 
-from . import *
+from . import Node
+from . import Way
+from . import Relation
+from . import Osm
 
 
 class Parser:
@@ -18,7 +21,7 @@ class Parser:
 
     @staticmethod
     def get_element_tags(osm_element: ElementTree) -> Dict[str, str]:
-        """Get all key value information for an element (node, way, or relation)"""
+        """Get all key value information for an element (node/way/relation)"""
         key_values = dict()
         for child in osm_element:
             if child.tag == 'tag':

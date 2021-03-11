@@ -1,7 +1,7 @@
-from .member import MemberTypes
-from .member import Member
-from .node import Node
-from .way import Way
-from .relation import Relation
-from .osm import Osm
-from .parser import Parser
+from .member import MemberTypes  # noqa
+from .member import Member  # noqa
+from .node import Node  # noqa
+from .way import Way  # noqa
+from .relation import Relation  # noqa
+from .osm import Osm  # noqa
+from .parser import Parser  # noqa

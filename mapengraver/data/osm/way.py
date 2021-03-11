@@ -1,8 +1,6 @@
 from typing import Dict, List
 import xml.etree.ElementTree as ElementTree
 
-from . import *
-
 
 class Way:
     """An OSM way"""

@@ -1,6 +1,6 @@
 from typing import Dict, List
 import xml.etree.ElementTree as ElementTree
-from . import *
+from . import Member
 
 
 class Relation:

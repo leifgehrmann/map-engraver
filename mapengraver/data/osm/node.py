@@ -1,7 +1,5 @@
 from typing import Dict
 
-from . import *
-
 
 class Node:
     """An OSM node"""
