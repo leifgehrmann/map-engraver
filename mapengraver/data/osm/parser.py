@@ -8,13 +8,13 @@ from . import *
 
 class Parser:
     @staticmethod
-    def parse(osm_file: Path) -> Map:
+    def parse(osm_file: Path) -> Osm:
         osm_tree = ElementTree.parse(osm_file.as_posix())
         osm_root = osm_tree.getroot()
         nodes = Parser.get_nodes(osm_root)
         ways = Parser.get_ways(osm_root)
         relations = Parser.get_relations(osm_root)
-        return Map(nodes, ways, relations)
+        return Osm(nodes, ways, relations)
 
     @staticmethod
     def get_element_tags(osm_element: ElementTree) -> Dict[str, str]:

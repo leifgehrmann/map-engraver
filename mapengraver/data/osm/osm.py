@@ -5,7 +5,7 @@ from . import Way
 from . import Relation
 
 
-class Map:
+class Osm:
     """A container for all objects from an OSM file"""
 
     nodes: Dict[str, type(Node)]

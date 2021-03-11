@@ -3,6 +3,5 @@ from .member import Member
 from .node import Node
 from .way import Way
 from .relation import Relation
-from .map import Map
+from .osm import Osm
 from .parser import Parser
-from .convert import Convert
