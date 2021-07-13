@@ -1,5 +1,7 @@
+from abc import ABC
+
 from shapely.geometry import Polygon, LineString
-from typing import Optional, List, Callable, Tuple, Dict, Union
+from typing import Optional, List, Tuple, Dict, Callable, Union
 
 from mapengraver.data.osm import Node
 from mapengraver.data.osm import Way
@@ -8,47 +10,79 @@ from mapengraver.data.osm import MemberTypes
 from mapengraver.data.osm import Osm
 
 
+class OsmLineString(LineString, ABC):
+    def __init__(self, coordinates=None):
+        super().__init__(coordinates)
+        self._osm_tags = {}
+
+    @property
+    def osm_tags(self):
+        return self._osm_tags
+
+    @osm_tags.setter
+    def osm_tags(self, x: Dict[str, str]):
+        self._osm_tags = x
+
+
+class OsmPolygon(Polygon, ABC):
+    def __init__(self, shell=None, holes=None):
+        super().__init__(shell, holes)
+        self._osm_tags = {}
+
+    @property
+    def osm_tags(self):
+        return self._osm_tags
+
+    @osm_tags.setter
+    def osm_tags(self, x: Dict[str, str]):
+        self._osm_tags = x
+
+
 class OsmToShapely:
-    @staticmethod
-    def way_to_linestring(
+    def __init__(
+            self,
             osm: Osm,
-            way: Way,
-            transform: Callable[
-                [float, float, Optional[float]],
-                Union[Tuple[float, float], Tuple[float, float, float]]
-            ]
-    ) -> Optional[LineString]:
-        nodes = osm.get_nodes_for_way(way.id)
+            transform: Optional[Callable[
+                [float, float],
+                Tuple[float, float]
+            ]] = None
+    ):
+        self.osm = osm
+        if transform is None:
+            self.transform = lambda x, y: (x, y)
+        else:
+            self.transform = transform
+
+    def way_to_linestring(
+            self,
+            way: Way
+    ) -> Optional[OsmLineString]:
+        nodes = self.osm.get_nodes_for_way(way.id)
         linestring_array = []
         for node in nodes:
-            linestring_array.append(transform(node.lon, node.lat, None))
-        line_string = LineString(linestring_array)
+            linestring_array.append(self.transform(node.lon, node.lat))
+        line_string = OsmLineString(linestring_array)
         line_string.osm_tags = way.tags
         return line_string
 
-    @staticmethod
     def way_to_polygon(
-            osm: Osm,
-            way: Way,
-            transform: Callable[
-                [float, float, Optional[float]],
-                Union[Tuple[float, float], Tuple[float, float, float]]
-            ]
-    ) -> Optional[Polygon]:
-        nodes = osm.get_nodes_for_way(way.id)
+            self,
+            way: Way
+    ) -> Optional[OsmPolygon]:
+        nodes = self.osm.get_nodes_for_way(way.id)
         polygon_array = []
         for node in nodes:
-            polygon_array.append(transform(node.lon, node.lat, None))
+            polygon_array.append(self.transform(node.lon, node.lat))
         if polygon_array[len(polygon_array)-1] == polygon_array[0] and len(polygon_array) > 2:
-            p = Polygon(polygon_array)
+            p = OsmPolygon(polygon_array)
             if p.exterior.is_ccw:
-                p = Polygon(reversed(polygon_array))
+                p = OsmPolygon(reversed(polygon_array))
             p.osm_tags = way.tags
             return p
         raise WayToPolygonError("Could not convert way to polygon: " + way.id)
 
-    @staticmethod
-    def piece_together_ways(
+    def _piece_together_ways(
+            self,
             way_refs: List[str],
             way_nodes: Dict[str, List[Node]],
             way_start_nodes: Dict[str, Node],
@@ -117,15 +151,10 @@ class OsmToShapely:
 
         return way_refs, output_ways
 
-    @staticmethod
     def relation_to_polygon(
-            osm: Osm,
-            relation: Relation,
-            transform: Callable[
-                [float, float, Optional[float]],
-                Union[Tuple[float, float], Tuple[float, float, float]]
-            ]
-    ) -> Optional[Polygon]:
+            self,
+            relation: Relation
+    ) -> Optional[OsmPolygon]:
         outer_way_refs = []
         outer_way_all_nodes = {}
         outer_way_start_nodes = {}
@@ -136,7 +165,7 @@ class OsmToShapely:
         inner_way_end_node = {}
         for member in relation.members:
             if member.type == MemberTypes.WAY:
-                way_nodes = osm.get_nodes_for_way(member.ref)
+                way_nodes = self.osm.get_nodes_for_way(member.ref)
                 if len(way_nodes) == 0:
                     continue
                 if member.role == "inner":
@@ -151,7 +180,7 @@ class OsmToShapely:
                     outer_way_refs.append(member.ref)
 
         # now piece together the outer way
-        incomplete_way_refs, outer_ways_nodes = OsmToShapely.piece_together_ways(
+        incomplete_way_refs, outer_ways_nodes = self._piece_together_ways(
             outer_way_refs,
             outer_way_all_nodes,
             outer_way_start_nodes,
@@ -162,7 +191,7 @@ class OsmToShapely:
         if len(incomplete_way_refs) > 0:
             for member in relation.members:
                 if member.type == MemberTypes.WAY:
-                    test_way_nodes = osm.get_nodes_for_way(member.ref)
+                    test_way_nodes = self.osm.get_nodes_for_way(member.ref)
                     if member.role == "outer":
                         print("Relation Members for id: " + str(member.ref), test_way_nodes)
             print("Relation Id: " + str(relation.id))
@@ -179,10 +208,10 @@ class OsmToShapely:
         # create exterior of polygon
         exterior = []
         for node in outer_ways_nodes[0]:
-            exterior.append(transform(node.lon, node.lat, None))
+            exterior.append(self.transform(node.lon, node.lat))
 
         # now piece together the inner way
-        incomplete_way_refs, inner_ways_nodes = OsmToShapely.piece_together_ways(
+        incomplete_way_refs, inner_ways_nodes = self._piece_together_ways(
             inner_way_refs,
             inner_way_all_nodes,
             inner_way_start_node,
@@ -197,15 +226,15 @@ class OsmToShapely:
         for inner_way_nodes in inner_ways_nodes:
             interior_coordinates = []
             for node in inner_way_nodes:
-                interior_coordinates.append(transform(node.lon, node.lat, None))
+                interior_coordinates.append((node.lon, node.lat))
             interior_polygon = Polygon(interior_coordinates)
             if not interior_polygon.exterior.is_ccw:
                 interior_coordinates = list(reversed(interior_coordinates))
             interiors.append(interior_coordinates)
 
-        polygon = Polygon(exterior, interiors)
+        polygon = OsmPolygon(exterior, interiors)
         if polygon.exterior.is_ccw:
-            polygon = Polygon(reversed(exterior), interiors)
+            polygon = OsmPolygon(reversed(exterior), interiors)
         polygon.osm_tags = relation.tags
         return polygon
 
