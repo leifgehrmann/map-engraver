@@ -54,6 +54,18 @@
   <node id='-117286' action='modify' visible='true' lat='59.0061481157' lon='5.79393840388' />
   <node id='-117287' action='modify' visible='true' lat='59.0060516438' lon='5.80822331266' />
   <node id='-117288' action='modify' visible='true' lat='59.01285227064' lon='5.8083965294' />
+  <node id='-117302' action='modify' visible='true' lat='59.0023220992' lon='5.71703365152' />
+  <node id='-117303' action='modify' visible='true' lat='59.00236836271' lon='5.73356265275' />
+  <node id='-117304' action='modify' visible='true' lat='58.99519673761' lon='5.73363832647' />
+  <node id='-117305' action='modify' visible='true' lat='58.99515046446' lon='5.71710932524' />
+  <node id='-117315' action='modify' visible='true' lat='58.99733505352' lon='5.74500532962' />
+  <node id='-117316' action='modify' visible='true' lat='59.00189041861' lon='5.75385165323' />
+  <node id='-117317' action='modify' visible='true' lat='59.00198690218' lon='5.73956674445' />
+  <node id='-117318' action='modify' visible='true' lat='58.99508762548' lon='5.75367843649' />
+  <node id='-117319' action='modify' visible='true' lat='58.99937088385' lon='5.74949690604' />
+  <node id='-117320' action='modify' visible='true' lat='58.99937088385' lon='5.74500532962' />
+  <node id='-117321' action='modify' visible='true' lat='58.99733505352' lon='5.74949690604' />
+  <node id='-117322' action='modify' visible='true' lat='58.99518412812' lon='5.73939352771' />
   <way id='-101787' action='modify' visible='true'>
     <nd ref='-101758' />
     <nd ref='-101759' />
@@ -61,6 +73,7 @@
     <nd ref='-101761' />
     <nd ref='-101758' />
     <tag k='building' v='yes' />
+    <tag k='name' v='Clockwise Building' />
   </way>
   <way id='-101791' action='modify' visible='true'>
     <nd ref='-101763' />
@@ -135,10 +148,34 @@
     <nd ref='-117285' />
     <tag k='building' v='yes' />
   </way>
+  <way id='-102178' action='modify' visible='true'>
+    <nd ref='-117302' />
+    <nd ref='-117305' />
+    <nd ref='-117304' />
+    <nd ref='-117303' />
+    <nd ref='-117302' />
+    <tag k='building' v='yes' />
+    <tag k='name' v='Counter-Clockwise Building' />
+  </way>
+  <way id='-102289' action='modify' visible='true'>
+    <nd ref='-117320' />
+    <nd ref='-117319' />
+    <nd ref='-117321' />
+    <nd ref='-117315' />
+    <nd ref='-117320' />
+  </way>
+  <way id='-102290' action='modify' visible='true'>
+    <nd ref='-117317' />
+    <nd ref='-117316' />
+    <nd ref='-117318' />
+    <nd ref='-117322' />
+    <nd ref='-117317' />
+  </way>
   <relation id='-99750' action='modify' visible='true'>
     <member type='way' ref='-101795' role='inner' />
     <member type='way' ref='-101791' role='outer' />
     <tag k='building' v='yes' />
+    <tag k='name' v='Clockwise Building with Hole' />
     <tag k='type' v='multipolygon' />
   </relation>
   <relation id='-99775' action='modify' visible='true'>
@@ -153,6 +190,7 @@
     <member type='way' ref='-101940' role='outer' />
     <member type='way' ref='-101998' role='outer' />
     <member type='way' ref='-102003' role='outer' />
+    <tag k='name' v='Lake of Many Segments' />
     <tag k='natural' v='water' />
     <tag k='type' v='multipolygon' />
   </relation>
@@ -162,6 +200,13 @@
     <member type='way' ref='-102030' role='outer' />
     <tag k='building' v='yes' />
     <tag k='name' v='Office Complex' />
+    <tag k='type' v='multipolygon' />
+  </relation>
+  <relation id='-99893' action='modify' visible='true'>
+    <member type='way' ref='-102289' role='inner' />
+    <member type='way' ref='-102290' role='outer' />
+    <tag k='building' v='yes' />
+    <tag k='name' v='Counter-Clockwise Building with Hole' />
     <tag k='type' v='multipolygon' />
   </relation>
 </osm>
