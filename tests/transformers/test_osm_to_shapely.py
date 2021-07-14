@@ -3,7 +3,8 @@ from pathlib import Path
 import unittest
 
 from mapengraver.data.osm import Parser
-from mapengraver.transformers.osm_to_shapely import OsmToShapely, WayToPolygonError
+from mapengraver.transformers.osm_to_shapely import OsmToShapely,\
+    WayToPolygonError
 
 
 class TestOsmToShapely(unittest.TestCase):
@@ -25,7 +26,9 @@ class TestOsmToShapely(unittest.TestCase):
         ]
 
         cw_bank_building_way = osm_map.get_way('-101787')
-        cw_bank_building_polygon = osm_to_shapely.way_to_polygon(cw_bank_building_way)
+        cw_bank_building_polygon = osm_to_shapely.way_to_polygon(
+            cw_bank_building_way
+        )
         assert cw_bank_building_polygon.osm_tags['building'] == 'yes'
         assert list(cw_bank_building_polygon.exterior.coords) == [
             (5.71666872951, 59.01328584519), (5.73319773074, 59.01333209396),
@@ -34,7 +37,9 @@ class TestOsmToShapely(unittest.TestCase):
         ]
 
         ccw_bank_building_way = osm_map.get_way('-102178')
-        ccw_bank_building_polygon = osm_to_shapely.way_to_polygon(ccw_bank_building_way)
+        ccw_bank_building_polygon = osm_to_shapely.way_to_polygon(
+            ccw_bank_building_way
+        )
         assert ccw_bank_building_polygon.osm_tags['building'] == 'yes'
         assert list(ccw_bank_building_polygon.exterior.coords) == [
             (5.71703365152, 59.0023220992), (5.73356265275, 59.00236836271),
@@ -43,7 +48,9 @@ class TestOsmToShapely(unittest.TestCase):
         ]
 
         cw_building_relation = osm_map.get_relation('-99750')
-        cw_building_polygon = osm_to_shapely.relation_to_polygon(cw_building_relation)
+        cw_building_polygon = osm_to_shapely.relation_to_polygon(
+            cw_building_relation
+        )
         assert cw_building_polygon.osm_tags['building'] == 'yes'
         assert list(cw_building_polygon.exterior.coords) == [
             (5.73921644314, 59.01319334747), (5.75349906139, 59.01296272491),
@@ -57,7 +64,9 @@ class TestOsmToShapely(unittest.TestCase):
         ]
 
         ccw_building_relation = osm_map.get_relation('-99893')
-        ccw_building_polygon = osm_to_shapely.relation_to_polygon(ccw_building_relation)
+        ccw_building_polygon = osm_to_shapely.relation_to_polygon(
+            ccw_building_relation
+        )
         assert ccw_building_polygon.osm_tags['building'] == 'yes'
         assert list(ccw_building_polygon.exterior.coords) == [
             (5.73956674445, 59.00198690218), (5.75385165323, 59.00189041861),
@@ -69,7 +78,6 @@ class TestOsmToShapely(unittest.TestCase):
             (5.74949690604, 58.99733505352), (5.74949690604, 58.99937088385),
             (5.74500532962, 58.99937088385)
         ]
-
 
         water_relation = osm_map.get_relation('-99778')
         water_polygon = osm_to_shapely.relation_to_polygon(water_relation)
@@ -106,4 +114,3 @@ class TestOsmToShapely(unittest.TestCase):
         assert list(highway_service_linestring.coords) == [
             (0, 0), (0, 0), (0, 0)
         ]
-
