@@ -1,7 +1,7 @@
 from abc import ABC
 
 from shapely.geometry import Polygon, LineString
-from typing import Optional, List, Tuple, Dict, Callable
+from typing import Optional, List, Tuple, Dict, Callable, Union
 
 from mapengraver.data.osm import Node
 from mapengraver.data.osm import Way
@@ -59,7 +59,10 @@ class OsmToShapely:
         return self._incomplete_refs_handler
 
     @incomplete_refs_handler.setter
-    def incomplete_refs_handler(self, x):
+    def incomplete_refs_handler(
+            self,
+            x: Callable[[Union[Way, Relation], List[str]], None]
+    ):
         self._incomplete_refs_handler = x
 
     def way_to_linestring(
