@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' generator='JOSM'>
+  <bounds minlat='55.9228065' minlon='3.1622601' maxlat='55.9249705' maxlon='3.1670237' origin='CGImap 0.8.3 (1625712 spike-07.openstreetmap.org)' />
+  <bounds minlat='55.9228065' minlon='3.1622601' maxlat='55.9249705' maxlon='3.1670237' origin='OpenStreetMap server' />
+  <node id='-117331' action='modify' visible='true' lat='59.0096782496' lon='5.70561945152'>
+    <tag k='amenity' v='bank' />
+  </node>
+  <node id='-117346' action='modify' visible='true' lat='59.00629616253' lon='5.76627727032' />
+  <node id='-117347' action='modify' visible='true' lat='59.00678458244' lon='5.7695647063' />
+  <node id='-117348' action='modify' visible='true' lat='59.0082363528' lon='5.77204331465' />
+  <node id='-117349' action='modify' visible='true' lat='59.01015411586' lon='5.77251263289' />
+  <node id='-117350' action='modify' visible='true' lat='59.0118769482' lon='5.77081092363' />
+  <node id='-117351' action='modify' visible='true' lat='59.01281118926' lon='5.76752463333' />
+  <node id='-117352' action='modify' visible='true' lat='59.01263494747' lon='5.76378628992' />
+  <node id='-117353' action='modify' visible='true' lat='59.01140894493' lon='5.76088420881' />
+  <node id='-117354' action='modify' visible='true' lat='59.00955560977' lon='5.75981851101' />
+  <node id='-117355' action='modify' visible='true' lat='59.00817618663' lon='5.76043653901' />
+  <node id='-117356' action='modify' visible='true' lat='59.00717558346' lon='5.76186221583' />
+  <way id='-102339' action='modify' visible='true'>
+    <nd ref='-117348' />
+    <nd ref='-117349' />
+    <nd ref='-117350' />
+    <nd ref='-117351' />
+    <nd ref='-117352' />
+  </way>
+  <way id='-102340' action='modify' visible='true'>
+    <nd ref='-117352' />
+    <nd ref='-117353' />
+    <nd ref='-117354' />
+    <nd ref='-117355' />
+    <nd ref='-117356' />
+  </way>
+  <way id='-102341' action='modify' visible='true'>
+    <nd ref='-117356' />
+    <nd ref='-117346' />
+    <nd ref='-117347' />
+  </way>
+  <relation id='-99898' action='modify' visible='true'>
+    <member type='way' ref='-102339' role='outer' />
+    <member type='way' ref='-102340' role='outer' />
+    <member type='way' ref='-102341' role='outer' />
+    <tag k='name' v='Lake of Many Segments' />
+    <tag k='natural' v='water' />
+    <tag k='type' v='multipolygon' />
+  </relation>
+</osm>

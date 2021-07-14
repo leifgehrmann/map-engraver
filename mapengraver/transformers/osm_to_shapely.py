@@ -1,7 +1,7 @@
 from abc import ABC
 
 from shapely.geometry import Polygon, LineString
-from typing import Optional, List, Tuple, Dict, Callable
+from typing import Optional, List, Tuple, Dict, Callable, Union
 
 from mapengraver.data.osm import Node
 from mapengraver.data.osm import Way
@@ -52,6 +52,18 @@ class OsmToShapely:
             self.transform = lambda x, y: (x, y)
         else:
             self.transform = transform
+        self._incomplete_refs_handler = lambda element, refs: None
+
+    @property
+    def incomplete_refs_handler(self):
+        return self._incomplete_refs_handler
+
+    @incomplete_refs_handler.setter
+    def incomplete_refs_handler(
+            self,
+            x: Callable[[Union[Way, Relation], List[str]], None]
+    ):
+        self._incomplete_refs_handler = x
 
     def way_to_linestring(
             self,
@@ -202,27 +214,29 @@ class OsmToShapely:
             outer_way_end_nodes
         )
 
-        # fail completely if there are
+        # Fail completely if there are any instances of incomplete_way_refs
+        # for the exterior polygon, meaning we failed to piece together the
+        # exterior ways. We fail completely because it's very likely that
+        # interior ways will intersect with the incomplete exterior ways.
+        # This happens a lot with buildings which have holes in them.
         if len(incomplete_way_refs) > 0:
-            for member in relation.members:
-                if member.type == MemberTypes.WAY:
-                    test_way_nodes = self.osm.get_nodes_for_way(member.ref)
-                    if member.role == "outer":
-                        print(
-                            "Relation Members for id: " + str(member.ref),
-                            test_way_nodes
-                        )
-            print("Relation Id: " + str(relation.id))
-            print("Failed to piece together exterior way. Very bad, pls fix")
-            print(incomplete_way_refs)
+            self.incomplete_refs_handler(relation, incomplete_way_refs)
             return None
 
-        if 0 == len(outer_ways_nodes) or len(outer_ways_nodes) > 1:
-            print("Did not expect " + str(len(outer_ways_nodes)) +
-                  " exterior ways! This is bad! FIX THIS!")
-            print("Relation Id: " + str(relation.id))
-            print(incomplete_way_refs)
+        # Fail completely if we somehow get no nodes pieced together.
+        if 0 == len(outer_ways_nodes):
+            self.incomplete_refs_handler(relation, [])
             return None
+
+        # Fail completely if we somehow end up with more than 1 exterior
+        # polygon. Technically this is permitted by OSM to have multiple OUTER
+        # ways, but we haven't yet decided how to handle them yet.
+        if len(outer_ways_nodes) > 1:
+            raise RelationToPolygonError(
+                "Could not convert way to polygon: " + relation.id +
+                " . Did not expect " + str(len(outer_ways_nodes)) +
+                " exterior ways. This needs to be properly implemented."
+            )
 
         # create exterior of polygon
         exterior = []
@@ -238,9 +252,9 @@ class OsmToShapely:
         )
 
         if len(incomplete_way_refs) > 0:
-            print("Failed to piece together interior way. "
-                  "Continuing as normal, but something might look wrong...")
-            print(incomplete_way_refs)
+            # Failed to piece together interior way.
+            # Continuing as normal, but the shape might look wrong...
+            self.incomplete_refs_handler(relation, incomplete_way_refs)
 
         interiors = []
         for inner_way_nodes in inner_ways_nodes:
@@ -264,4 +278,8 @@ class WayToPolygonError(Exception):
 
 
 class WayToLineStringError(Exception):
+    pass
+
+
+class RelationToPolygonError(Exception):
     pass

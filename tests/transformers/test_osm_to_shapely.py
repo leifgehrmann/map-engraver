@@ -3,8 +3,8 @@ from pathlib import Path
 import unittest
 
 from mapengraver.data.osm import Parser
-from mapengraver.transformers.osm_to_shapely import OsmToShapely,\
-    WayToPolygonError
+from mapengraver.transformers.osm_to_shapely import OsmToShapely, \
+    WayToPolygonError, RelationToPolygonError
 
 
 class TestOsmToShapely(unittest.TestCase):
@@ -114,3 +114,40 @@ class TestOsmToShapely(unittest.TestCase):
         assert list(highway_service_linestring.coords) == [
             (0, 0), (0, 0), (0, 0)
         ]
+
+    def test_incomplete_refs_handler(self):
+        path = Path(__file__).parent.joinpath('incomplete_data.osm')
+
+        osm_map = Parser.parse(path)
+        osm_to_shapely = OsmToShapely(osm_map)
+        incomplete_relation = osm_map.get_relation('-99898')
+        incomplete_elements = []
+        incomplete_refs = []
+
+        incomplete_polygon = osm_to_shapely.relation_to_polygon(
+            incomplete_relation
+        )
+        assert incomplete_polygon is None
+
+        osm_to_shapely.incomplete_refs_handler = lambda element, refs: \
+            incomplete_elements.append(element) and \
+            incomplete_refs.append(refs)
+
+        incomplete_polygon = osm_to_shapely.relation_to_polygon(
+            incomplete_relation
+        )
+        assert incomplete_polygon is None
+        assert incomplete_elements[0] == incomplete_relation
+        assert len(incomplete_refs) == 0
+
+    def test_multiple_exteriors(self):
+        path = Path(__file__).parent.joinpath('unimplemented_data.osm')
+
+        osm_map = Parser.parse(path)
+        osm_to_shapely = OsmToShapely(osm_map)
+
+        relation_with_multiple_exteriors = osm_map.get_relation('-99894')
+        with self.assertRaises(RelationToPolygonError):
+            osm_to_shapely.relation_to_polygon(
+                relation_with_multiple_exteriors
+            )
