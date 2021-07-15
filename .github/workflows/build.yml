@@ -31,7 +31,6 @@ jobs:
           brew install pkg-config
           brew install libffi
           brew install cairo
-#          brew install proj
       - name: Install dependencies
         run: |
           poetry install
