@@ -11,6 +11,7 @@ cairocffi = "^1.2.0"
 tqdm = "^4.58.0"
 Shapely = "^1.7.1"
 CairoSVG = "^2.5.2"
+pyproj = "^3.1.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.4"
