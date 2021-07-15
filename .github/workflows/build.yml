@@ -25,17 +25,13 @@ jobs:
         uses: abatilo/actions-poetry@v2.0.0
         with:
           poetry-version: ${{ matrix.poetry-version }}
-#      - name: Install System Dependencies (Ubuntu)
-#        if: runner.os == 'ubuntu'
-#        run: |
-#          sudo apt-get install proj-bin
       - name: Install System Dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install pkg-config
           brew install libffi
           brew install cairo
-          brew install proj
+#          brew install proj
       - name: Install dependencies
         run: |
           poetry install
