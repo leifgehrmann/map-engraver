@@ -7,7 +7,7 @@ class CanvasCoordinate:
     x: CanvasUnit
     y: CanvasUnit
 
-    def __init__(self, x: CanvasUnit, y:CanvasUnit):
+    def __init__(self, x: CanvasUnit, y: CanvasUnit):
         self.x = x
         self.y = y
 
@@ -16,6 +16,6 @@ class CanvasCoordinate:
         return self.x.pt, self.y.pt
 
     @staticmethod
-    def origin():
+    def origin() -> 'CanvasCoordinate':
         """Returns the top left coordinate of the canvas"""
         return CanvasCoordinate(x=CanvasUnit(0), y=CanvasUnit(0))
