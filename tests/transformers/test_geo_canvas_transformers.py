@@ -9,7 +9,7 @@ from mapengraver.canvas.canvas_coordinate import CanvasCoordinate
 from mapengraver.canvas.canvas_unit import CanvasUnit
 from mapengraver.transformers.geo_coordinate import GeoCoordinate
 from mapengraver.transformers.geo_canvas_scale import GeoCanvasScale
-from mapengraver.transformers.project_geo_to_canvas import \
+from mapengraver.transformers.geo_canvas_transformers import \
     build_geo_to_canvas_transformer
 
 
