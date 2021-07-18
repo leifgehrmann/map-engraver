@@ -1,46 +1,60 @@
 import pyproj
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Optional
 
-from mapengraver.canvas.canvas_unit import CanvasUnit
+from mapengraver.canvas.canvas_coordinate import CanvasCoordinate
+from mapengraver.transformers.geo_coordinate import GeoCoordinate
+from mapengraver.transformers.geo_to_canvas_scale import GeoToCanvasScale
 
 
-def build_projection_function(
-        input_crs: pyproj.CRS = pyproj.CRS.from_epsg(4326),
-        output_crs: pyproj.CRS = pyproj.CRS.from_epsg(4326),
-        output_origin: Tuple[float, float] = (0, 0),
-        canvas_origin: Tuple[float, float] = (0, 0),
-        output_scale: float = 1,
-        canvas_scale: CanvasUnit = CanvasUnit(1),
-        inverse: bool = False
+def build_geo_to_canvas_transformation_func(
+        # The Coordinate Reference System for plotting coordinate data onto
+        # the canvas.
+        crs: pyproj.CRS,
+
+        # Controls the scale that things on the map will appear in. For
+        # example, the number of meters per centimeter.
+        scale: GeoToCanvasScale,
+
+        # Controls where the map should point to. If `origin_for_canvas` is the
+        # default, this geographic coordinate appear on the top-left corner of
+        # the canvas.
+        origin_for_geo: GeoCoordinate,
+
+        # Controls where on the canvas the origin should correspond to (Useful
+        # if your map has margins on the side of the map). Defaults to the
+        # top-left corner of the canvas.
+        origin_for_canvas: CanvasCoordinate = CanvasCoordinate.origin(),
+
+        # The Coordinate Reference System for the input data. For example, if
+        # your data is longitude/latitude data, you will want to set the
+        # `data_crs` as `pyproj.CRS.from_epsg(4326)`.
+        data_crs: Optional[pyproj.CRS] = None,
 ) -> Callable[[float, float], Tuple[float, float]]:
-    geo_projection = pyproj.Transformer.from_proj(
-        input_crs,
-        output_crs
-    )
-    translate = (output_origin[0] - canvas_origin[0],
-                 output_origin[1] - canvas_origin[1])
-    scale = output_scale / canvas_scale.pt
+    data_transformer: Optional[pyproj.Transformer] = None
+    if data_crs is not None:
+        data_transformer = pyproj.Transformer.from_proj(
+            data_crs,
+            crs
+        )
+    transformed_origin_for_geo = pyproj.Transformer\
+        .from_proj(origin_for_geo.crs, crs)\
+        .transform(*origin_for_geo.xy)
+    scale_factor = scale.geo_units / scale.canvas_units.pt
 
-    if inverse:
-        geo_projection = pyproj.Transformer.from_proj(
-            output_crs,
-            input_crs
+    def projection(x: float, y: float) -> Tuple[float, float]:
+        if data_transformer is not None:
+            coord = data_transformer.transform(x, y)
+        else:
+            coord = (x, y)
+        translated = (
+            coord[0] - transformed_origin_for_geo[0],
+            coord[1] - transformed_origin_for_geo[1]
+        )
+        # The y-coordinate is inverted because the coordinate space in computer
+        # graphics is inverted.
+        return (
+            translated[0] / scale_factor + origin_for_canvas.x.pt,
+            translated[1] / -scale_factor + origin_for_canvas.y.pt
         )
 
-        def inv_projection(x: float, y: float) -> Tuple[float, float]:
-            coord = (x / scale + translate[0], y / scale + translate[1])
-            return geo_projection.transform(coord[0], coord[1])
-
-        return inv_projection
-    else:
-        geo_projection = pyproj.Transformer.from_proj(
-            input_crs,
-            output_crs
-        )
-
-        def projection(x: float, y: float) -> Tuple[float, float]:
-            coord = geo_projection.transform(x, y)
-            translated = (coord[0] - translate[0], coord[1] - translate[1])
-            return translated[0] * scale, translated[1] * scale
-
-        return projection
+    return projection

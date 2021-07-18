@@ -5,8 +5,12 @@ from typing import Tuple
 import pyproj
 import unittest
 
+from mapengraver.canvas.canvas_coordinate import CanvasCoordinate
+from mapengraver.canvas.canvas_unit import CanvasUnit
+from mapengraver.transformers.geo_coordinate import GeoCoordinate
+from mapengraver.transformers.geo_to_canvas_scale import GeoToCanvasScale
 from mapengraver.transformers.project_geo_to_canvas import \
-    build_projection_function
+    build_geo_to_canvas_transformation_func
 
 
 class TestProjectGeoToCanvas(unittest.TestCase):
@@ -15,8 +19,15 @@ class TestProjectGeoToCanvas(unittest.TestCase):
             expected_coordinate: Tuple[float, float],
             actual_coordinate: Tuple[float, float]
     ):
-        if not math.isclose(expected_coordinate[0], actual_coordinate[0]) or \
-                not math.isclose(expected_coordinate[1], actual_coordinate[1]):
+        if not math.isclose(
+                expected_coordinate[0],
+                actual_coordinate[0],
+                abs_tol=0.01
+        ) or not math.isclose(
+            expected_coordinate[1],
+            actual_coordinate[1],
+            abs_tol=0.01
+        ):
             raise AssertionError(
                 'Coordinates are not close. Expected: (' +
                 str(expected_coordinate[0]) + ', ' +
@@ -26,50 +37,56 @@ class TestProjectGeoToCanvas(unittest.TestCase):
                 str(actual_coordinate[1]) + ')'
             )
 
-    @staticmethod
-    def magnitude(v: Tuple[float, float]):
-        return math.sqrt(v[0] * v[0] + v[1] * v[1])
-
-    def test_identity_conversion(self):
-        wgs_84_identity_func = build_projection_function()
-        self.assert_coordinates_are_close(
-            wgs_84_identity_func(55.855529, -4.232459),
-            (55.855529, -4.232459)
-        )
-
-    def test_british_national_grid_conversion(self):
-        british_grid_func = build_projection_function(
-            # 27700 is the british national grid
-            output_crs=pyproj.CRS.from_epsg(27700)
-        )
-        self.assert_coordinates_are_close(
-            # Glasgow
-            british_grid_func(55.855529, -4.232459),
-            (260354.7929476458, 664735.6993417306)
-        )
-
-    def test_offset_conversion(self):
+    """
+    This test projects a coordinate that is 600m east and 400m south from the
+    projection origin. If the scale is 100m to 1cm, then we should expect
+    an offset of 6cm, 4cm from the canvas origin. In this example, the canvas
+    origin is the top-left, inset by 1cm.
+    """
+    def test_conversion(self):
         wgs84_crs = pyproj.CRS.from_epsg(4326)
         british_crs = pyproj.CRS.from_epsg(27700)
-        crs_transformer = pyproj.Transformer.from_proj(
-            wgs84_crs,
+
+        coordinate_to_project = GeoCoordinate(55.862777, -4.260919, wgs84_crs)
+        expected_canvas_coordinates = CanvasCoordinate(
+            CanvasUnit.from_cm(1+6),
+            CanvasUnit.from_cm(1+4)
+        ).pt
+
+        origin_for_geo = GeoCoordinate(
+            258000,
+            666000,
             british_crs
         )
-        walter_scott_monument_wgs84 = (55.86115, -4.25017)
-        glasgow_central_station_wgs84 = (55.86045, -4.25772)
-        walter_scott_column_british = crs_transformer.transform(
-            *walter_scott_monument_wgs84
+        origin_for_canvas = CanvasCoordinate(
+            CanvasUnit.from_cm(1),
+            CanvasUnit.from_cm(1)
         )
-        glasgow_func = build_projection_function(
-            input_crs=wgs84_crs,
-            output_crs=british_crs,
-            output_origin=walter_scott_column_british
+
+        # 100 meters for every centimeter
+        geo_to_canvas_scale = GeoToCanvasScale(100, CanvasUnit.from_cm(1))
+
+        transformation_func = build_geo_to_canvas_transformation_func(
+            crs=british_crs,
+            data_crs=wgs84_crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas
         )
-        actual_distance_between_poi = math.floor(self.magnitude(
-            glasgow_func(*glasgow_central_station_wgs84)
-        ))
-        expected_distance_between_poi = 479
-        assert math.isclose(
-            actual_distance_between_poi,
-            expected_distance_between_poi
+        self.assert_coordinates_are_close(
+            transformation_func(*coordinate_to_project.xy),
+            expected_canvas_coordinates
+        )
+
+        # Repeat the same test, but this time without data_crs:
+        transformation_func = build_geo_to_canvas_transformation_func(
+            crs=british_crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas
+        )
+        coordinate_to_project = GeoCoordinate(258600, 665600, british_crs)
+        self.assert_coordinates_are_close(
+            transformation_func(*coordinate_to_project.xy),
+            expected_canvas_coordinates
         )
