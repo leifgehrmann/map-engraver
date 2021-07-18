@@ -1,12 +1,12 @@
 from mapengraver.canvas.canvas_unit import CanvasUnit
 
 
-class GeoToCanvasScale:
+class GeoCanvasScale:
     """
     An object that represents the number of geo units per canvas units.
 
     For example, if you want the scale: 1 centimeter for every 100 meters, you
-    would use: `GeoToCanvasScale(100, CanvasUnit.from_cm(1))` (Assuming that
+    would use: `GeoCanvasScale(100, CanvasUnit.from_cm(1))` (Assuming that
     the Coordinate Reference System being used is in meters).
     """
     geo_units: float

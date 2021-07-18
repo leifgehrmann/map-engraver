@@ -3,17 +3,17 @@ from typing import Tuple, Callable, Optional
 
 from mapengraver.canvas.canvas_coordinate import CanvasCoordinate
 from mapengraver.transformers.geo_coordinate import GeoCoordinate
-from mapengraver.transformers.geo_to_canvas_scale import GeoToCanvasScale
+from mapengraver.transformers.geo_canvas_scale import GeoCanvasScale
 
 
-def build_geo_to_canvas_transformation_func(
+def build_geo_to_canvas_transformer(
         # The Coordinate Reference System for plotting coordinate data onto
         # the canvas.
         crs: pyproj.CRS,
 
         # Controls the scale that things on the map will appear in. For
         # example, the number of meters per centimeter.
-        scale: GeoToCanvasScale,
+        scale: GeoCanvasScale,
 
         # Controls where the map should point to. If `origin_for_canvas` is the
         # default, this geographic coordinate appear on the top-left corner of
