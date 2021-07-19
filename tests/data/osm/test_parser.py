@@ -3,6 +3,7 @@ from pathlib import Path
 import unittest
 
 from mapengraver.data.osm import Parser
+from mapengraver.data.osm.util import get_nodes_for_way
 
 
 class TestParser(unittest.TestCase):
@@ -19,4 +20,4 @@ class TestParser(unittest.TestCase):
         assert osm_map.get_way('-101931').tags['highway'] == 'service'
         assert osm_map.get_relation('-99750').tags['building'] == 'yes'
 
-        assert osm_map.get_nodes_for_way('-101873')[1].tags['name'] == 'Beta'
+        assert get_nodes_for_way(osm_map, '-101873')[1].tags['name'] == 'Beta'

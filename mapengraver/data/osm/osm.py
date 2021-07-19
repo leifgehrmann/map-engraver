@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 from . import Node
 from . import Way
@@ -30,6 +30,3 @@ class Osm:
 
     def get_relation(self, ref: str) -> Relation:
         return self.relations[ref]
-
-    def get_nodes_for_way(self, ref: str) -> List[Node]:
-        return [self.nodes[node_ref] for node_ref in self.ways[ref].node_refs]
