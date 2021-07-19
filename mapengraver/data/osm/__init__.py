@@ -6,3 +6,4 @@ from .way import Way  # noqa
 from .relation import Relation  # noqa
 from .osm import Osm  # noqa
 from .parser import Parser  # noqa
+from .osm_subset import OsmSubset  # noqa
