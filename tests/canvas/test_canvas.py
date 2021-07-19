@@ -38,3 +38,8 @@ class TestCanvas(unittest.TestCase):
         canvas.close()
 
         assert path.exists()
+
+    def test_unknown_surface_type_raises_error(self):
+        path = Path(__file__).parent.joinpath('output/canvas.wat')
+        with self.assertRaises(Exception):
+            Canvas(path, 'unknown format', 100, 100)
