@@ -1,24 +1,22 @@
-from typing import Dict, List
+from typing import List
 import xml.etree.ElementTree as ElementTree
-from . import Member
+from . import Member, Element
 
 
-class Relation:
+class Relation(Element):
     """An OSM Relation"""
-    id: str
-    tags: Dict[str, str]
     members: List[type(Member)]
 
     def __init__(self, osm_element):
-        self.id = osm_element.attrib['id']
-        self.members = Relation.get_relation_members(osm_element)
+        super().__init__(osm_element)
+        self.members = Relation._get_relation_members(osm_element)
         self.nodes = []
         self.relations = []
         self.neighboring_ways = []
         self.neighboring_relations = []
 
     @staticmethod
-    def get_relation_members(osm_element: ElementTree) -> List[type(Member)]:
+    def _get_relation_members(osm_element: ElementTree) -> List[type(Member)]:
         """Get all members for a relation"""
         members = list()
         for child in osm_element:
