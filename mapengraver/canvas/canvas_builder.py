@@ -6,17 +6,11 @@ from pathlib import Path
 from mapengraver.canvas import Canvas
 from mapengraver.canvas.canvas_unit import CanvasUnit
 
-pixels_per_point = 0.75
-points_per_inch = 72
-mm_per_inch = 25.4
-points_per_pixel = 1 / pixels_per_point
-inch_per_mm = 1 / mm_per_inch
-
 
 class CanvasBuilder:
     path: Optional[Path]
-    width: Optional[float]
-    height: Optional[float]
+    width: Optional[CanvasUnit]
+    height: Optional[CanvasUnit]
     pixel_scale_factor: float
     surface_type: Optional[str]
     antialias_mode: int
@@ -25,7 +19,6 @@ class CanvasBuilder:
         self.path = None
         self.width = None
         self.height = None
-        self.units = None
         self.pixel_scale_factor = 1
         self.surface_type = None
         self.antialias_mode = cairo.ANTIALIAS_DEFAULT
@@ -34,13 +27,10 @@ class CanvasBuilder:
         self.validate_path()
         self.validate_pixel_scale_factor()
         self.validate_size()
-        self.validate_surface_type()
-        self.validate_antialias_mode()
 
         pixel_scale = self._calculate_pixel_scale_factor()
-        canvas_scale = self._calculate_units_in_points() * pixel_scale
-        width_in_points = self.width * canvas_scale
-        height_in_points = self.height * canvas_scale
+        width_in_points = self.width.pt * pixel_scale
+        height_in_points = self.height.pt * pixel_scale
 
         canvas = Canvas(
             self.path,
@@ -58,21 +48,22 @@ class CanvasBuilder:
         self.path = path
         file_extension = path.suffix
         file_extension = file_extension.lower()
-        if self.surface_type is None and file_extension != '':
-            if file_extension == '.png':
-                self.surface_type = 'png'
-            elif file_extension == '.svg':
-                self.surface_type = 'svg'
-            elif file_extension == '.pdf':
-                self.surface_type = 'pdf'
+        if file_extension == '.png':
+            self.surface_type = 'png'
+        elif file_extension == '.svg':
+            self.surface_type = 'svg'
+        elif file_extension == '.pdf':
+            self.surface_type = 'pdf'
+        else:
+            raise RuntimeError('Unknown file type: %s' % file_extension)
 
-    def set_surface_type(self, surface_type: str) -> None:
-        self.surface_type = surface_type
-
-    def set_size(self, width, height, units):
+    def set_size(self, width: CanvasUnit, height: CanvasUnit):
+        if width.pt <= 0:
+            raise RuntimeError('Invalid width: %s pt' % self.width.pt)
+        if height.pt <= 0:
+            raise RuntimeError('Invalid height: %s pt' % self.height.pt)
         self.width = width
         self.height = height
-        self.units = units
 
     def set_pixel_scale_factor(self, pixel_scale_factor) -> None:
         """
@@ -86,23 +77,20 @@ class CanvasBuilder:
         """
         self.pixel_scale_factor = pixel_scale_factor
 
+    def set_anti_alias_mode(self, antialias_mode):
+        if antialias_mode < 0 or antialias_mode > 6:
+            raise RuntimeError(
+                'Invalid antialias mode: %d' % self.antialias_mode
+            )
+        self.antialias_mode = antialias_mode
+
     def validate_path(self):
         if not self.path.parents[0].is_dir():
             raise RuntimeError('Not such file or directory: %s' % self.path)
 
     def validate_size(self):
-        if self.width is None:
-            raise RuntimeError('Invalid width: None')
-        if self.height is None:
-            raise RuntimeError('Invalid height: None')
-        if self.width <= 0:
-            raise RuntimeError('Invalid width: %s' % self.width)
-        if self.height < 0:
-            raise RuntimeError('Invalid height: %s' % self.surface_type)
-
-    def validate_units(self):
-        if self.units not in ['px', 'mm', 'in', 'pt']:
-            raise RuntimeError('Invalid units: %s' % self.units)
+        if self.width is None or self.height is None:
+            raise RuntimeError('Invalid size: None, None')
 
     def validate_pixel_scale_factor(self):
         if self.is_surface_type_vector() and self.pixel_scale_factor != 1:
@@ -111,31 +99,8 @@ class CanvasBuilder:
                 '%s' % self.surface_type
             )
 
-    def validate_antialias_mode(self):
-        if self.antialias_mode < 0 or self.antialias_mode > 6:
-            raise RuntimeError(
-                'Invalid antialias mode: %d' % self.antialias_mode
-            )
-
-    def validate_surface_type(self):
-        if self.surface_type not in ['pdf', 'png', 'svg']:
-            raise RuntimeError('Invalid surface type: %s' % self.surface_type)
-
     def is_surface_type_vector(self) -> bool:
         return self.surface_type in ['svg', 'pdf']
-
-    def _calculate_units_in_points(self) -> float:
-        if self.units == 'pt':
-            return 1.0
-        if self.units == 'in':
-            return CanvasUnit.from_in(1).pt
-        if self.units == 'mm':
-            return CanvasUnit.from_mm(1).pt
-        if self.units == 'cm':
-            return CanvasUnit.from_cm(1).pt
-        if self.units == 'px':
-            return CanvasUnit.from_px(1).pt
-        return 1.0
 
     def _calculate_pixel_scale_factor(self) -> float:
         if self.is_surface_type_vector():

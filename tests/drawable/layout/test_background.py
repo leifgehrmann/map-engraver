@@ -3,6 +3,7 @@ from pathlib import Path
 import unittest
 
 from mapengraver.canvas import CanvasBuilder
+from mapengraver.canvas.canvas_unit import CanvasUnit as Cu
 from mapengraver.drawable.layout.background import Background
 
 
@@ -16,7 +17,7 @@ class TestBackground(unittest.TestCase):
         path.unlink(missing_ok=True)
         canvas_builder = CanvasBuilder()
         canvas_builder.set_path(path)
-        canvas_builder.set_size(100, 100, 'px')
+        canvas_builder.set_size(Cu.from_px(100), Cu.from_px(100))
 
         canvas = canvas_builder.build()
 

@@ -1,3 +1,7 @@
+from typing import Tuple, Optional
+
+import subprocess
+
 from pathlib import Path
 
 import unittest
@@ -50,20 +54,36 @@ class TestCanvasUnit(unittest.TestCase):
 
         for (surface_type, pixel_scale_factor) in surface_types:
             for unit in units:
-                path = Path(__file__).parent\
-                    .joinpath(
-                    'output/canvas_unit_%s_%s_x%s.%s' %
-                    (surface_type, unit, pixel_scale_factor, surface_type)
-                )
-                print((unit, pixel_scale_factor, surface_type))
-                path.unlink(missing_ok=True)
                 canvas_builder = CanvasBuilder()
-                canvas_builder.set_path(path)
+
+                # We want to test all units, but some sizes are just too big
+                # and will take up lots of disk space. So we make an exception
+                # for inches and centimeters.
+                expected_size_in_unit: int
+                expected_size: Optional[CanvasUnit]
                 if unit in ['in', 'cm']:
+                    expected_size_in_unit = 4
+                    expected_size = CanvasUnit.from_unit(4, unit)
                     # Setting to a smaller size to avoid disk space issues
-                    canvas_builder.set_size(4, 4, unit)
+                    canvas_builder.set_size(expected_size, expected_size)
                 else:
-                    canvas_builder.set_size(100, 100, unit)
+                    expected_size_in_unit = 100
+                    expected_size = CanvasUnit.from_unit(100, unit)
+                    canvas_builder.set_size(expected_size, expected_size)
+
+                path = Path(__file__).parent \
+                    .joinpath(
+                    'output/canvas_unit_%s_%f%s_x%s.%s' %
+                    (
+                        surface_type,
+                        expected_size_in_unit,
+                        unit,
+                        pixel_scale_factor,
+                        surface_type
+                    )
+                )
+                path.unlink(missing_ok=True)
+                canvas_builder.set_path(path)
                 canvas_builder.set_pixel_scale_factor(pixel_scale_factor)
 
                 canvas = canvas_builder.build()
@@ -71,6 +91,23 @@ class TestCanvasUnit(unittest.TestCase):
                 canvas.close()
 
                 assert path.exists()
+
+                actual_size = self.get_file_dimensions_using_imagemagick(path)
+                if surface_type == 'pdf':
+                    self.assert_match(
+                        expected_size_in_unit, unit, surface_type,
+                        1, actual_size, expected_size.pt
+                    )
+                elif surface_type == 'svg':
+                    self.assert_match(
+                        expected_size_in_unit, unit, surface_type,
+                        1, actual_size, expected_size.px
+                    )
+                elif surface_type == 'png':
+                    self.assert_match(
+                        expected_size_in_unit, unit, surface_type,
+                        pixel_scale_factor, actual_size, expected_size.px
+                    )
 
     @staticmethod
     def draw_rectangle_top_left(canvas: Canvas, unit: str):
@@ -108,6 +145,51 @@ class TestCanvasUnit(unittest.TestCase):
         CairoHelper.draw_polygon(canvas.context, point_unit_shape)
         canvas.context.fill()
 
+    @staticmethod
+    def get_file_dimensions_using_imagemagick(
+            path: Path
+    ) -> Tuple[float, float]:
+        pipe = subprocess.Popen(
+            ['identify', '-format', "%P", path.as_posix()],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
+        stdout, stderr = pipe.communicate()
+        w, h = str(stdout.decode('utf-8')).split('\n')[0].split('x')
+        return float(w), float(h)
+
+    @staticmethod
+    def assert_match(
+            expected_size_in_unit,
+            unit,
+            surface_type,
+            pixel_scale_factor,
+            actual,
+            expected
+    ):
+        if round(actual[0]/pixel_scale_factor) != round(expected):
+            raise AssertionError(
+                'mismatched-size for %s%s.%s x%d. expected: %f, actual: %f' % (
+                    expected_size_in_unit,
+                    unit,
+                    surface_type,
+                    pixel_scale_factor,
+                    actual[0],
+                    expected
+                )
+            )
+        if round(actual[1]/pixel_scale_factor) != round(expected):
+            raise AssertionError(
+                'mismatched-size for %s%s.%s x%d. expected: %f, actual: %f' % (
+                    expected_size_in_unit,
+                    unit,
+                    surface_type,
+                    pixel_scale_factor,
+                    actual[1],
+                    expected
+                )
+            )
+
     def test_unit_scale(self):
         surface_types = ['png', 'svg', 'pdf']
         for surface_type in surface_types:
@@ -116,7 +198,10 @@ class TestCanvasUnit(unittest.TestCase):
             path.unlink(missing_ok=True)
             canvas_builder = CanvasBuilder()
             canvas_builder.set_path(path)
-            canvas_builder.set_size(1, 1, 'in')
+            canvas_builder.set_size(
+                CanvasUnit.from_in(1),
+                CanvasUnit.from_in(1)
+            )
 
             canvas = canvas_builder.build()
 
