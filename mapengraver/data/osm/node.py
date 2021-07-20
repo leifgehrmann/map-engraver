@@ -1,17 +1,14 @@
-from typing import Dict
+from mapengraver.data.osm import Element
 
 
-class Node:
+class Node(Element):
     """An OSM node"""
-    id: str
     lat: float
     lon: float
-    tags: Dict[str, str]
 
     def __init__(self, osm_element):
-        self.id = osm_element.attrib['id']
+        super().__init__(osm_element)
         self.lat = float(osm_element.attrib['lat'])
         self.lon = float(osm_element.attrib['lon'])
-        self.tags = {}
         self.member_of_ways = []
         self.member_of_relations = []

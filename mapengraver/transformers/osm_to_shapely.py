@@ -8,6 +8,7 @@ from mapengraver.data.osm import Way
 from mapengraver.data.osm import Relation
 from mapengraver.data.osm import MemberTypes
 from mapengraver.data.osm import Osm
+from mapengraver.data.osm.util import get_nodes_for_way
 
 
 class OsmLineString(LineString, ABC):
@@ -69,7 +70,7 @@ class OsmToShapely:
             self,
             way: Way
     ) -> Optional[OsmLineString]:
-        nodes = self.osm.get_nodes_for_way(way.id)
+        nodes = get_nodes_for_way(self.osm, way.id)
         linestring_array = []
         for node in nodes:
             linestring_array.append(self.transform(node.lon, node.lat))
@@ -81,7 +82,7 @@ class OsmToShapely:
             self,
             way: Way
     ) -> Optional[OsmPolygon]:
-        nodes = self.osm.get_nodes_for_way(way.id)
+        nodes = get_nodes_for_way(self.osm, way.id)
         polygon_array = []
         for node in nodes:
             polygon_array.append(self.transform(node.lon, node.lat))
@@ -188,7 +189,7 @@ class OsmToShapely:
         inner_way_end_node = {}
         for member in relation.members:
             if member.type == MemberTypes.WAY:
-                way_nodes = self.osm.get_nodes_for_way(member.ref)
+                way_nodes = get_nodes_for_way(self.osm, member.ref)
                 if len(way_nodes) == 0:
                     continue
                 if member.role == "inner":
