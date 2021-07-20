@@ -105,4 +105,4 @@ class CanvasBuilder:
     def _calculate_pixel_scale_factor(self) -> float:
         if self.is_surface_type_vector():
             return 1
-        return self.pixel_scale_factor
+        return CanvasUnit.from_pt(1).px * self.pixel_scale_factor

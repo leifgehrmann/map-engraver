@@ -48,18 +48,28 @@ class TestCanvasBuilder(unittest.TestCase):
         canvas_builder.set_anti_alias_mode(cairo.ANTIALIAS_BEST)
 
     def test_invalid_setters(self):
-        canvas_builder = CanvasBuilder()
-
         path = Path(__file__).parent.joinpath('output/canvas_builder.wat')
         with self.assertRaises(RuntimeError):
+            canvas_builder = CanvasBuilder()
+            canvas_builder.set_size(Cu.from_mm(1), Cu.from_mm(1))
             canvas_builder.set_path(path)
         with self.assertRaises(RuntimeError):
+            canvas_builder = CanvasBuilder()
+            canvas_builder.set_path(path)
             canvas_builder.set_size(Cu.from_mm(-1), Cu.from_mm(1))
         with self.assertRaises(RuntimeError):
+            canvas_builder = CanvasBuilder()
+            canvas_builder.set_path(path)
             canvas_builder.set_size(Cu.from_mm(1), Cu.from_mm(-1))
         with self.assertRaises(RuntimeError):
+            canvas_builder = CanvasBuilder()
+            canvas_builder.set_path(path)
+            canvas_builder.set_size(Cu.from_mm(1), Cu.from_mm(1))
             canvas_builder.set_anti_alias_mode(-1)
         with self.assertRaises(RuntimeError):
+            canvas_builder = CanvasBuilder()
+            canvas_builder.set_path(path)
+            canvas_builder.set_size(Cu.from_mm(1), Cu.from_mm(1))
             canvas_builder.set_anti_alias_mode(7)
 
     def test_invalid_directory_path(self):

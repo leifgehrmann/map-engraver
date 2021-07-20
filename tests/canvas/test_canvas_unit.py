@@ -1,3 +1,5 @@
+import math
+
 from typing import Tuple, Optional
 
 import subprocess
@@ -73,7 +75,7 @@ class TestCanvasUnit(unittest.TestCase):
 
                 path = Path(__file__).parent \
                     .joinpath(
-                    'output/canvas_unit_%s_%f%s_x%s.%s' %
+                    'output/canvas_unit_%s_%d%s_x%s.%s' %
                     (
                         surface_type,
                         expected_size_in_unit,
@@ -167,26 +169,34 @@ class TestCanvasUnit(unittest.TestCase):
             actual,
             expected
     ):
-        if round(actual[0]/pixel_scale_factor) != round(expected):
+        if not math.isclose(
+                actual[0],
+                expected * pixel_scale_factor,
+                rel_tol=1.0
+        ):
             raise AssertionError(
-                'mismatched-size for %s%s.%s x%d. expected: %f, actual: %f' % (
+                'mismatched-size for %s%s.%s x%s. expected: %f, actual: %f' % (
                     expected_size_in_unit,
                     unit,
                     surface_type,
                     pixel_scale_factor,
                     actual[0],
-                    expected
+                    expected * pixel_scale_factor
                 )
             )
-        if round(actual[1]/pixel_scale_factor) != round(expected):
+        if not math.isclose(
+                actual[1],
+                expected * pixel_scale_factor,
+                rel_tol=1.0
+        ):
             raise AssertionError(
-                'mismatched-size for %s%s.%s x%d. expected: %f, actual: %f' % (
+                'mismatched-size for %s%s.%s x%s. expected: %f, actual: %f' % (
                     expected_size_in_unit,
                     unit,
                     surface_type,
                     pixel_scale_factor,
                     actual[1],
-                    expected
+                    expected * pixel_scale_factor
                 )
             )
 
