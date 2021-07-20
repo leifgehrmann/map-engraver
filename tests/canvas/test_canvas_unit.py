@@ -38,6 +38,10 @@ class TestCanvasUnit(unittest.TestCase):
         assert CanvasUnit.from_mm(2).mm == 2
         assert CanvasUnit.from_px(2).px == 2
 
+    def test_unknown_unit(self):
+        with self.assertRaises(Exception):
+            CanvasUnit.from_unit(1, 'unknown')
+
     def test_outputs(self):
         surface_types = [
             ('pdf', 1), ('svg', 1), ('png', 0.5), ('png', 1), ('png', 2)
