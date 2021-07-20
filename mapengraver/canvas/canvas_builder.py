@@ -28,18 +28,26 @@ class CanvasBuilder:
         self.validate_pixel_scale_factor()
         self.validate_size()
 
-        pixel_scale = self._calculate_pixel_scale_factor()
-        width_in_points = self.width.pt * pixel_scale
-        height_in_points = self.height.pt * pixel_scale
+        width_in_surface_units: float
+        height_in_surface_units: float
+        scale: float
+        if self.is_surface_type_vector():
+            width_in_surface_units = self.width.pt
+            height_in_surface_units = self.height.pt
+            scale = CanvasUnit.from_pt(1).pt
+        else:
+            width_in_surface_units = self.width.px * self.pixel_scale_factor
+            height_in_surface_units = self.height.px * self.pixel_scale_factor
+            scale = CanvasUnit.from_pt(1).px * self.pixel_scale_factor
 
         canvas = Canvas(
             self.path,
             self.surface_type,
-            width_in_points,
-            height_in_points,
+            width_in_surface_units,
+            height_in_surface_units,
+            scale
         )
 
-        canvas.set_scale(pixel_scale)
         canvas.set_antialias_mode(self.antialias_mode)
 
         return canvas
@@ -59,9 +67,9 @@ class CanvasBuilder:
 
     def set_size(self, width: CanvasUnit, height: CanvasUnit):
         if width.pt <= 0:
-            raise RuntimeError('Invalid width: %s pt' % self.width.pt)
+            raise RuntimeError('Invalid width: %s pt' % width.pt)
         if height.pt <= 0:
-            raise RuntimeError('Invalid height: %s pt' % self.height.pt)
+            raise RuntimeError('Invalid height: %s pt' % height.pt)
         self.width = width
         self.height = height
 
@@ -101,8 +109,3 @@ class CanvasBuilder:
 
     def is_surface_type_vector(self) -> bool:
         return self.surface_type in ['svg', 'pdf']
-
-    def _calculate_pixel_scale_factor(self) -> float:
-        if self.is_surface_type_vector():
-            return 1
-        return CanvasUnit.from_pt(1).px * self.pixel_scale_factor

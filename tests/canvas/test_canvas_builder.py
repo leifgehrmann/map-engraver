@@ -1,15 +1,24 @@
+import math
+
+import subprocess
+
+from shapely.geometry import Polygon
+from typing import Optional, Tuple
+
 import cairocffi as cairo
 from pathlib import Path
 
 import unittest
 
-from mapengraver.canvas import CanvasBuilder
-from mapengraver.canvas.canvas_unit import CanvasUnit as Cu
+from mapengraver.canvas import CanvasBuilder, Canvas
+from mapengraver.canvas.canvas_unit import CanvasUnit as Cu, CanvasUnit
+from mapengraver.graphicshelper import CairoHelper
+from tests.canvas.unit_scale import UnitScale
 
 
 class TestCanvasBuilder(unittest.TestCase):
     def setUp(self):
-        Path(__file__).parent.joinpath('output/')\
+        Path(__file__).parent.joinpath('output/') \
             .mkdir(parents=True, exist_ok=True)
 
     def test_svg(self):
@@ -48,27 +57,28 @@ class TestCanvasBuilder(unittest.TestCase):
         canvas_builder.set_anti_alias_mode(cairo.ANTIALIAS_BEST)
 
     def test_invalid_setters(self):
-        path = Path(__file__).parent.joinpath('output/canvas_builder.wat')
+        valid_path = Path(__file__).parent.joinpath('output/valid.png')
+        invalid_path = Path(__file__).parent.joinpath('output/invalid.wat')
         with self.assertRaises(RuntimeError):
             canvas_builder = CanvasBuilder()
             canvas_builder.set_size(Cu.from_mm(1), Cu.from_mm(1))
-            canvas_builder.set_path(path)
+            canvas_builder.set_path(invalid_path)
         with self.assertRaises(RuntimeError):
             canvas_builder = CanvasBuilder()
-            canvas_builder.set_path(path)
+            canvas_builder.set_path(valid_path)
             canvas_builder.set_size(Cu.from_mm(-1), Cu.from_mm(1))
         with self.assertRaises(RuntimeError):
             canvas_builder = CanvasBuilder()
-            canvas_builder.set_path(path)
+            canvas_builder.set_path(valid_path)
             canvas_builder.set_size(Cu.from_mm(1), Cu.from_mm(-1))
         with self.assertRaises(RuntimeError):
             canvas_builder = CanvasBuilder()
-            canvas_builder.set_path(path)
+            canvas_builder.set_path(valid_path)
             canvas_builder.set_size(Cu.from_mm(1), Cu.from_mm(1))
             canvas_builder.set_anti_alias_mode(-1)
         with self.assertRaises(RuntimeError):
             canvas_builder = CanvasBuilder()
-            canvas_builder.set_path(path)
+            canvas_builder.set_path(valid_path)
             canvas_builder.set_size(Cu.from_mm(1), Cu.from_mm(1))
             canvas_builder.set_anti_alias_mode(7)
 
@@ -123,3 +133,182 @@ class TestCanvasBuilder(unittest.TestCase):
             canvas_builder.build()
 
         assert not path.exists()
+
+    """
+    Each output format should have a square in the top left corner. This tests
+    that the scale is correct, both from the perspective of the canvas (The
+    canvas dimensions should match the units), and the polygons drawn (The
+    midpoint of the canvas).
+    """
+    def test_scaling_outputs(self):
+        surface_types = [
+            ('pdf', 1), ('svg', 1), ('png', 0.5), ('png', 1), ('png', 2)
+        ]
+        units = ['pt', 'in', 'cm', 'mm', 'px']
+
+        for (surface_type, pixel_scale_factor) in surface_types:
+            for unit in units:
+                canvas_builder = CanvasBuilder()
+
+                # We want to test all units, but some sizes are just too big
+                # and will take up lots of disk space. So we make an exception
+                # for inches and centimeters.
+                expected_size_in_unit: int
+                expected_size: Optional[CanvasUnit]
+                if unit in ['in', 'cm']:
+                    expected_size_in_unit = 4
+                    expected_size = Cu.from_unit(4, unit)
+                    # Setting to a smaller size to avoid disk space issues
+                    canvas_builder.set_size(expected_size, expected_size)
+                else:
+                    expected_size_in_unit = 100
+                    expected_size = CanvasUnit.from_unit(100, unit)
+                    canvas_builder.set_size(expected_size, expected_size)
+
+                path = Path(__file__).parent \
+                    .joinpath(
+                    'output/canvas_builder_%s_%d%s_x%s.%s' %
+                    (
+                        surface_type,
+                        expected_size_in_unit,
+                        unit,
+                        pixel_scale_factor,
+                        surface_type
+                    )
+                )
+                path.unlink(missing_ok=True)
+                canvas_builder.set_path(path)
+                canvas_builder.set_pixel_scale_factor(pixel_scale_factor)
+
+                canvas = canvas_builder.build()
+                self.draw_rectangle_top_left(canvas, unit)
+                canvas.close()
+
+                assert path.exists()
+
+                actual_size = self.get_file_dimensions_using_imagemagick(path)
+                if surface_type == 'pdf':
+                    self.assert_match(
+                        expected_size_in_unit, unit, surface_type,
+                        1, actual_size, expected_size.pt
+                    )
+                elif surface_type == 'svg':
+                    self.assert_match(
+                        expected_size_in_unit, unit, surface_type,
+                        1, actual_size, expected_size.px
+                    )
+                elif surface_type == 'png':
+                    self.assert_match(
+                        expected_size_in_unit, unit, surface_type,
+                        pixel_scale_factor, actual_size, expected_size.px
+                    )
+
+    @staticmethod
+    def draw_rectangle_top_left(canvas: Canvas, unit: str):
+        if unit in ['in', 'cm']:
+            # Setting to a smaller size to avoid disk space issues
+            midpoint = CanvasUnit.from_unit(2, unit).pt
+        else:
+            midpoint = CanvasUnit.from_unit(50, unit).pt
+        top_left = (0, 0)
+        top_right = (midpoint, 0)
+        bottom_left = (0, midpoint)
+        bottom_right = (midpoint, midpoint)
+
+        shape = Polygon([
+            top_left,
+            top_right,
+            bottom_right,
+            bottom_left,
+            top_left
+        ])
+
+        canvas.context.set_source_rgb(0, 0, 0)
+        CairoHelper.draw_polygon(canvas.context, shape)
+        canvas.context.fill()
+
+        point_unit_shape = Polygon([
+            (0, 0),
+            (0, 1),
+            (1, 1),
+            (1, 0),
+            (0, 0)
+        ])
+
+        canvas.context.set_source_rgb(1, 0, 0)
+        CairoHelper.draw_polygon(canvas.context, point_unit_shape)
+        canvas.context.fill()
+
+    @staticmethod
+    def get_file_dimensions_using_imagemagick(
+            path: Path
+    ) -> Tuple[float, float]:
+        pipe = subprocess.Popen(
+            ['identify', '-format', "%P", path.as_posix()],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
+        stdout, stderr = pipe.communicate()
+        w, h = str(stdout.decode('utf-8')).split('\n')[0].split('x')
+        return float(w), float(h)
+
+    @staticmethod
+    def assert_match(
+            expected_size_in_unit,
+            unit,
+            surface_type,
+            pixel_scale_factor,
+            actual,
+            expected
+    ):
+        if not math.isclose(
+                actual[0],
+                expected * pixel_scale_factor,
+                rel_tol=1.0
+        ):
+            raise AssertionError(
+                'mismatched-size for %s%s.%s x%s. expected: %f, actual: %f' % (
+                    expected_size_in_unit,
+                    unit,
+                    surface_type,
+                    pixel_scale_factor,
+                    actual[0],
+                    expected * pixel_scale_factor
+                )
+            )
+        if not math.isclose(
+                actual[1],
+                expected * pixel_scale_factor,
+                rel_tol=1.0
+        ):
+            raise AssertionError(
+                'mismatched-size for %s%s.%s x%s. expected: %f, actual: %f' % (
+                    expected_size_in_unit,
+                    unit,
+                    surface_type,
+                    pixel_scale_factor,
+                    actual[1],
+                    expected * pixel_scale_factor
+                )
+            )
+
+    def test_unit_scale(self):
+        surface_types = ['png', 'svg', 'pdf']
+        for surface_type in surface_types:
+            path = Path(__file__).parent\
+                .joinpath('output/canvas_builder_unit_scale.%s' % surface_type)
+            path.unlink(missing_ok=True)
+            canvas_builder = CanvasBuilder()
+            canvas_builder.set_path(path)
+            canvas_builder.set_size(
+                CanvasUnit.from_in(1),
+                CanvasUnit.from_in(1)
+            )
+
+            canvas = canvas_builder.build()
+
+            UnitScale().draw(canvas)
+
+            canvas.close()
+
+            assert path.exists()
