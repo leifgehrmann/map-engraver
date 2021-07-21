@@ -243,18 +243,34 @@ class TestCanvasBuilder(unittest.TestCase):
     def get_file_dimensions_using_imagemagick(
             path: Path
     ) -> Tuple[float, float]:
-        pipe = subprocess.Popen(
-            ['identify', '-format', "%P", path.as_posix()],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
-        )
-        stdout, stderr = pipe.communicate()
+        size_str: str
+        stdout: bytes
+        stderr: bytes
+        if path.suffix.lower() == '.pdf':
+            pipe = subprocess.Popen(
+                [
+                    'pdfinfo', path.as_posix()
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+            )
+            stdout, stderr = pipe.communicate()
+            size_str = str(stdout.decode('utf-8')).split('\n')[0]
+            size_str = size_str.replace(' ', '')
+        else:
+            pipe = subprocess.Popen(
+                ['identify', '-format', "%P", path.as_posix()],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+            )
+            stdout, stderr = pipe.communicate()
+            size_str = str(stdout.decode('utf-8')).split('\n')[0]
         try:
-            w, h = str(stdout.decode('utf-8')).split('\n')[0].split('x')
+            w, h = size_str.split('x')
         except ValueError:
             raise AssertionError(
                 'Failed to get image size for %s. ' % path.as_posix() +
-                'identify returned: %s' % stdout.decode('utf-8')
+                'identify output: %s' % stdout.decode('utf-8')
             )
         return float(w), float(h)
 
