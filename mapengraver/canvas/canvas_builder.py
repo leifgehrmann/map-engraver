@@ -36,8 +36,8 @@ class CanvasBuilder:
             height_in_surface_units = self.height.pt
             scale = CanvasUnit.from_pt(1).pt
         else:
-            width_in_surface_units = self.width.px * self.pixel_scale_factor
-            height_in_surface_units = self.height.px * self.pixel_scale_factor
+            width_in_surface_units = self.width.px
+            height_in_surface_units = self.height.px
             scale = CanvasUnit.from_pt(1).px * self.pixel_scale_factor
 
         canvas = Canvas(

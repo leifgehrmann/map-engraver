@@ -39,8 +39,8 @@ class Canvas:
         elif surface_type == 'png':
             surface = cairo.ImageSurface(
                 cairo.FORMAT_ARGB32,
-                int(width),
-                int(height)
+                int(width * self.scale),
+                int(height * self.scale)
             )
         else:
             raise Exception('Unexpected Format: %s' % surface_type)
@@ -53,7 +53,8 @@ class Canvas:
         self.surface = surface
         self.context = context
 
-        self.context.scale(self.scale, self.scale)
+        if isinstance(self.surface, cairo.ImageSurface):
+            self.context.scale(self.scale, self.scale)
 
     def set_antialias_mode(self, antialias_mode: int):
         self.context.set_antialias(antialias_mode)
