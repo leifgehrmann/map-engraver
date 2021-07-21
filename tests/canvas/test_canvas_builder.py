@@ -253,7 +253,8 @@ class TestCanvasBuilder(unittest.TestCase):
             w, h = str(stdout.decode('utf-8')).split('\n')[0].split('x')
         except ValueError:
             raise AssertionError(
-                'Failed to get image size for %s' % path.as_posix()
+                'Failed to get image size for %s. ' % path.as_posix() +
+                'identify returned: %s' % stdout.decode('utf-8')
             )
         return float(w), float(h)
 
