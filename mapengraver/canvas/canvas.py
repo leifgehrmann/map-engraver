@@ -22,6 +22,9 @@ class Canvas:
             height: float,
             scale: float = 1
     ):
+        self.width = width
+        self.height = height
+        self.scale = scale
         self.path_as_posix = path.as_posix()
 
         if surface_type == 'pdf':
@@ -46,10 +49,6 @@ class Canvas:
             raise Exception('Unexpected Format: %s' % surface_type)
 
         context = cairo.Context(surface)
-
-        self.width = width
-        self.height = height
-        self.scale = scale
         self.surface = surface
         self.context = context
 
