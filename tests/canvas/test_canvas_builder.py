@@ -1,3 +1,5 @@
+import re
+
 import math
 
 import subprocess
@@ -243,20 +245,35 @@ class TestCanvasBuilder(unittest.TestCase):
     def get_file_dimensions_using_imagemagick(
             path: Path
     ) -> Tuple[float, float]:
-        size_str: str
+        width: str
+        height: str
         stdout: bytes
         stderr: bytes
         if path.suffix.lower() == '.pdf':
             pipe = subprocess.Popen(
                 [
-                    'pdfinfo', path.as_posix()
+                    'grep', '-a', 'MediaBox', path.as_posix()
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT
             )
             stdout, stderr = pipe.communicate()
-            size_str = str(stdout.decode('utf-8')).split('\n')[0]
-            size_str = size_str.replace(' ', '')
+            stdout_str = str(stdout.decode('utf-8'))
+            match = re.search(r'([0-9.]+) ([0-9.]+) ]', stdout_str)
+            width = match.group(1)
+            height = match.group(2)
+        elif path.suffix.lower() == '.svg':
+            pipe = subprocess.Popen(
+                [
+                    'grep', '-a', '<svg', path.as_posix()
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+            )
+            stdout, stderr = pipe.communicate()
+            stdout_str = str(stdout.decode('utf-8'))
+            width = re.search(r'width="([0-9.]+)pt"', stdout_str).group(1)
+            height = re.search(r'height="([0-9.]+)pt"', stdout_str).group(1)
         else:
             pipe = subprocess.Popen(
                 ['identify', '-format', "%P", path.as_posix()],
@@ -265,14 +282,8 @@ class TestCanvasBuilder(unittest.TestCase):
             )
             stdout, stderr = pipe.communicate()
             size_str = str(stdout.decode('utf-8')).split('\n')[0]
-        try:
-            w, h = size_str.split('x')
-        except ValueError:
-            raise AssertionError(
-                'Failed to get image size for %s. ' % path.as_posix() +
-                'identify output: %s' % stdout.decode('utf-8')
-            )
-        return float(w), float(h)
+            width, height = size_str.split('x')
+        return float(width), float(height)
 
     @staticmethod
     def assert_match(
