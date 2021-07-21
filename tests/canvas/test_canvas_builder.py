@@ -249,7 +249,12 @@ class TestCanvasBuilder(unittest.TestCase):
             stderr=subprocess.STDOUT
         )
         stdout, stderr = pipe.communicate()
-        w, h = str(stdout.decode('utf-8')).split('\n')[0].split('x')
+        try:
+            w, h = str(stdout.decode('utf-8')).split('\n')[0].split('x')
+        except ValueError:
+            raise AssertionError(
+                'Failed to get image size for %s' % path.as_posix()
+            )
         return float(w), float(h)
 
     @staticmethod
