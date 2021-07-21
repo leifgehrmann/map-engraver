@@ -32,8 +32,7 @@ class TestCanvas(unittest.TestCase):
     def test_png(self):
         path = Path(__file__).parent.joinpath('output/canvas.png')
         path.unlink(missing_ok=True)
-        canvas = Canvas(path, 'png', 100, 100)
-        canvas.set_scale(0.5)
+        canvas = Canvas(path, 'png', 100, 100, 0.5)
         canvas.set_antialias_mode(cairocffi.ANTIALIAS_NONE)
         canvas.close()
 

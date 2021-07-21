@@ -24,7 +24,10 @@ class TestSvg(unittest.TestCase):
         path.unlink(missing_ok=True)
         canvas_builder = CanvasBuilder()
         canvas_builder.set_path(path)
-        canvas_builder.set_size(10, 7, 'cm')
+        canvas_builder.set_size(
+            Cu.from_cm(4),
+            Cu.from_cm(4)
+        )
 
         canvas = canvas_builder.build()
 
