@@ -180,7 +180,6 @@ class TestCanvasBuilder(unittest.TestCase):
                 )
                 path.unlink(missing_ok=True)
                 canvas_builder.set_path(path)
-                expected_scale = pixel_scale_factor
                 canvas_builder.set_pixel_scale_factor(pixel_scale_factor)
 
                 canvas = canvas_builder.build()
@@ -198,7 +197,7 @@ class TestCanvasBuilder(unittest.TestCase):
                 elif surface_type == 'svg':
                     self.assert_match(
                         expected_size_in_unit, unit, surface_type,
-                        1, actual, expected_size.px
+                        1, actual, expected_size.pt
                     )
                 elif surface_type == 'png':
                     self.assert_match(
@@ -283,6 +282,7 @@ class TestCanvasBuilder(unittest.TestCase):
             image = Image.open(path.as_posix())
             width, height = image.size
             scale = CanvasUnit.from_px(float(image.info['dpi'][0])).inches
+            image.close()
         return width, height, scale
 
     @staticmethod
@@ -297,10 +297,10 @@ class TestCanvasBuilder(unittest.TestCase):
         if not math.isclose(
                 actual[0],
                 expected * pixel_scale_factor,
-                rel_tol=1.0
+                abs_tol=2.0
         ):
             raise AssertionError(
-                'mismatched-size for %s%s.%s x%s. expected: %f, actual: %f' % (
+                'mismatched-size %s%s.%s x%s. expected: %f, actual: %f' % (
                     expected_size_in_unit,
                     unit,
                     surface_type,
@@ -312,10 +312,10 @@ class TestCanvasBuilder(unittest.TestCase):
         if not math.isclose(
                 actual[1],
                 expected * pixel_scale_factor,
-                rel_tol=1.0
+                abs_tol=2.0
         ):
             raise AssertionError(
-                'mismatched-size for %s%s.%s x%s. expected: %f, actual: %f' % (
+                'mismatched-size %s%s.%s x%s. expected: %f, actual: %f' % (
                     expected_size_in_unit,
                     unit,
                     surface_type,
@@ -330,7 +330,7 @@ class TestCanvasBuilder(unittest.TestCase):
                 rel_tol=0.01
         ):
             raise AssertionError(
-                'mismatched-scale for %s%s.%s x%s. expected: %f, actual: %f' % (
+                'mismatched-scale %s%s.%s x%s. expected: %f, actual: %f' % (
                     expected_size_in_unit,
                     unit,
                     surface_type,

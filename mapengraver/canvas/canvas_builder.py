@@ -34,11 +34,11 @@ class CanvasBuilder:
         if self.is_surface_type_vector():
             width_in_surface_units = self.width.pt
             height_in_surface_units = self.height.pt
-            scale = CanvasUnit.from_pt(1).pt
+            scale = 1
         else:
-            width_in_surface_units = self.width.px
-            height_in_surface_units = self.height.px
-            scale = CanvasUnit.from_pt(1).px * self.pixel_scale_factor
+            width_in_surface_units = self.width.px * self.pixel_scale_factor
+            height_in_surface_units = self.height.px * self.pixel_scale_factor
+            scale = self.pixel_scale_factor
 
         canvas = Canvas(
             self.path,

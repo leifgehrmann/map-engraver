@@ -42,8 +42,8 @@ class Canvas:
         elif surface_type == 'png':
             surface = cairo.ImageSurface(
                 cairo.FORMAT_ARGB32,
-                int(width * self.scale),
-                int(height * self.scale)
+                int(width),
+                int(height)
             )
         else:
             raise Exception('Unexpected Format: %s' % surface_type)
@@ -53,7 +53,10 @@ class Canvas:
         self.context = context
 
         if isinstance(self.surface, cairo.ImageSurface):
-            self.context.scale(self.scale, self.scale)
+            self.context.scale(
+                CanvasUnit.from_pt(1).px * self.scale,
+                CanvasUnit.from_pt(1).px * self.scale
+            )
 
     def set_antialias_mode(self, antialias_mode: int):
         self.context.set_antialias(antialias_mode)
@@ -70,5 +73,5 @@ class Canvas:
         # of inches should not change. We use Pillow to adjust the DPI.
         if isinstance(self.surface, cairo.ImageSurface):
             image = Image.open(self.path_as_posix)
-            dpi = CanvasUnit.from_in(1).pt * self.scale
+            dpi = CanvasUnit.from_in(1).px * self.scale
             image.save(self.path_as_posix, dpi=(dpi, dpi))
