@@ -180,6 +180,7 @@ class TestCanvasBuilder(unittest.TestCase):
                 )
                 path.unlink(missing_ok=True)
                 canvas_builder.set_path(path)
+                expected_scale = pixel_scale_factor
                 canvas_builder.set_pixel_scale_factor(pixel_scale_factor)
 
                 canvas = canvas_builder.build()
@@ -188,21 +189,21 @@ class TestCanvasBuilder(unittest.TestCase):
 
                 assert path.exists()
 
-                actual_size = self.get_file_dimensions_using_imagemagick(path)
+                actual = self.get_file_dimensions_and_scale(path)
                 if surface_type == 'pdf':
                     self.assert_match(
                         expected_size_in_unit, unit, surface_type,
-                        1, actual_size, expected_size.pt
+                        1, actual, expected_size.pt
                     )
                 elif surface_type == 'svg':
                     self.assert_match(
                         expected_size_in_unit, unit, surface_type,
-                        1, actual_size, expected_size.px
+                        1, actual, expected_size.px
                     )
                 elif surface_type == 'png':
                     self.assert_match(
                         expected_size_in_unit, unit, surface_type,
-                        pixel_scale_factor, actual_size, expected_size.px
+                        pixel_scale_factor, actual, expected_size.px
                     )
 
     @staticmethod
@@ -242,13 +243,12 @@ class TestCanvasBuilder(unittest.TestCase):
         canvas.context.fill()
 
     @staticmethod
-    def get_file_dimensions_using_imagemagick(
+    def get_file_dimensions_and_scale(
             path: Path
-    ) -> Tuple[float, float]:
-        width: str
-        height: str
-        stdout: bytes
-        stderr: bytes
+    ) -> Tuple[float, float, float]:
+        width: float
+        height: float
+        scale: float
         if path.suffix.lower() == '.pdf':
             pipe = subprocess.Popen(
                 [
@@ -260,8 +260,9 @@ class TestCanvasBuilder(unittest.TestCase):
             stdout, stderr = pipe.communicate()
             stdout_str = str(stdout.decode('utf-8'))
             match = re.search(r'([0-9.]+) ([0-9.]+) ]', stdout_str)
-            width = match.group(1)
-            height = match.group(2)
+            width = float(match.group(1))
+            height = float(match.group(2))
+            scale = 1.0
         elif path.suffix.lower() == '.svg':
             pipe = subprocess.Popen(
                 [
@@ -272,18 +273,17 @@ class TestCanvasBuilder(unittest.TestCase):
             )
             stdout, stderr = pipe.communicate()
             stdout_str = str(stdout.decode('utf-8'))
-            width = re.search(r'width="([0-9.]+)pt"', stdout_str).group(1)
-            height = re.search(r'height="([0-9.]+)pt"', stdout_str).group(1)
+            width_match = re.search(r'width="([0-9.]+)pt"', stdout_str)
+            height_match = re.search(r'height="([0-9.]+)pt"', stdout_str)
+            width = float(width_match.group(1))
+            height = float(height_match.group(1))
+            scale = 1.0
         else:
-            pipe = subprocess.Popen(
-                ['identify', '-format', "%P", path.as_posix()],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT
-            )
-            stdout, stderr = pipe.communicate()
-            size_str = str(stdout.decode('utf-8')).split('\n')[0]
-            width, height = size_str.split('x')
-        return float(width), float(height)
+            from PIL import Image
+            image = Image.open(path.as_posix())
+            width, height = image.size
+            scale = CanvasUnit.from_px(float(image.info['dpi'][0])).inches
+        return width, height, scale
 
     @staticmethod
     def assert_match(
@@ -291,7 +291,7 @@ class TestCanvasBuilder(unittest.TestCase):
             unit,
             surface_type,
             pixel_scale_factor,
-            actual,
+            actual: Tuple[float, float, float],
             expected
     ):
         if not math.isclose(
@@ -305,8 +305,8 @@ class TestCanvasBuilder(unittest.TestCase):
                     unit,
                     surface_type,
                     pixel_scale_factor,
-                    actual[0],
-                    expected * pixel_scale_factor
+                    expected * pixel_scale_factor,
+                    actual[0]
                 )
             )
         if not math.isclose(
@@ -320,8 +320,23 @@ class TestCanvasBuilder(unittest.TestCase):
                     unit,
                     surface_type,
                     pixel_scale_factor,
-                    actual[1],
-                    expected * pixel_scale_factor
+                    expected * pixel_scale_factor,
+                    actual[1]
+                )
+            )
+        if not math.isclose(
+                actual[2],
+                pixel_scale_factor,
+                rel_tol=0.01
+        ):
+            raise AssertionError(
+                'mismatched-scale for %s%s.%s x%s. expected: %f, actual: %f' % (
+                    expected_size_in_unit,
+                    unit,
+                    surface_type,
+                    pixel_scale_factor,
+                    pixel_scale_factor,
+                    actual[2],
                 )
             )
 
