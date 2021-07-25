@@ -16,7 +16,7 @@ class PolygonDrawer(Drawable):
 
     def __init__(self):
         self.polygons = []
-        self.fill_color = (1, 1, 1, 1)
+        self.fill_color = None
         self.stroke_color = (0, 0, 0, 1)
         self.stroke_width = None
 
