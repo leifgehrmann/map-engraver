@@ -12,9 +12,9 @@ from pathlib import Path
 
 import unittest
 
-from mapengraver.canvas import CanvasBuilder, Canvas
-from mapengraver.canvas.canvas_unit import CanvasUnit as Cu, CanvasUnit
-from mapengraver.graphicshelper import CairoHelper
+from map_engraver.canvas import CanvasBuilder, Canvas
+from map_engraver.canvas.canvas_unit import CanvasUnit as Cu, CanvasUnit
+from map_engraver.graphicshelper import CairoHelper
 from tests.canvas.unit_scale import UnitScale
 
 

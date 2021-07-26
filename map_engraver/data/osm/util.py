@@ -1,4 +1,4 @@
-from mapengraver.data.osm import Osm
+from map_engraver.data.osm import Osm
 
 
 def get_nodes_for_way(osm: Osm, way_ref: str):

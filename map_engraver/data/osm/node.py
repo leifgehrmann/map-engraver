@@ -1,4 +1,4 @@
-from mapengraver.data.osm import Element
+from map_engraver.data.osm import Element
 
 
 class Node(Element):

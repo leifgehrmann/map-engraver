@@ -1,9 +1,9 @@
 import pyproj
 from typing import Tuple, Callable, Optional
 
-from mapengraver.canvas.canvas_coordinate import CanvasCoordinate
-from mapengraver.transformers.geo_coordinate import GeoCoordinate
-from mapengraver.transformers.geo_canvas_scale import GeoCanvasScale
+from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
+from map_engraver.transformers.geo_coordinate import GeoCoordinate
+from map_engraver.transformers.geo_canvas_scale import GeoCanvasScale
 
 
 def build_geo_to_canvas_transformer(

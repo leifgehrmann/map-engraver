@@ -2,8 +2,8 @@ from pathlib import Path
 
 import unittest
 
-from mapengraver.data.osm import Parser, Osm, Element, Way
-from mapengraver.data.osm.filter import filter_elements
+from map_engraver.data.osm import Parser, Osm, Element, Way
+from map_engraver.data.osm.filter import filter_elements
 
 
 class TestFilter(unittest.TestCase):

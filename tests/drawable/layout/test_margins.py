@@ -2,9 +2,9 @@ from pathlib import Path
 
 import unittest
 
-from mapengraver.canvas import CanvasBuilder
-from mapengraver.canvas.canvas_unit import CanvasUnit as Cu
-from mapengraver.drawable.layout.margins import Margins
+from map_engraver.canvas import CanvasBuilder
+from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
+from map_engraver.drawable.layout.margins import Margins
 
 
 class TestMargins(unittest.TestCase):

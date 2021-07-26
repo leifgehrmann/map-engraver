@@ -2,8 +2,8 @@ from pathlib import Path
 
 import unittest
 
-from mapengraver.data.osm import Parser
-from mapengraver.data.osm.util import get_nodes_for_way
+from map_engraver.data.osm import Parser
+from map_engraver.data.osm.util import get_nodes_for_way
 
 
 class TestParser(unittest.TestCase):

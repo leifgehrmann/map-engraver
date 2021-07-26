@@ -2,10 +2,10 @@ from typing import Tuple
 
 from pathlib import Path
 
-from mapengraver.canvas import Canvas
-from mapengraver.canvas.canvas_unit import CanvasUnit
-from mapengraver.drawable.drawable import Drawable
-from mapengraver.graphicshelper.svg_surface import SvgSurface
+from map_engraver.canvas import Canvas
+from map_engraver.canvas.canvas_unit import CanvasUnit
+from map_engraver.drawable.drawable import Drawable
+from map_engraver.graphicshelper.svg_surface import SvgSurface
 
 
 class Svg(Drawable):

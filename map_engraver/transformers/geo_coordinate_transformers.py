@@ -2,7 +2,7 @@ from typing import List
 
 from pyproj import proj, Transformer
 
-from mapengraver.transformers.geo_coordinate import GeoCoordinate
+from map_engraver.transformers.geo_coordinate import GeoCoordinate
 
 
 def transform_geo_coordinate_to_new_crs(

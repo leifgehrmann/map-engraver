@@ -3,9 +3,9 @@ from pathlib import Path
 import unittest
 from shapely.geometry import Polygon
 
-from mapengraver.canvas import CanvasBuilder
-from mapengraver.canvas.canvas_unit import CanvasUnit as Cu
-from mapengraver.drawable.geometry.polygon_drawer import PolygonDrawer
+from map_engraver.canvas import CanvasBuilder
+from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
+from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
 
 
 class TestPolygonDrawer(unittest.TestCase):

@@ -1,7 +1,7 @@
 from typing import List
 import xml.etree.ElementTree as ElementTree
 
-from mapengraver.data.osm import Element
+from map_engraver.data.osm import Element
 
 
 class Way(Element):
