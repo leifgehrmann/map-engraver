@@ -5,11 +5,11 @@ from typing import Tuple
 import pyproj
 import unittest
 
-from mapengraver.canvas.canvas_coordinate import CanvasCoordinate
-from mapengraver.canvas.canvas_unit import CanvasUnit
-from mapengraver.transformers.geo_coordinate import GeoCoordinate
-from mapengraver.transformers.geo_canvas_scale import GeoCanvasScale
-from mapengraver.transformers.geo_canvas_transformers import \
+from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
+from map_engraver.canvas.canvas_unit import CanvasUnit
+from map_engraver.transformers.geo_coordinate import GeoCoordinate
+from map_engraver.transformers.geo_canvas_scale import GeoCanvasScale
+from map_engraver.transformers.geo_canvas_transformers import \
     build_geo_to_canvas_transformer
 
 

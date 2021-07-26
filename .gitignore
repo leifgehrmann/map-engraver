@@ -11,6 +11,7 @@ venv/
 .coverage
 coverage.xml
 htmlcov
+dist
 
 ### Test ouputs ###
 tests/**/output/

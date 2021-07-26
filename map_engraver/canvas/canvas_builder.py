@@ -3,8 +3,8 @@ from typing import Optional
 import cairocffi as cairo
 from pathlib import Path
 
-from mapengraver.canvas import Canvas
-from mapengraver.canvas.canvas_unit import CanvasUnit
+from map_engraver.canvas import Canvas
+from map_engraver.canvas.canvas_unit import CanvasUnit
 
 
 class CanvasBuilder:

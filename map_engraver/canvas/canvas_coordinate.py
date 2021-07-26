@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from mapengraver.canvas.canvas_unit import CanvasUnit
+from map_engraver.canvas.canvas_unit import CanvasUnit
 
 
 class CanvasCoordinate:

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import unittest
 
-from mapengraver.canvas import Canvas
+from map_engraver.canvas import Canvas
 
 
 class TestCanvas(unittest.TestCase):

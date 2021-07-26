@@ -2,8 +2,8 @@ from pathlib import Path
 
 import unittest
 
-from mapengraver.data.osm import Parser
-from mapengraver.transformers.osm_to_shapely import OsmToShapely, \
+from map_engraver.data.osm import Parser
+from map_engraver.transformers.osm_to_shapely import OsmToShapely, \
     WayToPolygonError, RelationToPolygonError
 
 

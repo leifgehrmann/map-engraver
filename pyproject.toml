@@ -29,7 +29,7 @@ source = ["src", "*/site-packages"]
 
 [tool.coverage.run]
 branch = true
-source = ["mapengraver"]
+source = ["map_engraver"]
 
 [tool.coverage.report]
 show_missing = true

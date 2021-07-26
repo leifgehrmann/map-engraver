@@ -1,10 +1,10 @@
 from typing import Tuple
 
-from mapengraver.canvas import Canvas
-from mapengraver.canvas.canvas_unit import CanvasUnit
-from mapengraver.drawable.drawable import Drawable
-from mapengraver.graphicshelper import CairoHelper
-from mapengraver.logging.progressable import ProgressObservable
+from map_engraver.canvas import Canvas
+from map_engraver.canvas.canvas_unit import CanvasUnit
+from map_engraver.drawable.drawable import Drawable
+from map_engraver.graphicshelper import CairoHelper
+from map_engraver.logging.progressable import ProgressObservable
 
 from shapely.geometry import Polygon
 

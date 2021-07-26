@@ -1,7 +1,7 @@
 from typing import Callable
 
-from mapengraver.data.osm import Osm, Element
-from mapengraver.data.osm import OsmSubset
+from map_engraver.data.osm import Osm, Element
+from map_engraver.data.osm import OsmSubset
 
 
 def filter_elements(

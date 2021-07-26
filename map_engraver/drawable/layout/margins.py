@@ -1,10 +1,10 @@
 from shapely.geometry import Polygon
 from typing import Optional
 
-from mapengraver.canvas import Canvas
-from mapengraver.canvas.canvas_unit import CanvasUnit
-from mapengraver.drawable.drawable import Drawable
-from mapengraver.graphicshelper import CairoHelper
+from map_engraver.canvas import Canvas
+from map_engraver.canvas.canvas_unit import CanvasUnit
+from map_engraver.drawable.drawable import Drawable
+from map_engraver.graphicshelper import CairoHelper
 
 
 class Margins(Drawable):

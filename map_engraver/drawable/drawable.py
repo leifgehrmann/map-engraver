@@ -1,6 +1,6 @@
 import abc
 
-from mapengraver.canvas import Canvas
+from map_engraver.canvas import Canvas
 
 
 class Drawable(abc.ABC):

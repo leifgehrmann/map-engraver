@@ -3,12 +3,12 @@ from abc import ABC
 from shapely.geometry import Polygon, LineString
 from typing import Optional, List, Tuple, Dict, Callable, Union
 
-from mapengraver.data.osm import Node
-from mapengraver.data.osm import Way
-from mapengraver.data.osm import Relation
-from mapengraver.data.osm import MemberTypes
-from mapengraver.data.osm import Osm
-from mapengraver.data.osm.util import get_nodes_for_way
+from map_engraver.data.osm import Node
+from map_engraver.data.osm import Way
+from map_engraver.data.osm import Relation
+from map_engraver.data.osm import MemberTypes
+from map_engraver.data.osm import Osm
+from map_engraver.data.osm.util import get_nodes_for_way
 
 
 class OsmLineString(LineString, ABC):

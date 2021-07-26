@@ -1,6 +1,6 @@
 from typing import Dict
 
-from mapengraver.data.osm import Node, Way, Relation
+from map_engraver.data.osm import Node, Way, Relation
 
 
 class OsmSubset:
