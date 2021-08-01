@@ -1,6 +1,6 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, MultiPolygon
 
 from map_engraver.canvas import Canvas
 from map_engraver.canvas.canvas_unit import CanvasUnit
@@ -12,7 +12,7 @@ class PolygonDrawer(Drawable):
     stroke_width: Optional[CanvasUnit]
     stroke_color: Optional[Tuple[float, float, float, float]]
     fill_color: Optional[Tuple[float, float, float, float]]
-    polygons: List[Polygon]
+    geoms: List[Union[Polygon, MultiPolygon]]
 
     def __init__(self):
         self.polygons = []
@@ -27,15 +27,22 @@ class PolygonDrawer(Drawable):
         return self.stroke_width is not None and self.stroke_color is not None
 
     def draw(self, canvas: Canvas):
-        for polygon in self.polygons:
-            CairoHelper.draw_polygon(canvas.context, polygon)
-            if self._has_fill() and self._has_stroke():
-                canvas.context.set_source_rgba(*self.fill_color)
-                canvas.context.fill_preserve()
-            elif self._has_fill():
-                canvas.context.set_source_rgba(*self.fill_color)
-                canvas.context.fill()
-            if self._has_stroke():
-                canvas.context.set_line_width(self.stroke_width.pt)
-                canvas.context.set_source_rgba(*self.stroke_color)
-                canvas.context.stroke()
+        for geom in self.geoms:
+            if type(geom) is MultiPolygon:
+                for sub_geom in geom.geoms:
+                    self.draw_polygon(canvas, sub_geom)
+            else:
+                self.draw_polygon(canvas, geom)
+
+    def draw_polygon(self, canvas: Canvas, polygon: Polygon):
+        CairoHelper.draw_polygon(canvas.context, polygon)
+        if self._has_fill() and self._has_stroke():
+            canvas.context.set_source_rgba(*self.fill_color)
+            canvas.context.fill_preserve()
+        elif self._has_fill():
+            canvas.context.set_source_rgba(*self.fill_color)
+            canvas.context.fill()
+        if self._has_stroke():
+            canvas.context.set_line_width(self.stroke_width.pt)
+            canvas.context.set_source_rgba(*self.stroke_color)
+            canvas.context.stroke()
