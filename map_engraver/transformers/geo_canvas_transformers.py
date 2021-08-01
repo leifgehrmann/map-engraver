@@ -38,7 +38,7 @@ def build_geo_to_canvas_transformer(
         )
     transformed_origin_for_geo = pyproj.Transformer\
         .from_proj(origin_for_geo.crs, crs)\
-        .transform(*origin_for_geo.xy)
+        .transform(*origin_for_geo.tuple)
     scale_factor = scale.geo_units / scale.canvas_units.pt
 
     def projection(x: float, y: float) -> Tuple[float, float]:

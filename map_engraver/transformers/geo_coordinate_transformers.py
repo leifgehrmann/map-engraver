@@ -12,7 +12,7 @@ def transform_geo_coordinate_to_new_crs(
     result = Transformer.from_proj(
         geo_coordinate.crs,
         new_crs
-    ).transform(*geo_coordinate.xy)
+    ).transform(*geo_coordinate.tuple)
     return GeoCoordinate(result[0], result[1], new_crs)
 
 

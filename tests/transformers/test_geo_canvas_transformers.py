@@ -74,7 +74,7 @@ class TestProjectGeoToCanvas(unittest.TestCase):
             origin_for_canvas=origin_for_canvas
         )
         self.assert_coordinates_are_close(
-            transformation_func(*coordinate_to_project.xy),
+            transformation_func(*coordinate_to_project.tuple),
             expected_canvas_coordinates
         )
 
@@ -87,6 +87,6 @@ class TestProjectGeoToCanvas(unittest.TestCase):
         )
         coordinate_to_project = GeoCoordinate(258600, 665600, british_crs)
         self.assert_coordinates_are_close(
-            transformation_func(*coordinate_to_project.xy),
+            transformation_func(*coordinate_to_project.tuple),
             expected_canvas_coordinates
         )

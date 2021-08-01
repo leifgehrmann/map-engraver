@@ -13,5 +13,5 @@ class GeoCoordinate:
         self.crs = crs
 
     @property
-    def xy(self) -> Tuple[float, float]:
+    def tuple(self) -> Tuple[float, float]:
         return self.x, self.y
