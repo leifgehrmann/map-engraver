@@ -1,6 +1,6 @@
 from abc import ABC
 
-from shapely.geometry import Polygon, LineString
+from shapely.geometry import Polygon, LineString, Point
 from typing import Optional, List, Tuple, Dict, Callable, Union
 
 from map_engraver.data.osm import Node
@@ -9,6 +9,20 @@ from map_engraver.data.osm import Relation
 from map_engraver.data.osm import MemberTypes
 from map_engraver.data.osm import Osm
 from map_engraver.data.osm.util import get_nodes_for_way
+
+
+class OsmPoint(Point, ABC):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self._osm_tags = {}
+
+    @property
+    def osm_tags(self):
+        return self._osm_tags
+
+    @osm_tags.setter
+    def osm_tags(self, x: Dict[str, str]):
+        self._osm_tags = x
 
 
 class OsmLineString(LineString, ABC):
@@ -65,6 +79,14 @@ class OsmToShapely:
             x: Callable[[Union[Way, Relation], List[str]], None]
     ):
         self._incomplete_refs_handler = x
+
+    def node_to_point(
+            self,
+            node: Node
+    ) -> Optional[OsmPoint]:
+        point = OsmPoint(*self.transform(node.lon, node.lat))
+        point.osm_tags = node.tags
+        return point
 
     def way_to_linestring(
             self,
