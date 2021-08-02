@@ -14,6 +14,15 @@ class TestOsmToShapely(unittest.TestCase):
         osm_map = Parser.parse(path)
         osm_to_shapely = OsmToShapely(osm_map)
 
+        bus_stop_beta_node = osm_map.get_node('-101814')
+        bus_stop_beta_point = osm_to_shapely.node_to_point(
+            bus_stop_beta_node
+        )
+        assert bus_stop_beta_point.osm_tags['highway'] == 'bus_stop'
+        assert list(bus_stop_beta_point.coords) == [
+            (5.71135378422, 59.01678200227),
+        ]
+
         highway_service_way = osm_map.get_way('-101873')
         highway_service_linestring = osm_to_shapely.way_to_linestring(
             highway_service_way
