@@ -14,6 +14,7 @@ class TestOsmToShapely(unittest.TestCase):
         osm_map = Parser.parse(path)
         osm_to_shapely = OsmToShapely(osm_map)
 
+        # Node to Point
         bus_stop_beta_node = osm_map.get_node('-101814')
         bus_stop_beta_point = osm_to_shapely.node_to_point(
             bus_stop_beta_node
@@ -23,6 +24,22 @@ class TestOsmToShapely(unittest.TestCase):
             (5.71135378422, 59.01678200227),
         ]
 
+        # Nodes to Points
+        nodes_to_query = {
+            '-101814': osm_map.get_node('-101814'),
+            '-101818': osm_map.get_node('-101818')
+        }
+        points = osm_to_shapely.nodes_to_points(
+            nodes_to_query
+        )
+        assert len(points) == 2
+        assert points[0].osm_tags['highway'] == 'bus_stop'
+        assert points[1].osm_tags['highway'] == 'bus_stop'
+        assert points[0].osm_tags['name'] != points[1].osm_tags['name']
+        assert list(points[0].coords) == [(5.71135378422, 59.01678200227)]
+        assert list(points[1].coords) == [(5.75348477105, 59.0163426805)]
+
+        # Way to LineString
         highway_service_way = osm_map.get_way('-101873')
         highway_service_linestring = osm_to_shapely.way_to_linestring(
             highway_service_way
@@ -34,6 +51,7 @@ class TestOsmToShapely(unittest.TestCase):
             (5.72491834501, 59.01675888021)
         ]
 
+        # Way to Polygon (With Clock-Wise Ways)
         cw_bank_building_way = osm_map.get_way('-101787')
         cw_bank_building_polygon = osm_to_shapely.way_to_polygon(
             cw_bank_building_way
@@ -45,6 +63,7 @@ class TestOsmToShapely(unittest.TestCase):
             (5.71666872951, 59.01328584519)
         ]
 
+        # Way to Polygon (With Counter Clock-Wise Ways)
         ccw_bank_building_way = osm_map.get_way('-102178')
         ccw_bank_building_polygon = osm_to_shapely.way_to_polygon(
             ccw_bank_building_way
@@ -56,6 +75,7 @@ class TestOsmToShapely(unittest.TestCase):
             (5.71703365152, 59.0023220992)
         ]
 
+        # Relation to Polygon (With Clock-Wise Ways)
         cw_building_relation = osm_map.get_relation('-99750')
         cw_building_polygon = osm_to_shapely.relation_to_polygon(
             cw_building_relation
@@ -72,6 +92,7 @@ class TestOsmToShapely(unittest.TestCase):
             (5.74469616638, 59.01051080523)
         ]
 
+        # Relation to Polygon (With Counter Clock-Wise Ways)
         ccw_building_relation = osm_map.get_relation('-99893')
         ccw_building_polygon = osm_to_shapely.relation_to_polygon(
             ccw_building_relation
@@ -88,6 +109,7 @@ class TestOsmToShapely(unittest.TestCase):
             (5.74500532962, 58.99937088385)
         ]
 
+        # Relation to Polygon (With multiple Way segments)
         water_relation = osm_map.get_relation('-99778')
         water_polygon = osm_to_shapely.relation_to_polygon(water_relation)
         assert water_polygon.osm_tags['natural'] == 'water'

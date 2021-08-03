@@ -88,6 +88,15 @@ class OsmToShapely:
         point.osm_tags = node.tags
         return point
 
+    def nodes_to_points(
+            self,
+            nodes: Dict[str, Node]
+    ) -> List[OsmPoint]:
+        return list(filter(
+            None,
+            map(lambda node: self.node_to_point(node), nodes.values())
+        ))
+
     def way_to_linestring(
             self,
             way: Way
