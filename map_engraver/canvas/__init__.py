@@ -1,2 +1,2 @@
-from .canvas import Canvas  # noqa
-from .canvas_builder import CanvasBuilder  # noqa
+from .canvas import Canvas  # noqa: F401
+from .canvas_builder import CanvasBuilder  # noqa: F401

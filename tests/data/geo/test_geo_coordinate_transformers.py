@@ -1,8 +1,8 @@
 import pyproj
 import unittest
 
-from map_engraver.transformers.geo_coordinate import GeoCoordinate
-from map_engraver.transformers.geo_coordinate_transformers import \
+from map_engraver.data.geo.geo_coordinate import GeoCoordinate
+from map_engraver.data.geo.geo_coordinate_transformers import \
     transform_geo_coordinates_to_new_crs
 
 
