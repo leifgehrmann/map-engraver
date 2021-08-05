@@ -1,6 +1,4 @@
-from abc import ABC
-
-from shapely.geometry import Polygon, LineString, Point
+from shapely.geometry import Polygon
 from typing import Optional, List, Tuple, Dict, Callable, Union
 
 from map_engraver.data.osm import Node
@@ -10,47 +8,9 @@ from map_engraver.data.osm import MemberTypes
 from map_engraver.data.osm import Osm
 from map_engraver.data.osm.util import get_nodes_for_way
 
-
-class OsmPoint(Point, ABC):
-    def __init__(self, *args):
-        super().__init__(*args)
-        self._osm_tags = {}
-
-    @property
-    def osm_tags(self):
-        return self._osm_tags
-
-    @osm_tags.setter
-    def osm_tags(self, x: Dict[str, str]):
-        self._osm_tags = x
-
-
-class OsmLineString(LineString, ABC):
-    def __init__(self, coordinates=None):
-        super().__init__(coordinates)
-        self._osm_tags = {}
-
-    @property
-    def osm_tags(self):
-        return self._osm_tags
-
-    @osm_tags.setter
-    def osm_tags(self, x: Dict[str, str]):
-        self._osm_tags = x
-
-
-class OsmPolygon(Polygon, ABC):
-    def __init__(self, shell=None, holes=None):
-        super().__init__(shell, holes)
-        self._osm_tags = {}
-
-    @property
-    def osm_tags(self):
-        return self._osm_tags
-
-    @osm_tags.setter
-    def osm_tags(self, x: Dict[str, str]):
-        self._osm_tags = x
+from map_engraver.data.osm_shapely.osm_line_string import OsmLineString
+from map_engraver.data.osm_shapely.osm_point import OsmPoint
+from map_engraver.data.osm_shapely.osm_polygon import OsmPolygon
 
 
 class OsmToShapely:

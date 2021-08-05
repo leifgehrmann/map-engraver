@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 
 from map_engraver.data.osm import Parser
-from map_engraver.transformers.osm_to_shapely import OsmToShapely, \
+from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely, \
     WayToPolygonError, RelationToPolygonError
 
 
