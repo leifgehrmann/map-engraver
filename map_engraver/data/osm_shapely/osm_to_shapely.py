@@ -44,7 +44,7 @@ class OsmToShapely:
             self,
             node: Node
     ) -> Optional[OsmPoint]:
-        point = OsmPoint(*self.transform(node.lon, node.lat))
+        point = OsmPoint(*self.transform(node.lat, node.lon))
         point.osm_tags = node.tags
         return point
 
@@ -64,7 +64,7 @@ class OsmToShapely:
         nodes = get_nodes_for_way(self.osm, way.id)
         linestring_array = []
         for node in nodes:
-            linestring_array.append(self.transform(node.lon, node.lat))
+            linestring_array.append(self.transform(node.lat, node.lon))
         line_string = OsmLineString(linestring_array)
         line_string.osm_tags = way.tags
         return line_string
@@ -76,7 +76,7 @@ class OsmToShapely:
         nodes = get_nodes_for_way(self.osm, way.id)
         polygon_array = []
         for node in nodes:
-            polygon_array.append(self.transform(node.lon, node.lat))
+            polygon_array.append(self.transform(node.lat, node.lon))
         if polygon_array[len(polygon_array)-1] == polygon_array[0] and \
                 len(polygon_array) > 2:
             p = OsmPolygon(polygon_array)
@@ -233,7 +233,7 @@ class OsmToShapely:
         # create exterior of polygon
         exterior = []
         for node in outer_ways_nodes[0]:
-            exterior.append(self.transform(node.lon, node.lat))
+            exterior.append(self.transform(node.lat, node.lon))
 
         # now piece together the inner way
         incomplete_way_refs, inner_ways_nodes = self._piece_together_ways(
@@ -252,7 +252,7 @@ class OsmToShapely:
         for inner_way_nodes in inner_ways_nodes:
             interior_coordinates = []
             for node in inner_way_nodes:
-                interior_coordinates.append((node.lon, node.lat))
+                interior_coordinates.append((node.lat, node.lon))
             interior_polygon = Polygon(interior_coordinates)
             if not interior_polygon.exterior.is_ccw:
                 interior_coordinates = list(reversed(interior_coordinates))
