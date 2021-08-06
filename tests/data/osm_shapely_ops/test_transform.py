@@ -72,5 +72,5 @@ class TestTransform(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             osm_shapely_ops.transform(
                 lambda x, y: (x * 2.0, y * 3.0),
-                Point(1,2)
+                Point(1, 2)
             )
