@@ -20,6 +20,6 @@ def transform(func, geom: T) -> T:
         new_geom = OsmPolygon(new_geom)
         new_geom.osm_tags = geom.osm_tags
     else:
-        raise RuntimeError('Unexpected geom type: ' + geom)
+        raise RuntimeError('Unexpected geom type: ' + geom.__class__.__name__)
     return new_geom
     pass
