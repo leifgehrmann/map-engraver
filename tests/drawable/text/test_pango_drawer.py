@@ -3,7 +3,9 @@ from pathlib import Path
 import unittest
 
 from map_engraver.canvas import CanvasBuilder
+from map_engraver.canvas.canvas_coordinate import CanvasCoordinate as Cc
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
+from map_engraver.data.pango.layout import Layout
 from map_engraver.drawable.text.pango_drawer import PangoDrawer
 
 
@@ -12,9 +14,9 @@ class TestPangoDrawer(unittest.TestCase):
         Path(__file__).parent.joinpath('output/')\
             .mkdir(parents=True, exist_ok=True)
 
-    def test_temp(self):
+    def test_layout_is_drawn(self):
         path = Path(__file__).parent.joinpath(
-            'output/pango_drawer_temp.svg'
+            'output/pango_drawer_layout_is_drawn.svg'
         )
         path.unlink(missing_ok=True)
         canvas_builder = CanvasBuilder()
@@ -23,7 +25,14 @@ class TestPangoDrawer(unittest.TestCase):
 
         canvas = canvas_builder.build()
 
+        layout = Layout(canvas)
+        layout.position = Cc.from_pt(10, 10)
+        layout.width = Cu.from_pt(80)
+        layout.height = Cu.from_pt(80)
+        layout.set_markup('<span font="italic 10px">Hello World</span>')
+
         drawer = PangoDrawer()
+        drawer.pango_objects = [layout]
         drawer.draw(canvas)
 
         canvas.close()
@@ -32,5 +41,5 @@ class TestPangoDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('#glyph0-7') != -1
-            assert data.find('#glyph1-1') != -1
+            assert data.find('xlink:href="#glyph0-1" x="10"') != -1
+            assert data.find('xlink:href="#glyph0-8"') != -1
