@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import unittest
 
 from map_engraver.canvas.canvas_unit import CanvasUnit

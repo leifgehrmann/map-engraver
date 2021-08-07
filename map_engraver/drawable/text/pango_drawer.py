@@ -1,7 +1,6 @@
 from typing import Union, List
 
 import pangocairocffi
-import pangocffi
 
 from map_engraver.canvas import Canvas
 from map_engraver.data.pango.layout import Layout
