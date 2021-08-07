@@ -158,6 +158,30 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 pyparsing = ">=2.0.2"
 
 [[package]]
+name = "pangocairocffi"
+version = "0.6.0"
+description = "CFFI-based pango-cairo bindings for Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+cairocffi = ">=1.0.2"
+cffi = ">=1.1.0"
+pangocffi = ">=0.10.0"
+
+[[package]]
+name = "pangocffi"
+version = "0.10.0"
+description = "CFFI-based pango bindings for Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+cffi = ">=1.1.0"
+
+[[package]]
 name = "pillow"
 version = "8.3.1"
 description = "Python Imaging Library (Fork)"
@@ -322,7 +346,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "cedae64bbc9be543fee9f1a161b6a82d92ff458b8e62ad5c6fe02484b9d8108c"
+content-hash = "d44236bda5c595e6719424af057eb5d007085962c74c522ce4ea85f3f994b978"
 
 [metadata.files]
 atomicwrites = [
@@ -461,6 +485,12 @@ mccabe = [
 packaging = [
     {file = "packaging-20.9-py2.py3-none-any.whl", hash = "sha256:67714da7f7bc052e064859c05c595155bd1ee9f69f76557e21f051443c20947a"},
     {file = "packaging-20.9.tar.gz", hash = "sha256:5b327ac1320dc863dca72f4514ecc086f31186744b84a230374cc1fd776feae5"},
+]
+pangocairocffi = [
+    {file = "pangocairocffi-0.6.0.tar.gz", hash = "sha256:0be41505990b7b790b140ea95638c0a1e11b4a44ddbe526bca6dd737a316aae5"},
+]
+pangocffi = [
+    {file = "pangocffi-0.10.0.tar.gz", hash = "sha256:77ecc37928a3cd1a1e271265579e1a997ca2cfac095d5ebd2508f329fb070405"},
 ]
 pillow = [
     {file = "Pillow-8.3.1-1-cp36-cp36m-win_amd64.whl", hash = "sha256:fd7eef578f5b2200d066db1b50c4aa66410786201669fb76d5238b007918fb24"},

@@ -1,21 +1,9 @@
-from pathlib import Path
-
 import unittest
 
 from map_engraver.canvas.canvas_unit import CanvasUnit
 
 
 class TestCanvasUnit(unittest.TestCase):
-    """
-    Each output format should have a square in the top left corner. This tests
-    that the scale is correct, both from the perspective of the canvas (The
-    canvas dimensions should match the units), and the polygons drawn (The
-    midpoint of the canvas).
-    """
-    def setUp(self):
-        Path(__file__).parent.joinpath('output/')\
-            .mkdir(parents=True, exist_ok=True)
-
     def test_comparisons(self):
         assert CanvasUnit.from_in(1).pt > CanvasUnit.from_cm(1).pt
         assert CanvasUnit.from_cm(1).pt > CanvasUnit.from_mm(1).pt
