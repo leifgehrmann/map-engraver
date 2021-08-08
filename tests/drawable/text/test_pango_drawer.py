@@ -27,9 +27,14 @@ class TestPangoDrawer(unittest.TestCase):
 
         layout = Layout(canvas)
         layout.position = Cc.from_pt(10, 10)
+        layout.color = (0, 0, 1, 0.5)
         layout.width = Cu.from_pt(80)
         layout.height = Cu.from_pt(80)
-        layout.set_markup('<span font="italic 10px">Hello World</span>')
+        layout.set_markup(
+            '<span font="10px">Hello '
+            '<span font="italic" color="#FF0000FF">World</span>'
+            '</span>'
+        )
 
         drawer = PangoDrawer()
         drawer.pango_objects = [layout]
@@ -41,5 +46,7 @@ class TestPangoDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
+            assert data.find('<g style="fill:rgb(0%,0%,100%);fill-opacity:0.5;">') != -1
             assert data.find('xlink:href="#glyph0-1" x="10"') != -1
-            assert data.find('xlink:href="#glyph0-8"') != -1
+            assert data.find('<g style="fill:rgb(100%,0%,0%);fill-opacity:1;">') != -1
+            assert data.find('xlink:href="#glyph1-5"') != -1

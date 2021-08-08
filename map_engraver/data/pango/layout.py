@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import pangocairocffi
 import pangocffi
@@ -11,8 +11,9 @@ from map_engraver.canvas.canvas_unit import CanvasUnit
 
 class Layout:
     def __init__(self, canvas: Canvas):
-        self._position = CanvasCoordinate.origin()
         self._layout = pangocairocffi.create_layout(canvas.context)
+        self._position = CanvasCoordinate.origin()
+        self._color = (0, 0, 0, 1)
 
     @property
     def pango_layout(self) -> PangoLayout:
@@ -54,6 +55,12 @@ class Layout:
     def alignment(self, x: Alignment):
         self._layout.set_alignment(x)
 
+    def set_text(self, text: str):
+        self._layout.set_text(text)
+
+    def set_markup(self, markup: str):
+        self._layout.set_markup(markup)
+
     @property
     def position(self) -> CanvasCoordinate:
         return self._position
@@ -62,8 +69,10 @@ class Layout:
     def position(self, position: CanvasCoordinate):
         self._position = position
 
-    def set_text(self, text: str):
-        self._layout.set_text(text)
+    @property
+    def color(self) -> Tuple[float, float, float, float]:
+        return self._color
 
-    def set_markup(self, markup: str):
-        self._layout.set_markup(markup)
+    @color.setter
+    def color(self, color: Tuple[float, float, float, float]):
+        self._color = color
