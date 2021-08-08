@@ -52,6 +52,14 @@ class TestCanvasUnit(unittest.TestCase):
     def test_neg(self):
         assert -CanvasUnit.from_cm(2) == CanvasUnit.from_cm(-2)
 
+    def test_mul(self):
+        assert CanvasUnit.from_cm(2.5) * 2 == CanvasUnit.from_cm(5)
+        assert CanvasUnit.from_cm(2) * 2.5 == CanvasUnit.from_cm(5)
+
+    def test_div(self):
+        assert CanvasUnit.from_cm(5) / 2.5 == CanvasUnit.from_cm(2)
+        assert CanvasUnit.from_cm(5) / 2 == CanvasUnit.from_cm(2.5)
+
     def test_unknown_unit(self):
         with self.assertRaises(Exception):
             CanvasUnit.from_unit(1, 'unknown')

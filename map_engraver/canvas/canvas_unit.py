@@ -92,5 +92,11 @@ class CanvasUnit:
             return CanvasUnit(self.pt - other.pt)
         raise NotImplementedError()
 
+    def __mul__(self, x):
+        return CanvasUnit(self.pt * x)
+
+    def __truediv__(self, x):
+        return CanvasUnit(self.pt / x)
+
     def __neg__(self):
         return CanvasUnit(-self.pt)
