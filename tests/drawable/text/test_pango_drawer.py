@@ -46,7 +46,15 @@ class TestPangoDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('<g style="fill:rgb(0%,0%,100%);fill-opacity:0.5;">') != -1
-            assert data.find('xlink:href="#glyph0-1" x="10"') != -1
-            assert data.find('<g style="fill:rgb(100%,0%,0%);fill-opacity:1;">') != -1
-            assert data.find('xlink:href="#glyph1-5"') != -1
+            assert data.find(
+                '<g style="fill:rgb(0%,0%,100%);fill-opacity:0.5;">'
+            ) != -1
+            assert data.find(
+                'xlink:href="#glyph0-1" x="10"'
+            ) != -1
+            assert data.find(
+                '<g style="fill:rgb(100%,0%,0%);fill-opacity:1;">'
+            ) != -1
+            assert data.find(
+                'xlink:href="#glyph1-5"'
+            ) != -1
