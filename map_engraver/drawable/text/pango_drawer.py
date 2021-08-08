@@ -18,6 +18,7 @@ class PangoDrawer(Drawable):
         for pango_object in self.pango_objects:
             canvas.context.save()
             canvas.context.translate(*pango_object.position.pt)
+            canvas.context.set_source_rgba(*pango_object.color)
             pangocairocffi.show_layout(
                 canvas.context,
                 pango_object.pango_layout

@@ -46,6 +46,10 @@ class TestLayout(unittest.TestCase):
         assert layout.position.x.pt == 10
         assert layout.position.y.pt == 5
 
+        assert layout.color == (0, 0, 0, 1)
+        layout.color = (0, 1, 0, 0.5)
+        assert layout.color == (0, 1, 0, 0.5)
+
         assert layout.alignment == Alignment.LEFT
         layout.alignment = Alignment.RIGHT
         assert layout.alignment == Alignment.RIGHT
