@@ -1,3 +1,5 @@
+import math
+
 points_per_inch = 72
 mm_per_inch = 25.4
 points_per_pixel = 0.75
@@ -64,3 +66,31 @@ class CanvasUnit:
         elif unit == 'px':
             return CanvasUnit.from_px(value)
         raise Exception('Unknown unit')
+
+    def __eq__(self, other: 'CanvasUnit'):
+        if isinstance(other, CanvasUnit):
+            return math.isclose(self.pt, other.pt, abs_tol=0.00001)
+        else:
+            return False
+
+    def __add__(self, other):
+        if isinstance(other, CanvasUnit):
+            return CanvasUnit(self.pt + other.pt)
+        if other == 0:
+            return self
+        raise NotImplementedError()
+
+    def __radd__(self, other):
+        if isinstance(other, CanvasUnit):
+            return CanvasUnit(self.pt + other.pt)
+        if other == 0:
+            return self
+        raise NotImplementedError()
+
+    def __sub__(self, other):
+        if isinstance(other, CanvasUnit):
+            return CanvasUnit(self.pt - other.pt)
+        raise NotImplementedError()
+
+    def __neg__(self):
+        return CanvasUnit(-self.pt)

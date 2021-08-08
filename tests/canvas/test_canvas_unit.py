@@ -22,6 +22,36 @@ class TestCanvasUnit(unittest.TestCase):
         assert CanvasUnit.from_mm(2).mm == 2
         assert CanvasUnit.from_px(2).px == 2
 
+    def test_eq(self):
+        assert CanvasUnit.from_cm(2) == CanvasUnit.from_cm(2)
+        assert CanvasUnit.from_cm(2) != 2
+
+    def test_add(self):
+        assert CanvasUnit.from_cm(2) + CanvasUnit.from_cm(3) == \
+               CanvasUnit.from_cm(5)
+        assert CanvasUnit.from_cm(2).__radd__(CanvasUnit.from_cm(3)) == \
+               CanvasUnit.from_cm(5)
+        assert 0 + CanvasUnit.from_cm(2) == CanvasUnit.from_cm(2)
+        assert CanvasUnit.from_cm(2) + 0 == CanvasUnit.from_cm(2)
+        assert sum([
+            CanvasUnit.from_cm(2),
+            CanvasUnit.from_cm(3),
+            CanvasUnit.from_cm(4)
+        ]) == CanvasUnit.from_cm(9)
+        with self.assertRaises(NotImplementedError):
+            CanvasUnit.from_cm(2) + 1
+        with self.assertRaises(NotImplementedError):
+            1 + CanvasUnit.from_cm(2)
+
+    def test_sub(self):
+        assert CanvasUnit.from_cm(2) - CanvasUnit.from_cm(3) == \
+               CanvasUnit.from_cm(-1)
+        with self.assertRaises(NotImplementedError):
+            CanvasUnit.from_cm(2) - 1
+
+    def test_neg(self):
+        assert -CanvasUnit.from_cm(2) == CanvasUnit.from_cm(-2)
+
     def test_unknown_unit(self):
         with self.assertRaises(Exception):
             CanvasUnit.from_unit(1, 'unknown')
