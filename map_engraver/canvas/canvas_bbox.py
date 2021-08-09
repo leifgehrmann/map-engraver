@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit
 
