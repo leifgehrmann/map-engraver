@@ -36,7 +36,7 @@ class Layout:
 
     @property
     def logical_extents(self) -> CanvasBbox:
-        extent = self._layout.get_extents()[0]
+        extent = self._layout.get_extents()[1]
         x = CanvasUnit.from_pt(pangocffi.units_to_double(extent.x))
         y = CanvasUnit.from_pt(pangocffi.units_to_double(extent.y))
         x += self._position.x
