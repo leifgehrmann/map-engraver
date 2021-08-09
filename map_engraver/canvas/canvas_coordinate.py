@@ -1,3 +1,5 @@
+import math
+
 from typing import Tuple
 
 from map_engraver.canvas.canvas_unit import CanvasUnit
@@ -55,3 +57,10 @@ class CanvasCoordinate:
     def origin() -> 'CanvasCoordinate':
         """Returns the top left coordinate of the canvas"""
         return CanvasCoordinate(x=CanvasUnit(0), y=CanvasUnit(0))
+
+    def __eq__(self, other: 'CanvasCoordinate'):
+        if isinstance(other, CanvasCoordinate):
+            return math.isclose(self.x.pt, other.x.pt, abs_tol=0.00001) and \
+                math.isclose(self.y.pt, other.y.pt, abs_tol=0.00001)
+        else:
+            return False

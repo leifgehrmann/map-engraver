@@ -21,3 +21,7 @@ class TestCanvasCoordinate(unittest.TestCase):
         assert Cc.from_cm(2, 2).cm == (2, 2)
         assert Cc.from_mm(2, 2).mm == (2, 2)
         assert Cc.from_px(2, 2).px == (2, 2)
+
+    def test_eq(self):
+        assert Cc.from_pt(1, 2) == Cc.from_pt(1, 2)
+        assert Cc.from_pt(1, 2) != (1, 2)

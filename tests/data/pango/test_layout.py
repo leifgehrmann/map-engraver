@@ -54,4 +54,8 @@ class TestLayout(unittest.TestCase):
         layout.alignment = Alignment.RIGHT
         assert layout.alignment == Alignment.RIGHT
 
-        assert layout.pango_layout.get_extents()[0].height > 0
+        extents = layout.logical_extents
+        assert extents.pos.x.pt > 10
+        assert extents.pos.y.pt > 5
+        assert extents.width.pt > 1
+        assert extents.height.pt > 1

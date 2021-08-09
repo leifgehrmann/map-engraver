@@ -5,6 +5,7 @@ import pangocffi
 from pangocffi import Layout as PangoLayout, Alignment
 
 from map_engraver.canvas import Canvas
+from map_engraver.canvas.canvas_bbox import CanvasBbox
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit
 
@@ -32,6 +33,21 @@ class Layout:
 
     def reset_width(self):
         self._layout.set_width(-1)
+
+    @property
+    def logical_extents(self) -> CanvasBbox:
+        extent = self._layout.get_extents()[0]
+        x = CanvasUnit.from_pt(pangocffi.units_to_double(extent.x))
+        y = CanvasUnit.from_pt(pangocffi.units_to_double(extent.y))
+        x += self._position.x
+        y += self._position.y
+        width = CanvasUnit.from_pt(pangocffi.units_to_double(extent.width))
+        height = CanvasUnit.from_pt(pangocffi.units_to_double(extent.height))
+        return CanvasBbox(
+            CanvasCoordinate(x, y),
+            width,
+            height
+        )
 
     @property
     def height(self) -> Optional[CanvasUnit]:
