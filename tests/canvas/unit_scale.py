@@ -20,7 +20,7 @@ class UnitScale(Drawable, ProgressObservable):
         pass
 
     def draw(self, canvas: Canvas):
-        units = ['px', 'pt', 'mm', 'cm', 'in']
+        units = ['pango', 'px', 'pt', 'mm', 'cm', 'in']
         offset = 0
         for unit in units:
             self.draw_rectangle(canvas, offset, unit)
