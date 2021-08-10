@@ -5,6 +5,7 @@ mm_per_inch = 25.4
 points_per_pixel = 0.75
 inch_per_mm = 1 / mm_per_inch
 mm_per_cm = 10
+pango_units_per_point = 1024.0  # According to pango documentation
 
 
 class CanvasUnit:
@@ -53,6 +54,14 @@ class CanvasUnit:
     def from_px(cls, pixels: float) -> 'CanvasUnit':
         return CanvasUnit(pixels * points_per_pixel)
 
+    @property
+    def pango(self) -> int:
+        return round(self._points * pango_units_per_point)
+
+    @classmethod
+    def from_pango(cls, pango_units: int) -> 'CanvasUnit':
+        return CanvasUnit(pango_units / pango_units_per_point)
+
     @classmethod
     def from_unit(cls, value: float, unit: str) -> 'CanvasUnit':
         if unit == 'pt':
@@ -65,6 +74,8 @@ class CanvasUnit:
             return CanvasUnit.from_cm(value)
         elif unit == 'px':
             return CanvasUnit.from_px(value)
+        elif unit == 'pango':
+            return CanvasUnit.from_pango(round(value))
         raise Exception('Unknown unit')
 
     def __eq__(self, other: 'CanvasUnit'):
