@@ -24,12 +24,20 @@ def transform(func, geom: T) -> T:
     return new_geom
     pass
 
-def transform_clipped(
+
+def transform_interpolated_euclidean(
         func,
         geom: T,
-        clip_threshold=0.5, # Minimum distance from the edge a projection clip can occur.
-        distortion_threshold=0.5, # Maximum distance that interpolated coordinates can be from the real coordinates.
-        gap_threshold=1 # Smallest distance a gap between can occur.
+        distortion_threshold=0.5  # Maximum distance that interpolated coordinates can be from the real coordinates.
+) -> T:
+
+    return geom
+
+
+def transform_interpolated_wgs84_geodesic(
+        func,
+        geom: T,
+        distortion_threshold=0.5  # Maximum distance that interpolated coordinates can be from the real coordinates.
 ) -> T:
 
     return geom
