@@ -39,5 +39,11 @@ def transform_interpolated_wgs84_geodesic(
         geom: T,
         distortion_threshold=0.5  # Maximum distance that interpolated coordinates can be from the real coordinates.
 ) -> T:
+    '''
 
+    :param func:
+    :param geom:
+    :param distortion_threshold:
+    :return:
+    '''
     return geom
