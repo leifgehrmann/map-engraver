@@ -42,31 +42,34 @@ def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
         # Todo: Def
         origin = transformer.transform(0, 0)
 
-        def sign(x: float) -> float:
-            return math.copysign(1, x)
-
-        anti_meridian_lat = _binary_search_edge_wgs84(crs)
+        valid_lat = _sign(origin[0]) * 90
+        invalid_lat = -valid_lat
+        anti_meridian_lat = _binary_search_edge_wgs84(
+            crs,
+            valid_lat,
+            invalid_lat
+        )
         # Extend the path by including points at the North or South Pole.
         points.extend([
             (anti_meridian_lat, 180),
-            (sign(origin[0]) * 90, 180),
-            (sign(origin[0]) * 90, -180),
+            (_sign(origin[0]) * 90, 180),
+            (_sign(origin[0]) * 90, -180),
             (anti_meridian_lat, -180),
-            points[0],
+            points[0]
         ])
-
-        # debug
-        for point in points:
-            print(point, 'a')
 
         return MultiPolygon([Polygon(points)])
     else:
         # Todo: Make sure if the mask crosses the anti-meridian that we ensure
         # we return a multi-polygon.
-        for point in points:
-            print(point, 'a')
+        point_groups = _split_points_along_anti_meridian(crs, points)
+        return MultiPolygon(list(map(lambda point_group: Polygon(point_group), point_groups)))
 
     return MultiPolygon([Polygon(points)])
+
+
+def _sign(x: float) -> float:
+    return math.copysign(1, x)
 
 
 def _covers_hemisphere(points: List[Tuple[float, float]]) -> bool:
@@ -111,19 +114,17 @@ def _binary_search_edge_crs(crs: CRS, angle: float, threshold=1) -> float:
     return min_r
 
 
-def _binary_search_edge_wgs84(crs: CRS, threshold=0.000001) -> float:
+def _binary_search_edge_wgs84(
+        crs: CRS,
+        valid_lat: float,
+        invalid_lat: float,
+        threshold=0.000001,
+) -> float:
     transformer = Transformer.from_proj(
         CRS.from_epsg(4326),
         crs
     )
 
-    origin = transformer.transform(0, 0, direction=TransformDirection.INVERSE)
-
-    def sign(x: float) -> float:
-        return math.copysign(1, x)
-
-    valid_lat = sign(origin[0]) * 90
-    invalid_lat = -valid_lat
     while abs(valid_lat - invalid_lat) > threshold:
         pivot_lat = (invalid_lat + valid_lat) / 2
         print(invalid_lat, valid_lat, invalid_lat - invalid_lat, threshold)
@@ -133,3 +134,65 @@ def _binary_search_edge_wgs84(crs: CRS, threshold=0.000001) -> float:
             valid_lat = pivot_lat
 
     return valid_lat
+
+
+def _split_points_along_anti_meridian(
+        crs: CRS,
+        points: List[Tuple[float, float]],
+        threshold=0.000001
+) -> List[List[Tuple[float, float]]]:
+    transformer = Transformer.from_proj(
+        CRS.from_epsg(4326),
+        crs
+    )
+
+    total_points = len(points)
+    groups: List = []
+    group: List[Tuple[float, float]] = []
+    for i in range(len(points)):
+        current_point = points[i]
+        next_point = points[(i + 1) % total_points]
+
+        group.append(current_point)
+
+        if abs(current_point[1] - next_point[1]) > 90:
+            longitude = _sign(points[i][1]) * 180
+            anti_meridian_at_current_lat = transformer.transform(current_point[0], 180)
+            anti_meridian_at_next_lat = transformer.transform(next_point[0], 180)
+            if anti_meridian_at_current_lat[0] == float('inf') and \
+                    anti_meridian_at_next_lat[0] == float('inf'):
+                raise RuntimeError(
+                    'The anti-meridian at between the latitudes %f and %f '
+                    'could not be transformed with the projection. This is '
+                    'unexpected. Please fix the algorithm!'
+                )
+
+            if anti_meridian_at_current_lat[0] == float('inf'):
+                latitude = _binary_search_edge_wgs84(
+                    crs,
+                    next_point[0],  # Valid latitude
+                    current_point[0],  # Invalid latitude
+                    threshold
+                )
+            elif anti_meridian_at_next_lat[0] == float('inf'):
+                latitude = _binary_search_edge_wgs84(
+                    crs,
+                    current_point[0],  # Valid latitude
+                    next_point[0],  # Invalid latitude
+                    threshold
+                )
+            else:
+                latitude = next_point[0]
+
+            group.append((latitude, longitude))
+            groups.append(group)
+            group = [(latitude, -longitude)]
+
+        if len(groups) != 0 and groups[0][0] == next_point:
+            group.extend(groups[0])
+            groups[0] = group
+        elif i == total_points - 1:
+            groups.append(group)
+
+
+    return groups
