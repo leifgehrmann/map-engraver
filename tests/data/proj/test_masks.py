@@ -1,10 +1,16 @@
+from math import isclose
+
+import re
+
+from typing import Tuple
+
 import pyproj
 from pathlib import Path
 
 import unittest
-from pyproj import CRS
+from pyproj import CRS, Transformer
 from shapely import ops
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, MultiPolygon
 
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
@@ -12,7 +18,7 @@ from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.canvas import CanvasBuilder
 from map_engraver.data import geo_canvas_ops
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
-from map_engraver.data.proj.masks import orthographic_mask, _binary_search_edge_wgs84
+from map_engraver.data.proj.masks import orthographic_mask
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
 
 
@@ -22,12 +28,58 @@ class TestMasks(unittest.TestCase):
             .mkdir(parents=True, exist_ok=True)
 
     def test_orthographic_masks_at_equator(self):
-        crs = CRS.from_proj4('+proj=ortho +lat_0=0')
-        crs = CRS.from_proj4('+proj=ortho +lon_0=180 +lat_0=0.1')
-        # crs = CRS.from_proj4('+proj=ortho +lat_0=20')
-        # crs = CRS.from_proj4('+proj=ortho +lat_0=90')
-        # crs = CRS.from_proj4('+proj=geos +h=35785831.0 +lon_0=-60 +sweep=x')
-        # crs = CRS.from_proj4('+proj=geos +h=35785831.0 +lon_0=-160 +sweep=x')
+        cases = [
+            {
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=0',
+                'expectedBounds': (-89.9, -89.9, 89.9, 89.9),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=180 +lat_0=0',
+                'expectedBounds': (-89.9, -180, 89.9, 180),
+                'expectedGeomsCount': 2
+            },
+            {
+                'proj4': '+proj=ortho +lat_0=0.1',
+                'expectedBounds': (-89.8, -180, 89.9, 180),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=180 +lat_0=0.1',
+                'expectedBounds': (-89.8, -180, 89.9, 180),
+                'expectedGeomsCount': 2
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=20',
+                'expectedBounds': (-69.9, -180.0, 90.0, 180.0),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=180 +lat_0=20',
+                'expectedBounds': (-69.9, -180.0, 90.0, 180.0),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=90',
+                'expectedBounds': (0.02, -180.0, 90.0, 180.0),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=-90',
+                'expectedBounds': (-90.0, -180.0, -0.0, 180.0),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=geos +h=35785831.0 +lon_0=-60 +sweep=x',
+                'expectedBounds': (-81.3, -141.2, 81.3, 21.2),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=geos +h=35785831.0 +lon_0=-160 +sweep=x',
+                'expectedBounds': (-81.3, -180.0, 81.3, 180.0),
+                'expectedGeomsCount': 2
+            },
+        ]
         # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-20 +lon_0=-60')
         # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-20 +lon_0=-60')
         # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-20 +lon_0=145')
@@ -35,8 +87,15 @@ class TestMasks(unittest.TestCase):
         # crs = CRS.from_proj4('+proj=tpers +h=5500000 +lat_0=40')
         # crs = CRS.from_proj4('+proj=tpers +h=5500000 +lat_0=-40')
         # crs = CRS.from_proj4('+proj=tpers +h=5500000 +lat_0=30 +lon_0=-120 +tilt=30')
-        # print(_binary_search_edge_wgs84(crs))
-        print(orthographic_mask(crs))
+        for case in cases:
+            print(case['proj4'])
+            crs = CRS.from_proj4(case['proj4'])
+            mask = orthographic_mask(crs)
+            self.draw_mask_wgs84(case['proj4'], mask)
+            self.assert_geoms_are_valid(mask)
+            self.assert_all_points_are_valid(crs, mask)
+            self.assert_mask_has_bounds(mask, case['expectedBounds'])
+            self.assert_mask_geom_count(mask, case['expectedGeomsCount'])
 
     def test_orthographic_masks_at_45_north(self):
         pass
@@ -47,15 +106,19 @@ class TestMasks(unittest.TestCase):
     def test_orthographic_masks_at_anti_meridian(self):
         pass
 
-
-    def test_only_fill(self):
+    @staticmethod
+    def draw_mask_wgs84(name: str, mask_wgs84: MultiPolygon):
+        name = re.sub(r'\W+', '', name)
         path = Path(__file__).parent.joinpath(
-            'output/mask.svg'
+            'output/%s.svg' % name
         )
         path.unlink(missing_ok=True)
         canvas_builder = CanvasBuilder()
         canvas_builder.set_path(path)
-        canvas_builder.set_size(Cu.from_px(400), Cu.from_px(220))
+        canvas_builder.set_size(
+            Cu.from_px(360 + 20 * 2),
+            Cu.from_px(220 + 20 * 2)
+        )
 
         canvas = canvas_builder.build()
 
@@ -67,8 +130,8 @@ class TestMasks(unittest.TestCase):
             wgs84_crs
         )
         origin_for_canvas = CanvasCoordinate(
-            Cu.from_px(200),
-            Cu.from_px(110)
+            Cu.from_px(180 + 20),
+            Cu.from_px(90 + 20)
         )
 
         # 1 pixel for every degree
@@ -77,23 +140,7 @@ class TestMasks(unittest.TestCase):
             Cu.from_px(1)
         )
 
-        crs = CRS.from_proj4('+proj=ortho +lat_0=0')
-        # crs = CRS.from_proj4('+proj=ortho +lon_0=180 +lat_0=0')
-        # crs = CRS.from_proj4('+proj=ortho +lon_0=180 +lat_0=0.1')
-        # crs = CRS.from_proj4('+proj=ortho +lat_0=20')
-        crs = CRS.from_proj4('+proj=ortho +lat_0=90')
-        crs = CRS.from_proj4('+proj=ortho +lat_0=5')
-        # crs = CRS.from_proj4('+proj=geos +h=35785831.0 +lon_0=-60 +sweep=x')
-        # crs = CRS.from_proj4('+proj=geos +h=35785831.0 +lon_0=-160 +sweep=x')
-        # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-20 +lon_0=-60')
-        # crs = CRS.from_proj4('+proj=nsper +h=8000000 +lat_0=-20 +lon_0=-60')
-        # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-20 +lon_0=145')
-        # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-80 +lon_0=145')
-        # crs = CRS.from_proj4('+proj=tpers +h=5500000 +lat_0=40')
-        # crs = CRS.from_proj4('+proj=tpers +h=5500000 +lat_0=-40')
-        # crs = CRS.from_proj4('+proj=tpers +h=5500000 +lat_0=30 +lon_0=-120 +tilt=30')
-        multi_polygon = orthographic_mask(crs, resolution=400)
-        multi_polygon = ops.transform(lambda x, y: (y, x), multi_polygon)
+        mask_wgs84 = ops.transform(lambda x, y: (y, x), mask_wgs84)
 
         transformation_func = geo_canvas_ops.build_transformer(
             crs=wgs84_crs,
@@ -103,7 +150,7 @@ class TestMasks(unittest.TestCase):
             origin_for_canvas=origin_for_canvas
         )
 
-        multi_polygon = ops.transform(transformation_func, multi_polygon)
+        mask_wgs84 = ops.transform(transformation_func, mask_wgs84)
 
         domain = Polygon([(-180, -90), (180, -90), (180, 90), (-180, 90)])
         domain = ops.transform(transformation_func, domain)
@@ -115,12 +162,66 @@ class TestMasks(unittest.TestCase):
 
         polygon_drawer = PolygonDrawer()
         polygon_drawer.fill_color = (0, 1, 0)
-        polygon_drawer.geoms = [multi_polygon, Polygon([(-180, -90), (180, -90), (180, -90)])]
+        polygon_drawer.geoms = [mask_wgs84]
         polygon_drawer.draw(canvas)
 
         canvas.close()
 
-    # Confirm all points are valid coordinates
-    # Confirm the number of geoms in the multi polygon
-    # Confirm the width
-    # Confirm the height
+    @staticmethod
+    def assert_geoms_are_valid(
+            mask: MultiPolygon
+    ):
+        geom: Polygon
+        for geom in mask.geoms:
+            print(list(geom.exterior.coords))
+            assert geom.is_valid
+            assert geom.is_simple
+
+    @staticmethod
+    def assert_all_points_are_valid(
+            crs: CRS,
+            mask: MultiPolygon
+    ):
+        transformer = Transformer.from_proj(
+            CRS.from_epsg(4326),
+            crs
+        )
+        geom: Polygon
+        for geom in mask.geoms:
+            for point in geom.exterior.coords:
+                assert transformer.transform(*point) != float('inf')
+
+    @staticmethod
+    def assert_mask_has_bounds(
+            mask: MultiPolygon,
+            expected_bounds: Tuple[float, float, float, float],
+    ):
+        if (
+            not isclose(mask.bounds[0], expected_bounds[0], abs_tol=0.1) or
+            not isclose(mask.bounds[1], expected_bounds[1], abs_tol=0.1) or
+            not isclose(mask.bounds[2], expected_bounds[2], abs_tol=0.1) or
+            not isclose(mask.bounds[3], expected_bounds[3], abs_tol=0.1)
+        ):
+            raise AssertionError(
+                'Bounds are not close. Expected: (' +
+                str(expected_bounds) +
+                '). Actual: (' +
+                str(mask.bounds) +
+                ')'
+            )
+
+    @staticmethod
+    def assert_mask_geom_count(
+            mask: MultiPolygon,
+            expected_geom_count: int
+    ):
+        if len(mask.geoms) != expected_geom_count:
+            for geom in mask.geoms:
+                print(list(geom.exterior.coords))
+            raise AssertionError(
+                'Geom counts are not close. Expected: (' +
+                str(expected_geom_count) +
+                '). Actual: (' +
+                str(len(mask.geoms)) +
+                ')'
+            )

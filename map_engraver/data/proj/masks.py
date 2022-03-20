@@ -1,8 +1,6 @@
-from pyproj.enums import TransformDirection
 from typing import Tuple, List
 
 import math
-from operator import itemgetter
 
 from pyproj import CRS, Transformer
 from shapely.geometry import Polygon, MultiPolygon
@@ -17,8 +15,17 @@ def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
     :param threshold: The mask's edge precision, measured in units of the CRS.
     :return:
     """
-    # Todo: throw an error if an unknown projection is passed in.
+    # Throw an error if an unknown projection is passed in.
     print(crs.coordinate_operation.method_name)
+    if crs.coordinate_operation.method_name not in [
+        'Orthographic',
+        'Geostationary Satellite (Sweep X)',
+        'Geostationary Satellite (Sweep Y)',
+    ]:
+        raise Exception(
+            'projection method name not supported: ' +
+            crs.coordinate_operation.method_name
+        )
 
     transformer = Transformer.from_proj(
         crs,
@@ -37,35 +44,23 @@ def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
     print('Covers Hemisphere:', _covers_hemisphere(points))
 
     if _covers_hemisphere(points):
-        # Sort points by longitude
-        points = list(sorted(points, key=itemgetter(1)))
-        # Todo: Def
+        # Stitch points together
+        points = _split_points_along_anti_meridian(crs, points)[0]
+        # Used to determine which hemisphere the origin is in.
         origin = transformer.transform(0, 0)
-
-        valid_lat = _sign(origin[0]) * 90
-        invalid_lat = -valid_lat
-        anti_meridian_lat = _binary_search_edge_wgs84(
-            crs,
-            valid_lat,
-            invalid_lat
-        )
         # Extend the path by including points at the North or South Pole.
         points.extend([
-            (anti_meridian_lat, 180),
-            (_sign(origin[0]) * 90, 180),
-            (_sign(origin[0]) * 90, -180),
-            (anti_meridian_lat, -180),
-            points[0]
+            (_sign(origin[0]) * 90, _sign(points[-1][1]) * 180),
+            (_sign(origin[0]) * 90, _sign(points[-1][1]) * -180),
         ])
 
         return MultiPolygon([Polygon(points)])
     else:
-        # Todo: Make sure if the mask crosses the anti-meridian that we ensure
-        # we return a multi-polygon.
         point_groups = _split_points_along_anti_meridian(crs, points)
-        return MultiPolygon(list(map(lambda point_group: Polygon(point_group), point_groups)))
-
-    return MultiPolygon([Polygon(points)])
+        return MultiPolygon(list(map(
+            lambda point_group: Polygon(point_group),
+            point_groups
+        )))
 
 
 def _sign(x: float) -> float:
@@ -95,11 +90,13 @@ def _binary_search_edge_crs(crs: CRS, angle: float, threshold=1) -> float:
         crs,
         CRS.from_epsg(4326)
     )
-    # Todo:
-    # If ortho:
-    min_r = min(crs.ellipsoid.semi_minor_metre, crs.ellipsoid.semi_major_metre) * 0.9
-    # If geos:
     min_r = 0
+    if crs.coordinate_operation.method_name == 'Orthographic':
+        # Speeds up binary search a bit
+        min_r = min(
+            crs.ellipsoid.semi_minor_metre,
+            crs.ellipsoid.semi_major_metre
+        ) * 0.9
 
     max_r = max(crs.ellipsoid.semi_minor_metre, crs.ellipsoid.semi_major_metre)
     while max_r - min_r > threshold:
@@ -118,8 +115,18 @@ def _binary_search_edge_wgs84(
         crs: CRS,
         valid_lat: float,
         invalid_lat: float,
-        threshold=0.000001,
+        threshold=0.01,
 ) -> float:
+    """
+
+    :param crs:
+    :param valid_lat:
+    :param invalid_lat:
+    :param threshold: Defaults to 0.01, since this level of precision usually
+                      is the size of a neighbourhood.
+                      See https://xkcd.com/2170/
+    :return:
+    """
     transformer = Transformer.from_proj(
         CRS.from_epsg(4326),
         crs
@@ -127,7 +134,6 @@ def _binary_search_edge_wgs84(
 
     while abs(valid_lat - invalid_lat) > threshold:
         pivot_lat = (invalid_lat + valid_lat) / 2
-        print(invalid_lat, valid_lat, invalid_lat - invalid_lat, threshold)
         if (transformer.transform(pivot_lat, 180))[0] == float('inf'):
             invalid_lat = pivot_lat
         else:
@@ -139,7 +145,7 @@ def _binary_search_edge_wgs84(
 def _split_points_along_anti_meridian(
         crs: CRS,
         points: List[Tuple[float, float]],
-        threshold=0.000001
+        threshold=0.01
 ) -> List[List[Tuple[float, float]]]:
     transformer = Transformer.from_proj(
         CRS.from_epsg(4326),
@@ -184,9 +190,16 @@ def _split_points_along_anti_meridian(
             else:
                 latitude = next_point[0]
 
-            group.append((latitude, longitude))
+            if not math.isclose(current_point[1], longitude, abs_tol=0.0001):
+                group.append((latitude, longitude))
+
             groups.append(group)
-            group = [(latitude, -longitude)]
+
+            group = []
+            if not math.isclose(next_point[1], -longitude, abs_tol=0.0001):
+                print('222', current_point[1], next_point[1])
+                print('hmmm', next_point[1], -longitude)
+                group.append((latitude, -longitude))
 
         if len(groups) != 0 and groups[0][0] == next_point:
             group.extend(groups[0])
