@@ -28,22 +28,28 @@ def transform(func, geom: T) -> T:
 def transform_interpolated_euclidean(
         func,
         geom: T,
-        distortion_threshold=0.5  # Maximum distance that interpolated coordinates can be from the real coordinates.
+        distortion_threshold=0.5
 ) -> T:
-
+    """
+    :param func:
+    :param geom:
+    :param distortion_threshold: Maximum distance that interpolated coordinates
+                                 can be from the real coordinates.
+    :return:
+    """
     return geom
 
 
 def transform_interpolated_wgs84_geodesic(
         func,
         geom: T,
-        distortion_threshold=0.5  # Maximum distance that interpolated coordinates can be from the real coordinates.
+        distortion_threshold=0.5
 ) -> T:
-    '''
-
+    """
     :param func:
     :param geom:
-    :param distortion_threshold:
+    :param distortion_threshold: Maximum distance that interpolated coordinates
+                                 can be from the real coordinates.
     :return:
-    '''
+    """
     return geom

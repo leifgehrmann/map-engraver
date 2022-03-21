@@ -35,27 +35,12 @@ class TestMasks(unittest.TestCase):
                 'expectedGeomsCount': 1
             },
             {
-                'proj4': '+proj=ortho +lon_0=180 +lat_0=0',
-                'expectedBounds': (-89.9, -180, 89.9, 180),
-                'expectedGeomsCount': 2
-            },
-            {
-                'proj4': '+proj=ortho +lat_0=0.1',
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=0.1',
                 'expectedBounds': (-89.8, -180, 89.9, 180),
                 'expectedGeomsCount': 1
-            },
-            {
-                'proj4': '+proj=ortho +lon_0=180 +lat_0=0.1',
-                'expectedBounds': (-89.8, -180, 89.9, 180),
-                'expectedGeomsCount': 2
             },
             {
                 'proj4': '+proj=ortho +lon_0=0 +lat_0=20',
-                'expectedBounds': (-69.9, -180.0, 90.0, 180.0),
-                'expectedGeomsCount': 1
-            },
-            {
-                'proj4': '+proj=ortho +lon_0=180 +lat_0=20',
                 'expectedBounds': (-69.9, -180.0, 90.0, 180.0),
                 'expectedGeomsCount': 1
             },
@@ -70,6 +55,21 @@ class TestMasks(unittest.TestCase):
                 'expectedGeomsCount': 1
             },
             {
+                'proj4': '+proj=ortho +lon_0=180 +lat_0=0',
+                'expectedBounds': (-89.9, -180, 89.9, 180),
+                'expectedGeomsCount': 2
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=180 +lat_0=0.1',
+                'expectedBounds': (-89.8, -180, 89.9, 180),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=180 +lat_0=20',
+                'expectedBounds': (-69.9, -180.0, 90.0, 180.0),
+                'expectedGeomsCount': 1
+            },
+            {
                 'proj4': '+proj=geos +h=35785831.0 +lon_0=-60 +sweep=x',
                 'expectedBounds': (-81.3, -141.2, 81.3, 21.2),
                 'expectedGeomsCount': 1
@@ -79,16 +79,44 @@ class TestMasks(unittest.TestCase):
                 'expectedBounds': (-81.3, -180.0, 81.3, 180.0),
                 'expectedGeomsCount': 2
             },
+            {
+                'proj4': '+proj=geos +h=35785831.0 +lon_0=-160 +sweep=y',
+                'expectedBounds': (-81.3, -180.0, 81.3, 180.0),
+                'expectedGeomsCount': 2
+            },
+            {
+                'proj4': '+proj=nsper +h=3000000 +lat_0=-20 +lon_0=-60',
+                'expectedBounds': (-67.1, -111.2, 27.1, -8.7),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=nsper +h=3000000 +lat_0=-20 +lon_0=145',
+                'expectedBounds': (-67.1, -180.0, 27.1, 180.0),
+                'expectedGeomsCount': 2
+            },
+            {
+                'proj4': '+proj=nsper +h=3000000 +lat_0=-80 +lon_0=145',
+                'expectedBounds': (-90.0, -180.0, -32.8, 180.0),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=tpers +h=5500000 +lat_0=40',
+                'expectedBounds': (-17.4, -180.0, 90.0, 180.0),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=tpers +h=5500000 +lat_0=-40',
+                'expectedBounds': (-90.0, -180.0, 17.4, 180.0),
+                'expectedGeomsCount': 1
+            },
+            {
+                'proj4': '+proj=tpers +h=5500000 +lat_0=30 +lon_0=-120 '
+                         '+tilt=30',
+                'expectedBounds': (-27.3, -180.0, 87.5, 180.0),
+                'expectedGeomsCount': 2
+            },
         ]
-        # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-20 +lon_0=-60')
-        # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-20 +lon_0=-60')
-        # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-20 +lon_0=145')
-        # crs = CRS.from_proj4('+proj=nsper +h=3000000 +lat_0=-80 +lon_0=145')
-        # crs = CRS.from_proj4('+proj=tpers +h=5500000 +lat_0=40')
-        # crs = CRS.from_proj4('+proj=tpers +h=5500000 +lat_0=-40')
-        # crs = CRS.from_proj4('+proj=tpers +h=5500000 +lat_0=30 +lon_0=-120 +tilt=30')
         for case in cases:
-            print(case['proj4'])
             crs = CRS.from_proj4(case['proj4'])
             mask = orthographic_mask(crs)
             self.draw_mask_wgs84(case['proj4'], mask)
@@ -108,7 +136,7 @@ class TestMasks(unittest.TestCase):
 
     @staticmethod
     def draw_mask_wgs84(name: str, mask_wgs84: MultiPolygon):
-        name = re.sub(r'\W+', '', name)
+        name = re.sub(r'[^0-9A-Za-z_-]', '', name)
         path = Path(__file__).parent.joinpath(
             'output/%s.svg' % name
         )
@@ -161,7 +189,7 @@ class TestMasks(unittest.TestCase):
         polygon_drawer.draw(canvas)
 
         polygon_drawer = PolygonDrawer()
-        polygon_drawer.fill_color = (0, 1, 0)
+        polygon_drawer.fill_color = (1, 1, 0)
         polygon_drawer.geoms = [mask_wgs84]
         polygon_drawer.draw(canvas)
 
@@ -173,7 +201,6 @@ class TestMasks(unittest.TestCase):
     ):
         geom: Polygon
         for geom in mask.geoms:
-            print(list(geom.exterior.coords))
             assert geom.is_valid
             assert geom.is_simple
 
@@ -216,8 +243,6 @@ class TestMasks(unittest.TestCase):
             expected_geom_count: int
     ):
         if len(mask.geoms) != expected_geom_count:
-            for geom in mask.geoms:
-                print(list(geom.exterior.coords))
             raise AssertionError(
                 'Geom counts are not close. Expected: (' +
                 str(expected_geom_count) +

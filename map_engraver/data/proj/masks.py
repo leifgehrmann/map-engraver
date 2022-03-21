@@ -16,11 +16,12 @@ def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
     :return:
     """
     # Throw an error if an unknown projection is passed in.
-    print(crs.coordinate_operation.method_name)
     if crs.coordinate_operation.method_name not in [
-        'Orthographic',
-        'Geostationary Satellite (Sweep X)',
-        'Geostationary Satellite (Sweep Y)',
+        'Orthographic',  # ortho
+        'Geostationary Satellite (Sweep X)',  # geos
+        'Geostationary Satellite (Sweep Y)',  # geos
+        'Vertical Perspective',  # nsper
+        'PROJ tpers',  # tpers
     ]:
         raise Exception(
             'projection method name not supported: ' +
@@ -41,9 +42,7 @@ def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
         )
         points.append(position)
 
-    print('Covers Hemisphere:', _covers_hemisphere(points))
-
-    if _covers_hemisphere(points):
+    if _covers_hemisphere(crs):
         # Stitch points together
         points = _split_points_along_anti_meridian(crs, points)[0]
         # Used to determine which hemisphere the origin is in.
@@ -67,22 +66,22 @@ def _sign(x: float) -> float:
     return math.copysign(1, x)
 
 
-def _covers_hemisphere(points: List[Tuple[float, float]]) -> bool:
-    # Returns true if the coordinate sequence's longitude starts going in the
-    # reverse direction for more than a quarter of the sequence.
-    # This is used to determine whether the projected edge is covers the whole
-    # hemisphere.
-    segments_increasing = 0
-    segments_decreasing = 0
-    total_points = len(points)
-    for i in range(len(points)):
-        if points[i][1] < points[(i + 1) % total_points][1]:
-            segments_increasing += 1
-        else:
-            segments_decreasing += 1
+def _covers_hemisphere(crs: CRS) -> bool:
+    transformer = Transformer.from_proj(
+        CRS.from_epsg(4326),
+        crs
+    )
 
-    print('hemisphere check', total_points, segments_decreasing, segments_increasing)
-    return 4 > min(segments_increasing, segments_decreasing)
+    covers_northern = transformer.transform(90, 0)[0] != float('inf')
+    covers_southern = transformer.transform(-90, 0)[0] != float('inf')
+
+    # We don't really support projections like this, where the north and south
+    # poles are visible at the same, but it is possible in orthographic
+    # projections where the lat_0 is 0. For our purposes, we don't consider
+    # this projection as covering both hemisphere; it merely touches it.
+    if covers_northern and covers_southern:
+        return False
+    return covers_northern or covers_southern
 
 
 def _binary_search_edge_crs(crs: CRS, angle: float, threshold=1) -> float:
@@ -163,8 +162,12 @@ def _split_points_along_anti_meridian(
 
         if abs(current_point[1] - next_point[1]) > 90:
             longitude = _sign(points[i][1]) * 180
-            anti_meridian_at_current_lat = transformer.transform(current_point[0], 180)
-            anti_meridian_at_next_lat = transformer.transform(next_point[0], 180)
+            anti_meridian_at_current_lat = transformer.transform(
+                current_point[0], 180
+            )
+            anti_meridian_at_next_lat = transformer.transform(
+                next_point[0], 180
+            )
             if anti_meridian_at_current_lat[0] == float('inf') and \
                     anti_meridian_at_next_lat[0] == float('inf'):
                 raise RuntimeError(
@@ -197,8 +200,6 @@ def _split_points_along_anti_meridian(
 
             group = []
             if not math.isclose(next_point[1], -longitude, abs_tol=0.0001):
-                print('222', current_point[1], next_point[1])
-                print('hmmm', next_point[1], -longitude)
                 group.append((latitude, -longitude))
 
         if len(groups) != 0 and groups[0][0] == next_point:
@@ -206,6 +207,5 @@ def _split_points_along_anti_meridian(
             groups[0] = group
         elif i == total_points - 1:
             groups.append(group)
-
 
     return groups
