@@ -28,25 +28,29 @@ def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
             crs.coordinate_operation.method_name
         )
 
-    transformer = Transformer.from_proj(
+    proj_to_wgs84 = Transformer.from_proj(
         crs,
         CRS.from_epsg(4326)
+    )
+    wgs84_to_proj = Transformer.from_proj(
+        CRS.from_epsg(4326),
+        crs
     )
     points = []
     for i in range(resolution * 4):
         angle = i * math.pi * 2 / (resolution * 4)
-        radius = _binary_search_edge_crs(crs, angle, threshold)
-        position = transformer.transform(
+        radius = _binary_search_edge_crs(proj_to_wgs84, angle, threshold)
+        position = proj_to_wgs84.transform(
             math.cos(angle) * radius,
             math.sin(angle) * radius
         )
         points.append(position)
 
-    if _covers_hemisphere(crs):
+    if _covers_hemisphere(wgs84_to_proj):
         # Stitch points together
-        points = _split_points_along_anti_meridian(crs, points)[0]
+        points = _split_points_along_anti_meridian(wgs84_to_proj, points)[0]
         # Used to determine which hemisphere the origin is in.
-        origin = transformer.transform(0, 0)
+        origin = proj_to_wgs84.transform(0, 0)
         # Extend the path by including points at the North or South Pole.
         points.extend([
             (_sign(origin[0]) * 90, _sign(points[-1][1]) * 180),
@@ -55,7 +59,10 @@ def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
 
         return MultiPolygon([Polygon(points)])
     else:
-        point_groups = _split_points_along_anti_meridian(crs, points)
+        point_groups = _split_points_along_anti_meridian(
+            wgs84_to_proj,
+            points
+        )
         return MultiPolygon(list(map(
             lambda point_group: Polygon(point_group),
             point_groups
@@ -66,14 +73,9 @@ def _sign(x: float) -> float:
     return math.copysign(1, x)
 
 
-def _covers_hemisphere(crs: CRS) -> bool:
-    transformer = Transformer.from_proj(
-        CRS.from_epsg(4326),
-        crs
-    )
-
-    covers_northern = transformer.transform(90, 0)[0] != float('inf')
-    covers_southern = transformer.transform(-90, 0)[0] != float('inf')
+def _covers_hemisphere(wgs84_to_proj: Transformer) -> bool:
+    covers_northern = wgs84_to_proj.transform(90, 0)[0] != float('inf')
+    covers_southern = wgs84_to_proj.transform(-90, 0)[0] != float('inf')
 
     # We don't really support projections like this, where the north and south
     # poles are visible at the same, but it is possible in orthographic
@@ -84,12 +86,13 @@ def _covers_hemisphere(crs: CRS) -> bool:
     return covers_northern or covers_southern
 
 
-def _binary_search_edge_crs(crs: CRS, angle: float, threshold=1) -> float:
-    transformer = Transformer.from_proj(
-        crs,
-        CRS.from_epsg(4326)
-    )
+def _binary_search_edge_crs(
+        transformer: Transformer,
+        angle: float,
+        threshold=1
+) -> float:
     min_r = 0
+    crs = transformer.source_crs
     if crs.coordinate_operation.method_name == 'Orthographic':
         # Speeds up binary search a bit
         min_r = min(
@@ -111,14 +114,14 @@ def _binary_search_edge_crs(crs: CRS, angle: float, threshold=1) -> float:
 
 
 def _binary_search_edge_wgs84(
-        crs: CRS,
+        wgs84_to_proj: Transformer,
         valid_lat: float,
         invalid_lat: float,
         threshold=0.01,
 ) -> float:
     """
 
-    :param crs:
+    :param wgs84_to_proj:
     :param valid_lat:
     :param invalid_lat:
     :param threshold: Defaults to 0.01, since this level of precision usually
@@ -126,14 +129,10 @@ def _binary_search_edge_wgs84(
                       See https://xkcd.com/2170/
     :return:
     """
-    transformer = Transformer.from_proj(
-        CRS.from_epsg(4326),
-        crs
-    )
 
     while abs(valid_lat - invalid_lat) > threshold:
         pivot_lat = (invalid_lat + valid_lat) / 2
-        if (transformer.transform(pivot_lat, 180))[0] == float('inf'):
+        if (wgs84_to_proj.transform(pivot_lat, 180))[0] == float('inf'):
             invalid_lat = pivot_lat
         else:
             valid_lat = pivot_lat
@@ -142,15 +141,10 @@ def _binary_search_edge_wgs84(
 
 
 def _split_points_along_anti_meridian(
-        crs: CRS,
+        wgs84_to_proj: Transformer,
         points: List[Tuple[float, float]],
         threshold=0.01
 ) -> List[List[Tuple[float, float]]]:
-    transformer = Transformer.from_proj(
-        CRS.from_epsg(4326),
-        crs
-    )
-
     total_points = len(points)
     groups: List = []
     group: List[Tuple[float, float]] = []
@@ -162,10 +156,10 @@ def _split_points_along_anti_meridian(
 
         if abs(current_point[1] - next_point[1]) > 90:
             longitude = _sign(points[i][1]) * 180
-            anti_meridian_at_current_lat = transformer.transform(
+            anti_meridian_at_current_lat = wgs84_to_proj.transform(
                 current_point[0], 180
             )
-            anti_meridian_at_next_lat = transformer.transform(
+            anti_meridian_at_next_lat = wgs84_to_proj.transform(
                 next_point[0], 180
             )
             if anti_meridian_at_current_lat[0] == float('inf') and \
@@ -178,14 +172,14 @@ def _split_points_along_anti_meridian(
 
             if anti_meridian_at_current_lat[0] == float('inf'):
                 latitude = _binary_search_edge_wgs84(
-                    crs,
+                    wgs84_to_proj,
                     next_point[0],  # Valid latitude
                     current_point[0],  # Invalid latitude
                     threshold
                 )
             elif anti_meridian_at_next_lat[0] == float('inf'):
                 latitude = _binary_search_edge_wgs84(
-                    crs,
+                    wgs84_to_proj,
                     current_point[0],  # Valid latitude
                     next_point[0],  # Invalid latitude
                     threshold
