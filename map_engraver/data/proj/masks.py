@@ -6,7 +6,39 @@ from pyproj import CRS, Transformer
 from shapely.geometry import Polygon, MultiPolygon
 
 
-def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
+def orthographic_mask(
+        crs: CRS,
+        resolution=64,
+        threshold=1
+) -> Polygon:
+    # Throw an error if an unknown projection is passed in.
+    if not _is_supported_projection_method(crs):
+        raise Exception(
+            'projection method name not supported: ' +
+            crs.coordinate_operation.method_name
+        )
+
+    proj_to_wgs84 = Transformer.from_proj(
+        crs,
+        CRS.from_epsg(4326)
+    )
+    points = []
+    for i in range(resolution * 4):
+        angle = i * math.pi * 2 / (resolution * 4)
+        radius = _binary_search_edge_crs(proj_to_wgs84, angle, threshold)
+        position = (
+            math.cos(angle) * radius,
+            math.sin(angle) * radius
+        )
+        points.append(position)
+    return Polygon(points)
+
+
+def orthographic_mask_wgs84(
+        crs: CRS,
+        resolution=64,
+        threshold=1
+) -> MultiPolygon:
     """
 
     :param crs:
@@ -16,13 +48,7 @@ def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
     :return:
     """
     # Throw an error if an unknown projection is passed in.
-    if crs.coordinate_operation.method_name not in [
-        'Orthographic',  # ortho
-        'Geostationary Satellite (Sweep X)',  # geos
-        'Geostationary Satellite (Sweep Y)',  # geos
-        'Vertical Perspective',  # nsper
-        'PROJ tpers',  # tpers
-    ]:
+    if not _is_supported_projection_method(crs):
         raise Exception(
             'projection method name not supported: ' +
             crs.coordinate_operation.method_name
@@ -67,6 +93,16 @@ def orthographic_mask(crs: CRS, resolution=64, threshold=1) -> MultiPolygon:
             lambda point_group: Polygon(point_group),
             point_groups
         )))
+
+
+def _is_supported_projection_method(crs: CRS) -> bool:
+    return crs.coordinate_operation.method_name in [
+        'Orthographic',  # ortho
+        'Geostationary Satellite (Sweep X)',  # geos
+        'Geostationary Satellite (Sweep Y)',  # geos
+        'Vertical Perspective',  # nsper
+        'PROJ tpers',  # tpers
+    ]
 
 
 def _sign(x: float) -> float:

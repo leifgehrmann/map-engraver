@@ -1,6 +1,7 @@
 from math import isclose
 
 import re
+from shapely.geometry.base import BaseGeometry
 
 from typing import Tuple
 
@@ -18,7 +19,10 @@ from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.canvas import CanvasBuilder
 from map_engraver.data import geo_canvas_ops
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
-from map_engraver.data.proj.masks import orthographic_mask
+from map_engraver.data.osm import Parser
+from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely
+from map_engraver.data.proj.masks import orthographic_mask, \
+    orthographic_mask_wgs84
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
 
 
@@ -27,7 +31,88 @@ class TestMasks(unittest.TestCase):
         Path(__file__).parent.joinpath('output/') \
             .mkdir(parents=True, exist_ok=True)
 
-    def test_orthographic_masks_at_equator(self):
+    def test_orthographic_mask_outputs_expected_polygons(self):
+        cases = [
+            {
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=0',
+                'expectedBounds': (-89.9, -89.9, 89.9, 89.9)
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=0.1',
+                'expectedBounds': (-89.8, -180, 89.9, 180)
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=20',
+                'expectedBounds': (-69.9, -180.0, 90.0, 180.0)
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=90',
+                'expectedBounds': (0.02, -180.0, 90.0, 180.0)
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=0 +lat_0=-90',
+                'expectedBounds': (-90.0, -180.0, -0.0, 180.0)
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=180 +lat_0=0',
+                'expectedBounds': (-89.9, -180, 89.9, 180)
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=180 +lat_0=0.1',
+                'expectedBounds': (-89.8, -180, 89.9, 180)
+            },
+            {
+                'proj4': '+proj=ortho +lon_0=180 +lat_0=20',
+                'expectedBounds': (-69.9, -180.0, 90.0, 180.0)
+            },
+            {
+                'proj4': '+proj=geos +h=35785831.0 +lon_0=-60 +sweep=x',
+                'expectedBounds': (-81.3, -141.2, 81.3, 21.2)
+            },
+            {
+                'proj4': '+proj=geos +h=35785831.0 +lon_0=-160 +sweep=x',
+                'expectedBounds': (-81.3, -180.0, 81.3, 180.0)
+            },
+            {
+                'proj4': '+proj=geos +h=35785831.0 +lon_0=-160 +sweep=y',
+                'expectedBounds': (-81.3, -180.0, 81.3, 180.0)
+            },
+            {
+                'proj4': '+proj=nsper +h=3000000 +lat_0=-20 +lon_0=-60',
+                'expectedBounds': (-67.1, -111.2, 27.1, -8.7)
+            },
+            {
+                'proj4': '+proj=nsper +h=3000000 +lat_0=-20 +lon_0=145',
+                'expectedBounds': (-67.1, -180.0, 27.1, 180.0)
+            },
+            {
+                'proj4': '+proj=nsper +h=3000000 +lat_0=-80 +lon_0=145',
+                'expectedBounds': (-90.0, -180.0, -32.8, 180.0)
+            },
+            {
+                'proj4': '+proj=tpers +h=5500000 +lat_0=40',
+                'expectedBounds': (-17.4, -180.0, 90.0, 180.0)
+            },
+            {
+                'proj4': '+proj=tpers +h=5500000 +lat_0=-40',
+                'expectedBounds': (-90.0, -180.0, 17.4, 180.0)
+            },
+            {
+                'proj4': '+proj=tpers +h=5500000 +lat_0=30 +lon_0=-120 '
+                         '+tilt=30',
+                'expectedBounds': (-27.3, -180.0, 87.5, 180.0),
+            },
+        ]
+        for case in cases:
+            crs = CRS.from_proj4(case['proj4'])
+            mask = orthographic_mask(crs)
+            mask_wgs84 = orthographic_mask_wgs84(crs)
+            self.draw_mask_combine(case['proj4'], crs, mask, mask_wgs84)
+            assert mask.is_valid
+            assert mask.is_simple
+            # self.assert_mask_has_bounds(mask, case['expectedBounds'])
+
+    def test_orthographic_mask_wgs84_outputs_expected_multi_polygons(self):
         cases = [
             {
                 'proj4': '+proj=ortho +lon_0=0 +lat_0=0',
@@ -118,27 +203,98 @@ class TestMasks(unittest.TestCase):
         ]
         for case in cases:
             crs = CRS.from_proj4(case['proj4'])
-            mask = orthographic_mask(crs)
+            mask = orthographic_mask_wgs84(crs)
             self.draw_mask_wgs84(case['proj4'], mask)
             self.assert_geoms_are_valid(mask)
             self.assert_all_points_are_valid(crs, mask)
             self.assert_mask_has_bounds(mask, case['expectedBounds'])
             self.assert_mask_geom_count(mask, case['expectedGeomsCount'])
 
-    def test_orthographic_masks_at_45_north(self):
-        pass
+    @staticmethod
+    def get_world_map() -> MultiPolygon:
+        path = Path(__file__).parent.joinpath('world.osm')
 
-    def test_orthographic_masks_at_north_pole(self):
-        pass
+        osm_map = Parser.parse(path)
+        osm_to_shapely = OsmToShapely(osm_map)
 
-    def test_orthographic_masks_at_anti_meridian(self):
-        pass
+        polygons = map(osm_to_shapely.way_to_polygon, osm_map.ways.values())
+        return MultiPolygon(polygons)
+
+    @staticmethod
+    def draw_mask_combine(
+            name: str,
+            crs: CRS,
+            mask: Polygon,
+            mask_wgs84: MultiPolygon
+    ):
+        name = re.sub(r'[^0-9A-Za-z_-]', '', name)
+        path = Path(__file__).parent.joinpath(
+            'output/mask_%s.svg' % name
+        )
+        path.unlink(missing_ok=True)
+        canvas_builder = CanvasBuilder()
+        canvas_builder.set_path(path)
+        canvas_builder.set_size(
+            Cu.from_px(400 + 20 * 2),
+            Cu.from_px(400 + 20 * 2)
+        )
+
+        canvas = canvas_builder.build()
+
+        origin_for_geo = GeoCoordinate(
+            0,
+            0,
+            crs
+        )
+        origin_for_canvas = CanvasCoordinate(
+            Cu.from_px(200 + 20),
+            Cu.from_px(200 + 20)
+        )
+
+        # Fit the projected radius as the width of the canvas
+        geo_to_canvas_scale = geo_canvas_ops.GeoCanvasScale(
+            crs.ellipsoid.semi_major_metre,
+            Cu.from_px(200)
+        )
+
+        transformation_func = geo_canvas_ops.build_transformer(
+            crs=crs,
+            data_crs=crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas
+        )
+
+        mask = ops.transform(transformation_func, mask)
+
+        wgs84_crs = pyproj.CRS.from_epsg(4326)
+        transformation_func_2 = geo_canvas_ops.build_transformer(
+            crs=crs,
+            data_crs=wgs84_crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas
+        )
+        world = TestMasks.get_world_map().intersection(mask_wgs84)
+        world = ops.transform(transformation_func_2, world)
+
+        polygon_drawer = PolygonDrawer()
+        polygon_drawer.fill_color = (0, 0, 1)
+        polygon_drawer.geoms = [mask]
+        polygon_drawer.draw(canvas)
+
+        polygon_drawer = PolygonDrawer()
+        polygon_drawer.fill_color = (0, 1, 0)
+        polygon_drawer.geoms = [world]
+        polygon_drawer.draw(canvas)
+
+        canvas.close()
 
     @staticmethod
     def draw_mask_wgs84(name: str, mask_wgs84: MultiPolygon):
         name = re.sub(r'[^0-9A-Za-z_-]', '', name)
         path = Path(__file__).parent.joinpath(
-            'output/%s.svg' % name
+            'output/mask_wgs84_%s.svg' % name
         )
         path.unlink(missing_ok=True)
         canvas_builder = CanvasBuilder()
@@ -189,7 +345,7 @@ class TestMasks(unittest.TestCase):
         polygon_drawer.draw(canvas)
 
         polygon_drawer = PolygonDrawer()
-        polygon_drawer.fill_color = (1, 1, 0)
+        polygon_drawer.fill_color = (0, 1, 0)
         polygon_drawer.geoms = [mask_wgs84]
         polygon_drawer.draw(canvas)
 
@@ -220,7 +376,7 @@ class TestMasks(unittest.TestCase):
 
     @staticmethod
     def assert_mask_has_bounds(
-            mask: MultiPolygon,
+            mask: BaseGeometry,
             expected_bounds: Tuple[float, float, float, float],
     ):
         if (
