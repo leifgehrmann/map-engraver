@@ -17,6 +17,7 @@ from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely
 from map_engraver.data.proj.masks import orthographic_mask, \
     orthographic_mask_wgs84
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
+from tests.data.proj.orthographic_cases import get_orthographic_test_cases
 
 
 class TestOrthographicRendering(unittest.TestCase):
@@ -32,26 +33,9 @@ class TestOrthographicRendering(unittest.TestCase):
             .mkdir(parents=True, exist_ok=True)
 
     def test_orthographic_mask_outputs_expected_polygons(self):
-        cases = [
-            '+proj=ortho +lon_0=0 +lat_0=0',
-            '+proj=ortho +lon_0=0 +lat_0=0.1',
-            '+proj=ortho +lon_0=0 +lat_0=20',
-            '+proj=ortho +lon_0=0 +lat_0=90',
-            '+proj=ortho +lon_0=0 +lat_0=-90',
-            '+proj=ortho +lon_0=180 +lat_0=0',
-            '+proj=ortho +lon_0=180 +lat_0=0.1',
-            '+proj=ortho +lon_0=180 +lat_0=20',
-            '+proj=geos +h=35785831.0 +lon_0=-60 +sweep=x',
-            '+proj=geos +h=35785831.0 +lon_0=-160 +sweep=x',
-            '+proj=geos +h=35785831.0 +lon_0=-160 +sweep=y',
-            '+proj=nsper +h=3000000 +lat_0=-20 +lon_0=-60',
-            '+proj=nsper +h=3000000 +lat_0=-20 +lon_0=145',
-            '+proj=nsper +h=3000000 +lat_0=-80 +lon_0=145',
-            '+proj=tpers +h=5500000 +lat_0=40',
-            '+proj=tpers +h=5500000 +lat_0=-40',
-            '+proj=tpers +h=5500000 +lat_0=30 +lon_0=-120 +tilt=30'
-        ]
-        for proj4_str in cases:
+        for case in get_orthographic_test_cases():
+            proj4_str = case['proj4']
+
             crs = CRS.from_proj4(proj4_str)
             mask = orthographic_mask(crs)
             mask_wgs84 = orthographic_mask_wgs84(crs)
