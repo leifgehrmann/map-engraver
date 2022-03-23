@@ -18,23 +18,31 @@ class TestMasks(unittest.TestCase):
             .mkdir(parents=True, exist_ok=True)
 
     def test_orthographic_mask_outputs_expected_polygons(self):
-        cases = get_orthographic_test_cases()
-        for case in cases:
+        for case in get_orthographic_test_cases():
             crs = CRS.from_proj4(case['proj4'])
             mask = orthographic_mask(crs)
             assert mask.is_valid
             assert mask.is_simple
             self.assert_mask_has_bounds(mask, case['expectedProjBounds'])
 
+    def test_orthographic_mask_throws_error_on_unsupported_proj(self):
+        crs = CRS.from_epsg(4326)
+        with self.assertRaises(Exception):
+            orthographic_mask(crs)
+
     def test_orthographic_mask_wgs84_outputs_expected_multi_polygons(self):
-        cases = get_orthographic_test_cases()
-        for case in cases:
+        for case in get_orthographic_test_cases():
             crs = CRS.from_proj4(case['proj4'])
             mask = orthographic_mask_wgs84(crs)
             self.assert_geoms_are_valid(mask)
             self.assert_all_points_are_valid(crs, mask)
             self.assert_mask_has_bounds(mask, case['expectedWgs84Bounds'])
             self.assert_mask_geom_count(mask, case['expectedWgs84GeomsCount'])
+
+    def test_orthographic_mask_wgs84_throws_error_on_unsupported_proj(self):
+        crs = CRS.from_epsg(4326)
+        with self.assertRaises(Exception):
+            orthographic_mask_wgs84(crs)
 
     @staticmethod
     def assert_geoms_are_valid(

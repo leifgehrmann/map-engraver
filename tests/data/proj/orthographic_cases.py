@@ -1,5 +1,4 @@
 def get_orthographic_test_cases():
-    ortho = (-6378136.3, -6356752.2, 6378136.3, 6356752.2)
     return [
         {
             'proj4': '+proj=ortho +lon_0=0 +lat_0=0',
