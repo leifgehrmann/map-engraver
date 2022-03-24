@@ -14,6 +14,7 @@ from map_engraver.data import geo_canvas_ops
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
 from map_engraver.data.osm import Parser
 from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely
+from map_engraver.data.osm_shapely_ops.transform import transform_interpolated_euclidean
 from map_engraver.data.proj.masks import orthographic_mask, \
     orthographic_mask_wgs84
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
@@ -115,7 +116,10 @@ class TestOrthographicRendering(unittest.TestCase):
             origin_for_geo=origin_for_geo,
             origin_for_canvas=origin_for_canvas
         )
-        world_map_canvas = ops.transform(wgs84_to_canvas, world_map_wgs84)
+        world_map_canvas = transform_interpolated_euclidean(
+            wgs84_to_canvas,
+            world_map_wgs84
+        )
 
         # Render the polygons
         polygon_drawer = PolygonDrawer()
