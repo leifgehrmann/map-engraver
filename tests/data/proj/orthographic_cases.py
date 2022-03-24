@@ -73,6 +73,14 @@ def get_orthographic_test_cases():
             'expectedWgs84GeomsCount': 1
         },
         {
+            'proj4': '+proj=ortho +lon_0=-40 +lat_0=30',
+            'expectedProjBounds': (
+                -6378109.4, -6343600.7, 6378109.4, 6378136.3
+            ),
+            'expectedWgs84Bounds': (-59.9, -180.0, 90.0, 180.0),
+            'expectedWgs84GeomsCount': 1
+        },
+        {
             'proj4': '+proj=ortho +lon_0=180 +lat_0=20',
             'expectedProjBounds': (
                 -6378121.9, -6345528.8, 6378121.9, 6372985.5
