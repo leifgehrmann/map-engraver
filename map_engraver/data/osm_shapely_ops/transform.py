@@ -1,7 +1,7 @@
 import math
 
 from shapely import ops
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString
 from typing import TypeVar, Tuple, List
 
 from map_engraver.data.osm_shapely.osm_line_string import OsmLineString
@@ -45,34 +45,66 @@ def transform_interpolated_euclidean(
                                  can be from the real coordinates.
     :return:
     """
-    new_coords = []
-    # Todo: Support line-strings
-    if isinstance(geom, Polygon):
-        # Todo: Support interiors
-        for i in range(len(geom.exterior.coords) - 1):
-            a = geom.exterior.coords[i]
-            b = geom.exterior.coords[i + 1]
-            interpolated_points = _transform_interpolated_euclidean_segment(
+    if isinstance(geom, LineString):
+        return LineString(_transform_interpolated_euclidean_coords(
+            func,
+            geom.coords,
+            distortion_threshold=distortion_threshold
+        ))
+    elif isinstance(geom, Polygon):
+        new_exterior = _transform_interpolated_euclidean_coords(
+            func,
+            geom.exterior.coords,
+            distortion_threshold=distortion_threshold
+        )
+        new_interiors = []
+        for interior in geom.interiors:
+            new_interiors.append(_transform_interpolated_euclidean_coords(
                 func,
-                a,
-                b,
-                distortion_threshold=distortion_threshold
-            )
-            new_coords.append(func(*a))
-            new_coords.extend(interpolated_points)
-        # Todo: Confirm that polygons have a return co-ordinate.
-        new_coords.append(func(*geom.exterior.coords[-1]))
-        return Polygon(new_coords)
-    if isinstance(geom, MultiPolygon):
-        new_geoms = []
-        for sub_geom in geom.geoms:
-            new_geoms.append(transform_interpolated_euclidean(
-                func,
-                sub_geom,
+                interior.coords,
                 distortion_threshold=distortion_threshold
             ))
-        return MultiPolygon(new_geoms)
+        new_interiors = geom.interiors
+        return Polygon(new_exterior, new_interiors)
+    elif isinstance(geom, MultiLineString):
+        new_line_strings = []
+        for line_string in geom.geoms:
+            new_line_strings.append(transform_interpolated_euclidean(
+                func,
+                line_string,
+                distortion_threshold=distortion_threshold
+            ))
+        return MultiLineString(new_line_strings)
+    elif isinstance(geom, MultiPolygon):
+        new_polygons = []
+        for polygon in geom.geoms:
+            new_polygons.append(transform_interpolated_euclidean(
+                func,
+                polygon,
+                distortion_threshold=distortion_threshold
+            ))
+        return MultiPolygon(new_polygons)
     return geom
+
+
+def _transform_interpolated_euclidean_coords(
+        func,
+        coords: List[Tuple[float, float]],
+        distortion_threshold=0.25
+) -> List[Tuple[float, float]]:
+    new_coords = []
+    for i in range(len(coords)):
+        a = coords[i]
+        b = coords[(i + 1) % len(coords)]
+        interpolated_points = _transform_interpolated_euclidean_segment(
+            func,
+            a,
+            b,
+            distortion_threshold=distortion_threshold
+        )
+        new_coords.append(func(*a))
+        new_coords.extend(interpolated_points)
+    return new_coords
 
 
 def _transform_interpolated_euclidean_segment(
@@ -139,21 +171,3 @@ def _transform_interpolated_euclidean_segment(
         return new_points
 
     return []
-
-
-
-
-
-def transform_interpolated_wgs84_geodesic(
-        func,
-        geom: T,
-        distortion_threshold=0.5
-) -> T:
-    """
-    :param func:
-    :param geom:
-    :param distortion_threshold: Maximum distance that interpolated coordinates
-                                 can be from the real coordinates.
-    :return:
-    """
-    return geom
