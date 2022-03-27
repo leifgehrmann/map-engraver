@@ -92,10 +92,12 @@ def _transform_interpolated_euclidean_coords(
         coords: List[Tuple[float, float]],
         distortion_threshold=0.25
 ) -> List[Tuple[float, float]]:
+    if len(coords) == 0:
+        return []
     new_coords = []
-    for i in range(len(coords)):
+    for i in range(len(coords) - 1):
         a = coords[i]
-        b = coords[(i + 1) % len(coords)]
+        b = coords[i + 1]
         interpolated_points = _transform_interpolated_euclidean_segment(
             func,
             a,
@@ -104,6 +106,9 @@ def _transform_interpolated_euclidean_coords(
         )
         new_coords.append(func(*a))
         new_coords.extend(interpolated_points)
+
+    new_coords.append(func(*coords[-1]))
+
     return new_coords
 
 
