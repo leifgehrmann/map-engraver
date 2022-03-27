@@ -116,7 +116,7 @@ def _transform_interpolated_euclidean_segment(
         func,
         a: Tuple[float, float],
         b: Tuple[float, float],
-        distortion_threshold=0.25
+        distortion_threshold
 ) -> List[Tuple[float, float]]:
     """
     This function interpolates points between two points, in a way to minimizes
