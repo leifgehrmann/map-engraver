@@ -1,12 +1,11 @@
-import math
+from math import sqrt, sin, cos, atan2, copysign, acos, pi
 
-from pyproj import CRS, Transformer
 from shapely.geometry import LineString, MultiLineString
 from typing import Union, Tuple, List, Optional
 
-Coords = Tuple[float, float]  # (latitude, longitude)
+Coord = Tuple[float, float]  # (latitude, longitude)
 Vector = Tuple[float, float]
-LineSegments = List[Coords]
+LineSegments = List[Coord]
 
 
 def interpolate_geodesic(
@@ -31,8 +30,9 @@ def interpolate_geodesic(
 
     :param geom: A line-string or multi-line-string shapely object with WGS 84
                  coordinates.
-    :param angular_distortion_threshold: Maximum distance in meters thatinterpolated
-                                 coordinates can be from the real coordinates.
+    :param angular_distortion_threshold: The maximum obtuse angle that can
+                                         exist between two interpolated
+                                         line-segments.
     :return: A collection of line-strings with additional
     """
     if isinstance(geom, LineString):
@@ -80,12 +80,12 @@ def _interpolate_geodesic_line_string(
 
 
 def _sign(x: float) -> float:
-    return math.copysign(1, x)
+    return copysign(1, x)
 
 
 def _interpolate_geodesic_line_segment(
-        a_wgs84: Coords,
-        b_wgs84: Coords,
+        a_wgs84: Coord,
+        b_wgs84: Coord,
         angular_distortion_threshold: float
 ) -> Tuple[LineSegments, Optional[LineSegments]]:
     """
@@ -100,7 +100,6 @@ def _interpolate_geodesic_line_segment(
     # b-coordinate as that will be appended by the interpolate_geodesic
     # algorithm.
     if a_wgs84[1] == -b_wgs84[1]:
-        print('crossing poles!')
         if abs(a_wgs84[0]) == 90 or abs(b_wgs84[0]) == 90:
             return [a_wgs84, b_wgs84], None
         # Are we traversing up or down the globe.
@@ -111,41 +110,20 @@ def _interpolate_geodesic_line_segment(
                    (90 * lat_direction, a_wgs84[1])
                ], [(90 * lat_direction, b_wgs84[1])]
 
-    # Gnomonic projections can be used to find the great circle distances
-    # because the map projection displays all great circles as straight lines.
-    # This means the straight line between a and b is equivalent to the great
-    # circle path.
-    gnomonic_proj = CRS.from_proj4('+proj=stere +lat_0=%f +lon_0=%f +lat_ts=10' % a_wgs84)
-    wgs84_to_gnomonic = Transformer.from_proj(
-        CRS.from_epsg(4326),
-        gnomonic_proj
-    )
-    gnomonic_to_wgs84 = Transformer.from_proj(
-        gnomonic_proj,
-        CRS.from_epsg(4326)
-    )
-    # Our gnomonic projection uses `a_wgs84` as the origin.
-    a_gnomonic = wgs84_to_gnomonic.transform(*a_wgs84)
-    b_gnomonic = wgs84_to_gnomonic.transform(*b_wgs84)
-    print('a,b, wgs84', a_wgs84, b_wgs84)
-    print('a,b, gnomonic', a_gnomonic, b_gnomonic)
-
     # Does the shorted path cross the anti-meridian (i.e. are the longitudes
     # closer via the anti-meridian)
     if abs(a_wgs84[1] - b_wgs84[1]) > 180:
-        print('crossed the anti-meridian')
         if a_wgs84[1] > b_wgs84[1]:
             # `a_wgs84` is in the eastern hemisphere.
-            eastern_gnom_coord = a_gnomonic
-            western_gnom_coord = b_gnomonic
+            eastern_coord = a_wgs84
+            western_coord = b_wgs84
         else:
             # `a_wgs84` is in the western hemisphere.
-            eastern_gnom_coord = b_gnomonic
-            western_gnom_coord = a_gnomonic
+            eastern_coord = b_wgs84
+            western_coord = a_wgs84
         anti_meridian_lat = _locate_anti_meridian_latitude(
-            eastern_gnom_coord,
-            western_gnom_coord,
-            gnomonic_to_wgs84
+            eastern_coord,
+            western_coord
         )
         a_anti_meridian_intersection = (
             anti_meridian_lat,
@@ -158,47 +136,36 @@ def _interpolate_geodesic_line_segment(
 
         a_to_meridian = _interpolate_geodesic_coords(
             a_wgs84,
-            a_gnomonic,
             a_anti_meridian_intersection,
-            wgs84_to_gnomonic.transform(*a_anti_meridian_intersection),
-            gnomonic_to_wgs84,
             angular_distortion_threshold
         )
         a_to_meridian.append(a_anti_meridian_intersection)
         meridian_to_b = _interpolate_geodesic_coords(
             b_anti_meridian_intersection,
-            wgs84_to_gnomonic.transform(*b_anti_meridian_intersection),
             b_wgs84,
-            b_gnomonic,
-            gnomonic_to_wgs84,
             angular_distortion_threshold
         )
         return a_to_meridian, meridian_to_b
 
     return _interpolate_geodesic_coords(
         a_wgs84,
-        a_gnomonic,
         b_wgs84,
-        b_gnomonic,
-        gnomonic_to_wgs84,
         angular_distortion_threshold
     ), None
 
 
 def _locate_anti_meridian_latitude(
-        a_gnomonic: Coords,
-        b_gnomonic: Coords,
-        gnomonic_to_wgs84: Transformer,
+        a_wgs84: Coord,
+        b_wgs84: Coord,
         longitude_threshold=0.0001
 ) -> float:
     """
-    :param a_gnomonic: A coordinate in the gnomonic projection that corresponds
+    :param a_wgs84: A coordinate in the gnomonic projection that corresponds
                        to a coordinate on the eastern hemisphere in the WGS84
-                       projection.
-    :param b_gnomonic: A coordinate in the gnomonic projection that corresponds
+                       projection. Todo
+    :param b_wgs84: A coordinate in the gnomonic projection that corresponds
                        to a coordinate on the western hemisphere in the WGS84
-                       projection.
-    :param gnomonic_to_wgs84: A transformation function that
+                       projection. Todo
     :param longitude_threshold: How precise the value should be to pin-point
                                 the 180° longitude. The default is 0.0001, as
                                 according to [xkcd](https://www.xkcd.com/2170/)
@@ -206,46 +173,44 @@ def _locate_anti_meridian_latitude(
                                 pin-point a house.
     :return:
     """
-    mid_point_gnomonic = _mid_point(a_gnomonic, b_gnomonic)
-    mid_point_wgs84 = gnomonic_to_wgs84.transform(*mid_point_gnomonic)
-    print(mid_point_wgs84)
-    if abs(mid_point_wgs84[1]) - 180 < longitude_threshold:
-        return -mid_point_wgs84[0]
-    if mid_point_wgs84[1] > a_gnomonic[1]:  # Mid-point is in the eastern hemisphere.
+    mid_point_wgs84 = _interpolate_geodesic_coords_at_mid_point(
+        a_wgs84,
+        b_wgs84
+    )
+    if abs(abs(mid_point_wgs84[1]) - 180) < longitude_threshold:
+        return mid_point_wgs84[0]
+
+    # Mid-point is in the eastern hemisphere.
+    if mid_point_wgs84[1] > a_wgs84[1]:
         return _locate_anti_meridian_latitude(
-            mid_point_gnomonic,
-            b_gnomonic,
-            gnomonic_to_wgs84,
+            mid_point_wgs84,
+            b_wgs84,
             longitude_threshold=longitude_threshold
         )
+
     # Otherwise, the mid-point is in the western hemisphere.
     return _locate_anti_meridian_latitude(
-        a_gnomonic,
-        mid_point_gnomonic,
-        gnomonic_to_wgs84,
+        a_wgs84,
+        mid_point_wgs84,
         longitude_threshold=longitude_threshold
     )
 
 
 def _interpolate_geodesic_coords(
-        a_wgs84: Coords,
-        a_gnomonic: Coords,
-        b_wgs84: Coords,
-        b_gnomonic: Coords,
-        gnomonic_to_wgs84: Transformer,
+        a_wgs84: Coord,
+        b_wgs84: Coord,
         angular_distortion_threshold
-) -> List[Coords]:
+) -> List[Coord]:
     """
     :param a_wgs84:
-    :param a_gnomonic:
     :param b_wgs84:
-    :param b_gnomonic:
-    :param gnomonic_to_wgs84:
     :param angular_distortion_threshold:
     :return:
     """
-    mid_point_gnomonic = _mid_point(a_gnomonic, b_gnomonic)
-    mid_point_wgs84 = gnomonic_to_wgs84.transform(*mid_point_gnomonic)
+    mid_point_wgs84 = _interpolate_geodesic_coords_at_mid_point(
+        a_wgs84,
+        b_wgs84,
+    )
 
     # If the coordinates are opposite sides of the latitude, we want to split
     # the segments up more, since an S curve could return results prematurely
@@ -259,7 +224,6 @@ def _interpolate_geodesic_coords(
     is_distorted = angular_distortion_threshold < 180 - angular_distortion
 
     should_split = (has_s_curve and far_apart) or is_distorted
-    print(a_wgs84, b_wgs84, should_split, angular_distortion)
 
     if not should_split:
         return [a_wgs84]
@@ -268,32 +232,19 @@ def _interpolate_geodesic_coords(
     # Left split
     new_points.extend(_interpolate_geodesic_coords(
         a_wgs84,
-        a_gnomonic,
         mid_point_wgs84,
-        mid_point_gnomonic,
-        gnomonic_to_wgs84,
         angular_distortion_threshold
     ))
     # Right split
     new_points.extend(_interpolate_geodesic_coords(
         mid_point_wgs84,
-        mid_point_gnomonic,
         b_wgs84,
-        b_gnomonic,
-        gnomonic_to_wgs84,
         angular_distortion_threshold
     ))
     return new_points
 
 
-def _mid_point(a: Coords, b: Coords) -> Coords:
-    return (
-        (a[0] + b[0]) / 2,
-        (a[1] + b[1]) / 2
-    )
-
-
-def _diff(a: Coords, b: Coords) -> Coords:
+def _diff(a: Coord, b: Coord) -> Coord:
     return (
         (b[0] - a[0]),
         (b[1] - a[1])
@@ -301,10 +252,10 @@ def _diff(a: Coords, b: Coords) -> Coords:
 
 
 def _magnitude(v: Vector) -> float:
-    return math.sqrt(v[0] * v[0] + v[1] * v[1])
+    return sqrt(v[0] * v[0] + v[1] * v[1])
 
 
-def _obtuse_angle(a: Coords, b: Coords, c: Coords):
+def _obtuse_angle(a: Coord, b: Coord, c: Coord):
     """
     Given all three coordinates of a triangle, this function returns the
     angle between `ca` and `cb`.
@@ -317,5 +268,35 @@ def _obtuse_angle(a: Coords, b: Coords, c: Coords):
     ca = _diff(c, a)
     cb = _diff(c, b)
     ca_dot_bc = ca[0] * cb[0] + ca[1] * cb[1]
-    angle_radians = math.acos(ca_dot_bc / (_magnitude(ca) * _magnitude(cb)))
-    return angle_radians / math.pi * 180
+    angle_radians = acos(ca_dot_bc / (_magnitude(ca) * _magnitude(cb)))
+    return angle_radians / pi * 180
+
+
+def _interpolate_geodesic_coords_at_mid_point(p1: Coord, p2: Coord):
+    """
+    :param p1: The starting coordinate, in degrees.
+    :param p2: The end coordinate, in degrees.
+    :return: The coordinate half-way between the start and end, in degrees.
+    """
+    p1 = p1[0] / 180 * pi, p1[1] / 180 * pi
+    p2 = p2[0] / 180 * pi, p2[1] / 180 * pi
+    delta = haversine(p1, p2)
+    r = sin(0.5 * delta) / sin(delta)
+    x = r * cos(p1[0]) * cos(p1[1]) + r * cos(p2[0]) * cos(p2[1])
+    y = r * cos(p1[0]) * sin(p1[1]) + r * cos(p2[0]) * sin(p2[1])
+    z = r * sin(p1[0]) + r * sin(p2[0])
+    altitude = atan2(z, sqrt(x * x + y * y))
+    azimuth = atan2(y, x)
+    return altitude * 180 / pi, azimuth * 180 / pi
+
+
+def haversine(p1: Coord, p2: Coord) -> float:
+    """
+    :param p1: The starting coordinate, in radians.
+    :param p2: The end coordinate, in radians.
+    :return: The distance between `p1` and `p2` in radians.
+    """
+    d = p2[0] - p1[0], p2[1] - p1[1]
+    a = sin(d[0] / 2) * sin(d[0] / 2) + \
+        cos(p1[0]) * cos(p2[0]) * sin(d[1] / 2) * sin(d[1] / 2)
+    return 2 * atan2(sqrt(a), sqrt((1 - a)))
