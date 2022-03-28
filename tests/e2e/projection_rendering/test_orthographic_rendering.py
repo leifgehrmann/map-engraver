@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 from pyproj import CRS
 from shapely import ops
-from shapely.geometry import MultiPolygon, Polygon
+from shapely.geometry import MultiPolygon, Polygon, MultiLineString, LineString
 
 from map_engraver.canvas import Canvas, CanvasBuilder
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
@@ -14,9 +14,12 @@ from map_engraver.data import geo_canvas_ops
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
 from map_engraver.data.osm import Parser
 from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely
-from map_engraver.data.osm_shapely_ops.transform import transform_interpolated_euclidean
+from map_engraver.data.osm_shapely_ops.transform import \
+    transform_interpolated_euclidean
+from map_engraver.data.proj.geodesics import interpolate_geodesic
 from map_engraver.data.proj.masks import orthographic_mask, \
     orthographic_mask_wgs84
+from map_engraver.drawable.geometry.line_drawer import LineDrawer
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
 from tests.data.proj.orthographic_cases import get_orthographic_test_cases
 
@@ -44,9 +47,12 @@ class TestOrthographicRendering(unittest.TestCase):
             world_map = self.get_world_map()
             world_map = world_map.intersection(mask_wgs84)
 
+            flight_paths = self.get_flight_paths()
+            flight_paths = flight_paths.intersection(mask_wgs84)
+
             canvas = self.build_canvas(proj4_str)
-            self.draw_orthographic(canvas, crs, mask, world_map)
-            self.draw_wgs84(canvas, mask_wgs84, world_map)
+            self.draw_orthographic(canvas, crs, mask, world_map, flight_paths)
+            self.draw_wgs84(canvas, mask_wgs84, world_map, flight_paths)
             canvas.close()
 
     def build_canvas(self, name: str) -> Canvas:
@@ -78,12 +84,27 @@ class TestOrthographicRendering(unittest.TestCase):
         polygons = map(osm_to_shapely.way_to_polygon, osm_map.ways.values())
         return MultiPolygon(polygons)
 
+    def get_flight_paths(self) -> MultiLineString:
+        siberia_to_chile = LineString([(62, 129), (-57, -67)])
+        california_to_europe = LineString([(37, -122), (52, 13)])
+        north_pole_cross = LineString([(80, 90), (80, -90)])
+        south_pole_cross = LineString([(-80, 90), (-80, -90)])
+
+        paths = [
+            siberia_to_chile,
+            california_to_europe,
+            north_pole_cross,
+            south_pole_cross
+        ]
+        return interpolate_geodesic(MultiLineString(paths))
+
     def draw_orthographic(
             self,
             canvas: Canvas,
             crs: CRS,
             mask_proj: Polygon,
-            world_map_wgs84: MultiPolygon
+            world_map_wgs84: MultiPolygon,
+            flight_paths_wgs84: MultiLineString
     ):
         origin_for_geo = GeoCoordinate(0, 0, crs)
 
@@ -120,6 +141,10 @@ class TestOrthographicRendering(unittest.TestCase):
             wgs84_to_canvas,
             world_map_wgs84
         )
+        flight_paths_canvas = transform_interpolated_euclidean(
+            wgs84_to_canvas,
+            flight_paths_wgs84
+        )
 
         # Render the polygons
         polygon_drawer = PolygonDrawer()
@@ -132,11 +157,17 @@ class TestOrthographicRendering(unittest.TestCase):
         polygon_drawer.geoms = [world_map_canvas]
         polygon_drawer.draw(canvas)
 
+        polygon_drawer = LineDrawer()
+        polygon_drawer.stroke_color = (1, 0, 0)
+        polygon_drawer.geoms = [flight_paths_canvas]
+        polygon_drawer.draw(canvas)
+
     def draw_wgs84(
             self,
             canvas: Canvas,
             mask_wgs84: MultiPolygon,
-            world_map_wgs84: MultiPolygon
+            world_map_wgs84: MultiPolygon,
+            flight_paths_wgs84: MultiLineString
     ):
         wgs84_crs = CRS.from_epsg(4326)
 
@@ -160,6 +191,9 @@ class TestOrthographicRendering(unittest.TestCase):
         # Todo: These transformations should be handled by build_transformer.
         mask_wgs84 = ops.transform(lambda x, y: (y, x), mask_wgs84)
         world_map_wgs84 = ops.transform(lambda x, y: (y, x), world_map_wgs84)
+        flight_paths_wgs84 = ops.transform(
+            lambda x, y: (y, x), flight_paths_wgs84
+        )
 
         # Generate a polygon that represents the full range.
         domain_wgs84 = Polygon(
@@ -176,6 +210,9 @@ class TestOrthographicRendering(unittest.TestCase):
 
         mask_canvas = ops.transform(wgs84_to_canvas, mask_wgs84)
         world_map_canvas = ops.transform(wgs84_to_canvas, world_map_wgs84)
+        flight_paths_canvas = ops.transform(
+            wgs84_to_canvas, flight_paths_wgs84
+        )
         domain_canvas = ops.transform(wgs84_to_canvas, domain_wgs84)
 
         polygon_drawer = PolygonDrawer()
@@ -191,4 +228,9 @@ class TestOrthographicRendering(unittest.TestCase):
         polygon_drawer = PolygonDrawer()
         polygon_drawer.fill_color = (0, 1, 0)
         polygon_drawer.geoms = [world_map_canvas]
+        polygon_drawer.draw(canvas)
+
+        polygon_drawer = LineDrawer()
+        polygon_drawer.stroke_color = (1, 0, 0)
+        polygon_drawer.geoms = [flight_paths_canvas]
         polygon_drawer.draw(canvas)
