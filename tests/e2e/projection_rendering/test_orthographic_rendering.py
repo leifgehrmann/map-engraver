@@ -21,6 +21,7 @@ from map_engraver.data.proj.masks import orthographic_mask, \
     orthographic_mask_wgs84
 from map_engraver.drawable.geometry.line_drawer import LineDrawer
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
+from tests.data.proj.geodesic_cases import get_geodesic_test_cases
 from tests.data.proj.orthographic_cases import get_orthographic_test_cases
 
 
@@ -31,13 +32,15 @@ class TestOrthographicRendering(unittest.TestCase):
     orthographic_height = 400
     wgs84_width = 360
     wgs84_height = 180
+    orthographic_test_cases = get_orthographic_test_cases()
+    geodesic_test_cases = get_geodesic_test_cases()
 
     def setUp(self):
         Path(__file__).parent.joinpath('output/') \
             .mkdir(parents=True, exist_ok=True)
 
     def test_orthographic_mask_outputs_expected_polygons(self):
-        for case in get_orthographic_test_cases():
+        for case in self.orthographic_test_cases:
             proj4_str = case['proj4']
 
             crs = CRS.from_proj4(proj4_str)
@@ -85,18 +88,22 @@ class TestOrthographicRendering(unittest.TestCase):
         return MultiPolygon(polygons)
 
     def get_flight_paths(self) -> MultiLineString:
-        siberia_to_chile = LineString([(62, 129), (-57, -67)])
-        california_to_europe = LineString([(37, -122), (52, 13)])
-        north_pole_cross = LineString([(80, 90), (80, -90)])
-        south_pole_cross = LineString([(-80, 90), (-80, -90)])
+        line_strings = []
+        for case in self.geodesic_test_cases:
+            line_string = LineString(case['lineString'])
+            line_strings.append(line_string)
+        #siberia_to_chile = LineString([(62, 129), (-57, -67)])
+        #california_to_europe = LineString([(37, -122), (52, 13)])
+        #north_pole_cross = LineString([(80, 90), (80, -90)])
+        #south_pole_cross = LineString([(-80, 90), (-80, -90)])
 
-        paths = [
-            siberia_to_chile,
-            california_to_europe,
-            north_pole_cross,
-            south_pole_cross
-        ]
-        return interpolate_geodesic(MultiLineString(paths))
+        # paths = [
+        #     siberia_to_chile,
+        #     california_to_europe,
+        #     north_pole_cross,
+        #     south_pole_cross
+        # ]
+        return interpolate_geodesic(MultiLineString(line_strings))
 
     def draw_orthographic(
             self,
