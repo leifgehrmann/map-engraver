@@ -83,14 +83,14 @@ def orthographic_mask_wgs84(
             (_sign(origin[0]) * 90, _sign(points[-1][1]) * -180),
         ])
 
-        return MultiPolygon([_orthoganalize_polygon(Polygon(points))])
+        return MultiPolygon([_orthoganalize_polygon(crs, Polygon(points))])
     else:
         point_groups = _split_points_along_anti_meridian(
             wgs84_to_proj,
             points
         )
         return MultiPolygon(list(map(
-            lambda point_group: _orthoganalize_polygon(Polygon(point_group)),
+            lambda point_group: _orthoganalize_polygon(crs, Polygon(point_group)),
             point_groups
         )))
 
@@ -242,12 +242,19 @@ def _split_points_along_anti_meridian(
     return groups
 
 
-def _orthoganalize_polygon(polygon: Polygon) -> Polygon:
+def _orthoganalize_polygon(crs: CRS, polygon: Polygon) -> Polygon:
+    wgs84_to_proj = Transformer.from_proj(
+        CRS.from_epsg(4326),
+        crs
+    )
     new_polygon = Polygon(polygon)
     for i in range(len(polygon.exterior.coords) - 1):
         a = polygon.exterior.coords[i]
         b = polygon.exterior.coords[i + 1]
         if a[0] == b[0] or a[1] == b[1]:
+            continue
+        mid_point = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
+        if wgs84_to_proj.transform(*mid_point)[0] != float('inf'):
             continue
         box = _box_coordinates(a, b)
         new_polygon = new_polygon.difference(box)

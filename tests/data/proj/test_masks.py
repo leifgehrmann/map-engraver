@@ -36,6 +36,7 @@ class TestMasks(unittest.TestCase):
             mask = orthographic_mask_wgs84(crs)
             self.assert_geoms_are_valid(mask)
             self.assert_all_points_are_valid(crs, mask)
+            self.assert_all_mid_points_are_valid(crs, mask)
             self.assert_mask_has_bounds(mask, case['expectedWgs84Bounds'])
             self.assert_mask_geom_count(mask, case['expectedWgs84GeomsCount'])
 
@@ -65,7 +66,26 @@ class TestMasks(unittest.TestCase):
         geom: Polygon
         for geom in mask.geoms:
             for point in geom.exterior.coords:
-                assert transformer.transform(*point) != float('inf')
+                assert transformer.transform(*point)[0] != float('inf')
+
+    @staticmethod
+    def assert_all_mid_points_are_valid(
+            crs: CRS,
+            mask: MultiPolygon
+    ):
+        transformer = Transformer.from_proj(
+            CRS.from_epsg(4326),
+            crs
+        )
+        geom: Polygon
+        for geom in mask.geoms:
+            for i in range(len(geom.exterior.coords) - 1):
+                a = geom.exterior.coords[i]
+                b = geom.exterior.coords[i + 1]
+                # Take a subsample of 100 points, just to check that all
+                # for r in range(100):
+                m = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+                assert transformer.transform(*m)[0] != float('inf')
 
     @staticmethod
     def assert_mask_has_bounds(
