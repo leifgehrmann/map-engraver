@@ -3,7 +3,7 @@ from typing import Tuple, List
 import math
 
 from pyproj import CRS, Transformer
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon, MultiPolygon, box
 
 
 def orthographic_mask(
@@ -83,14 +83,14 @@ def orthographic_mask_wgs84(
             (_sign(origin[0]) * 90, _sign(points[-1][1]) * -180),
         ])
 
-        return MultiPolygon([Polygon(points)])
+        return MultiPolygon([_orthoganalize_polygon(Polygon(points))])
     else:
         point_groups = _split_points_along_anti_meridian(
             wgs84_to_proj,
             points
         )
         return MultiPolygon(list(map(
-            lambda point_group: Polygon(point_group),
+            lambda point_group: _orthoganalize_polygon(Polygon(point_group)),
             point_groups
         )))
 
@@ -201,7 +201,8 @@ def _split_points_along_anti_meridian(
             if anti_meridian_at_current_lat[0] == float('inf') and \
                     anti_meridian_at_next_lat[0] == float('inf'):
                 raise RuntimeError(
-                    'The anti-meridian at between the latitudes %f and %f '
+                    ("The anti-meridian at between the latitudes %f and %f " %
+                    (current_point[0], next_point[0])),
                     'could not be transformed with the projection. This is '
                     'unexpected. Please fix the algorithm!'
                 )
@@ -239,3 +240,25 @@ def _split_points_along_anti_meridian(
             groups.append(group)
 
     return groups
+
+
+def _orthoganalize_polygon(polygon: Polygon) -> Polygon:
+    new_polygon = Polygon(polygon)
+    for i in range(len(polygon.exterior.coords) - 1):
+        a = polygon.exterior.coords[i]
+        b = polygon.exterior.coords[i + 1]
+        if a[0] == b[0] or a[1] == b[1]:
+            continue
+        box = _box_coordinates(a, b)
+        new_polygon = new_polygon.difference(box)
+    return new_polygon
+
+
+
+def _box_coordinates(a: Tuple[float, float], b: Tuple[float, float]):
+    return box(
+        min(a[0], b[0]),
+        min(a[1], b[1]),
+        max(a[0], b[0]),
+        max(a[1], b[1]),
+    )
