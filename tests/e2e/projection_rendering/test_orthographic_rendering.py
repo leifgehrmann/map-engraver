@@ -34,6 +34,9 @@ class TestOrthographicRendering(unittest.TestCase):
     wgs84_height = 180
     orthographic_test_cases = get_orthographic_test_cases()
     geodesic_test_cases = get_geodesic_test_cases()
+    sea_color = (0/255, 101/255, 204/255)
+    land_color = (183/255, 218/255, 158/255)
+    line_color = (1, 0, 0, 0.75)
 
     def setUp(self):
         Path(__file__).parent.joinpath('output/') \
@@ -155,17 +158,17 @@ class TestOrthographicRendering(unittest.TestCase):
 
         # Render the polygons
         polygon_drawer = PolygonDrawer()
-        polygon_drawer.fill_color = (0, 0, 1)
+        polygon_drawer.fill_color = self.sea_color
         polygon_drawer.geoms = [mask_canvas]
         polygon_drawer.draw(canvas)
 
         polygon_drawer = PolygonDrawer()
-        polygon_drawer.fill_color = (0, 1, 0)
+        polygon_drawer.fill_color = self.land_color
         polygon_drawer.geoms = [world_map_canvas]
         polygon_drawer.draw(canvas)
 
         polygon_drawer = LineDrawer()
-        polygon_drawer.stroke_color = (1, 0, 0)
+        polygon_drawer.stroke_color = self.line_color
         polygon_drawer.geoms = [flight_paths_canvas]
         polygon_drawer.draw(canvas)
 
@@ -228,16 +231,16 @@ class TestOrthographicRendering(unittest.TestCase):
         polygon_drawer.draw(canvas)
 
         polygon_drawer = PolygonDrawer()
-        polygon_drawer.fill_color = (0, 0, 1)
+        polygon_drawer.fill_color = self.sea_color
         polygon_drawer.geoms = [mask_canvas]
         polygon_drawer.draw(canvas)
 
         polygon_drawer = PolygonDrawer()
-        polygon_drawer.fill_color = (0, 1, 0)
+        polygon_drawer.fill_color = self.land_color
         polygon_drawer.geoms = [world_map_canvas]
         polygon_drawer.draw(canvas)
 
         polygon_drawer = LineDrawer()
-        polygon_drawer.stroke_color = (1, 0, 0)
+        polygon_drawer.stroke_color = self.line_color
         polygon_drawer.geoms = [flight_paths_canvas]
         polygon_drawer.draw(canvas)
