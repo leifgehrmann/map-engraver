@@ -70,6 +70,13 @@ def orthographic_mask_wgs84(
             math.cos(angle) * radius,
             math.sin(angle) * radius
         )
+        # Todo: clean up
+        # If one of the positions is really close to the anti-meridian, just
+        # set it to it.
+        if math.isclose(position[1], 180 * _sign(position[1]), abs_tol=0.000000001) or \
+            position[1] > 180 or position[1] < -180:
+            position = (position[0], 180 * _sign(position[1]))
+
         points.append(position)
 
     if _covers_hemisphere(wgs84_to_proj):

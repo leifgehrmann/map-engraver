@@ -1,9 +1,27 @@
 def get_geodesic_test_cases():
     return [
         # Down the meridian
-        # (10, ), (-10,-180)
-        # Down the anti-meridian
-        # (10,-180), (-10,180)
+        {
+            'lineString': [(20, 180), (15, 180)],
+            'expectedLineStrings': [
+                [(40, 10), (90, 10)],
+                [(90, -170), (40, -170)]
+            ]
+        },
+        {
+            'lineString': [(-15, -180), (-20, -180)],
+            'expectedLineStrings': [
+                [(40, 10), (90, 10)],
+                [(90, -170), (40, -170)]
+            ]
+        },
+        {
+            'lineString': [(10, 180), (-10, -180)],
+            'expectedLineStrings': [
+                [(40, 10), (90, 10)],
+                [(90, -170), (40, -170)]
+            ]
+        },
         # Crossing the poles
         {
             'lineString': [(40, 10), (40, -170)],
