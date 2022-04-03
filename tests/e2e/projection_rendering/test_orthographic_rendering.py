@@ -95,17 +95,6 @@ class TestOrthographicRendering(unittest.TestCase):
         for case in self.geodesic_test_cases:
             line_string = LineString(case['lineString'])
             line_strings.append(line_string)
-        #siberia_to_chile = LineString([(62, 129), (-57, -67)])
-        #california_to_europe = LineString([(37, -122), (52, 13)])
-        #north_pole_cross = LineString([(80, 90), (80, -90)])
-        #south_pole_cross = LineString([(-80, 90), (-80, -90)])
-
-        # paths = [
-        #     siberia_to_chile,
-        #     california_to_europe,
-        #     north_pole_cross,
-        #     south_pole_cross
-        # ]
         return interpolate_geodesic(MultiLineString(line_strings))
 
     def draw_orthographic(
