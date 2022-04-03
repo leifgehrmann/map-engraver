@@ -67,14 +67,16 @@ def _interpolate_geodesic_line_string(
         )
         new_line_string_coords.extend(interpolated_coords)
         if split_coords is not None:
-            new_line_strings.append(LineString(new_line_string_coords))
+            if len(new_line_string_coords) > 1:
+                new_line_strings.append(LineString(new_line_string_coords))
             new_line_string_coords = split_coords
 
     # Append the last coord to the end of the line-segments
     new_line_string_coords.append(line_string.coords[-1])
 
     # Finalize the
-    new_line_strings.append(LineString(new_line_string_coords))
+    if len(new_line_string_coords) > 1:
+        new_line_strings.append(LineString(new_line_string_coords))
 
     return new_line_strings
 
@@ -99,18 +101,32 @@ def _interpolate_geodesic_line_segment(
     # segment that starts from the pole. The function does not return the
     # b-coordinate as that will be appended by the interpolate_geodesic
     # algorithm.
-    if a_wgs84[1] == -b_wgs84[1]:
-        if abs(a_wgs84[0]) == 90 or abs(b_wgs84[0]) == 90:
-            return [a_wgs84, b_wgs84], None
-        # Are we traversing up or down the globe.
-        lat_direction = 1 if a_wgs84[0] > -b_wgs84[0] else -1
+    if (a_wgs84[1] + 360) % 360 == (b_wgs84[1] + 180 + 360) % 360:
+        # If the point is starting from a pole we want to split the
+        # line-segments at this point.
+        if abs(a_wgs84[0]) == 90:
+            return [a_wgs84], [(90 * _sign(a_wgs84[0]), b_wgs84[1])]
 
+        # Conversely, if the point ends at a pole, we want to split the
+        # line-segments at the point it reaches the pole.
+        if abs(b_wgs84[0]) == 90:
+            return [a_wgs84, (90 * _sign(b_wgs84[0]), a_wgs84[1])], []
+
+        # If none of the coordinates are at the pole we want a line-segment
+        # that travels to the pole, then in a new line string, a coordinate
+        # starts from the pole.
+        lat_direction = 1 if a_wgs84[0] > -b_wgs84[0] else -1
         return [
                    a_wgs84,
                    (90 * lat_direction, a_wgs84[1])
                ], [(90 * lat_direction, b_wgs84[1])]
 
-    # Does the shorted path cross the anti-meridian (i.e. are the longitudes
+    # If the coordinate is on the same longitude, the shortest path will
+    # always be a vertical line, so we can skip interpolation.
+    if a_wgs84[1] == b_wgs84[1]:
+        return [a_wgs84], None
+
+    # Does the shortest path cross the anti-meridian? (i.e. are the longitudes
     # closer via the anti-meridian)
     if abs(a_wgs84[1] - b_wgs84[1]) > 180:
         if a_wgs84[1] > b_wgs84[1]:
@@ -160,12 +176,8 @@ def _locate_anti_meridian_latitude(
         longitude_threshold=0.0001
 ) -> float:
     """
-    :param a_wgs84: A coordinate in the gnomonic projection that corresponds
-                       to a coordinate on the eastern hemisphere in the WGS84
-                       projection. Todo
-    :param b_wgs84: A coordinate in the gnomonic projection that corresponds
-                       to a coordinate on the western hemisphere in the WGS84
-                       projection. Todo
+    :param a_wgs84: A WGS 84 coordinate on the eastern hemisphere.
+    :param b_wgs84: A WGS 84 coordinate on the western hemisphere.
     :param longitude_threshold: How precise the value should be to pin-point
                                 the 180° longitude. The default is 0.0001, as
                                 according to [xkcd](https://www.xkcd.com/2170/)
@@ -258,7 +270,7 @@ def _magnitude(v: Vector) -> float:
 def _obtuse_angle(a: Coord, b: Coord, c: Coord):
     """
     Given all three coordinates of a triangle, this function returns the
-    angle between `ca` and `cb`.
+    angle between `ca` and `cb` in degrees.
 
     :param a:
     :param b:
@@ -268,7 +280,13 @@ def _obtuse_angle(a: Coord, b: Coord, c: Coord):
     ca = _diff(c, a)
     cb = _diff(c, b)
     ca_dot_bc = ca[0] * cb[0] + ca[1] * cb[1]
-    angle_radians = acos(ca_dot_bc / (_magnitude(ca) * _magnitude(cb)))
+    adj_hyp = ca_dot_bc / (_magnitude(ca) * _magnitude(cb))
+    # Sigh... we need to handle floating point errors.
+    if adj_hyp < -1:
+        return 180
+    if adj_hyp > 1:
+        return 0
+    angle_radians = acos(adj_hyp)
     return angle_radians / pi * 180
 
 
@@ -278,6 +296,18 @@ def _interpolate_geodesic_coords_at_mid_point(p1: Coord, p2: Coord):
     :param p2: The end coordinate, in degrees.
     :return: The coordinate half-way between the start and end, in degrees.
     """
+    # Edge case: If the coordinates are antipodal at the North/South Pole, it
+    # is ambiguous what the mid-point between these two coordinates is.
+    # Normally this isn't a problem for any other antipodal coordinate on the
+    # globe, but for the North/South Poles, it will cause the interpolator to
+    # draw a non-geodesic line segment. For example: (90, 20) -> (-90, -20)
+    # will result in (90, 0), which is the mid_point, but rendering the line
+    # segment on a map will cause the line segment to be warped!
+    # To solve this, we return a mid-point that shares the exact same longitude
+    # as the starting coordinate.
+    if abs(p1[0]) == 90 and abs(p2[0]) == 90 and p1[0] == -p2[0]:
+        return 0, p1[1]
+
     p1 = p1[0] / 180 * pi, p1[1] / 180 * pi
     p2 = p2[0] / 180 * pi, p2[1] / 180 * pi
     delta = haversine(p1, p2)
