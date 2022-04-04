@@ -20,6 +20,17 @@ class TestGeodesics(unittest.TestCase):
                 case['expectedGeomsBounds']
             )
 
+    def test_interpolate_geodesic_for_multi_line_string(self):
+        for case in get_geodesic_test_cases():
+            input_line_string = LineString(case['lineString'])
+            input_multi_line_string = MultiLineString([input_line_string])
+            output_line_string = interpolate_geodesic(input_multi_line_string)
+
+            TestGeodesics.assert_output_matches_expected(
+                output_line_string,
+                case['expectedGeomsBounds']
+            )
+
     def test_interpolate_geodesic_does_not_support_polygons(self):
         with self.assertRaises(Exception):
             # noinspection PyTypeChecker
