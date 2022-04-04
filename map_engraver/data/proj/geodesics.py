@@ -20,13 +20,14 @@ def interpolate_geodesic(
     A common use-case is to convert a flight-path between two cities on a
     globe.
 
-    If the shortest-distance between two points happens to cross the poles or
-    the Todo
+    If the shortest-distance between two points happens to cross the poles, the
+    LineStrings may be split and return a MultiLineString.
 
-    The algorithm only applies to LineStrings and MultiLineStrings because for
-    a polygon it is easily possible for line-segments to overlap by
-    transforming each individual line-segment, thus producing an invalid
-    polygon.
+    The algorithm only applies to LineStrings and MultiLineStrings and not for
+    Polygons and MultiPolygons because for a polygon it is easily possible for
+    line-segments to overlap by transforming each individual line-segment, thus
+    producing an invalid polygon. If such functionality is desired, convert the
+    polygon's coordinates to a LineString, and then convert it back.
 
     :param geom: A line-string or multi-line-string shapely object with WGS 84
                  coordinates.
