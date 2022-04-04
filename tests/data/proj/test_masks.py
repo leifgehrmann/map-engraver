@@ -17,6 +17,28 @@ class TestMasks(unittest.TestCase):
         Path(__file__).parent.joinpath('output/') \
             .mkdir(parents=True, exist_ok=True)
 
+    def test_azimuthal_mask_raises_error_for_unsupported_proj(self):
+        unsupported_projs = [
+            '+proj=aeqd',
+            '+proj=airy',
+            '+proj=hammer',
+            '+proj=laea',
+            '+proj=lee_os',
+            '+proj=mil_os',
+            '+proj=gs48',
+            '+proj=gs50',
+            '+proj=alsk',
+            '+proj=oea +m=1 +n=2',
+            '+proj=stere +lat_0=90 +lat_ts=75',
+            '+proj=sterea +lat_0=90',
+        ]
+        for unsupported_proj in unsupported_projs:
+            crs = CRS.from_proj4(unsupported_proj)
+            with self.assertRaises(Exception):
+                azimuthal_mask(crs)
+            with self.assertRaises(Exception):
+                azimuthal_mask_wgs84(crs)
+
     def test_azimuthal_mask_outputs_expected_polygons(self):
         for case in get_azimuthal_test_cases():
             crs = CRS.from_proj4(case['proj4'])
