@@ -17,22 +17,22 @@ from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely
 from map_engraver.data.osm_shapely_ops.transform import \
     transform_interpolated_euclidean
 from map_engraver.data.proj.geodesics import interpolate_geodesic
-from map_engraver.data.proj.masks import orthographic_mask, \
-    orthographic_mask_wgs84
+from map_engraver.data.proj.masks import azimuthal_mask, \
+    azimuthal_mask_wgs84
 from map_engraver.drawable.geometry.line_drawer import LineDrawer
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
 from tests.data.proj.geodesic_cases import get_geodesic_test_cases
-from tests.data.proj.orthographic_cases import get_orthographic_test_cases
+from tests.data.proj.azimuthal_cases import get_azimuthal_test_cases
 
 
-class TestOrthographicRendering(unittest.TestCase):
+class TestAzimuthalRendering(unittest.TestCase):
     world_map_path = 'world.osm'
     margin = 20
-    orthographic_width = 400
-    orthographic_height = 400
+    azimuthal_width = 400
+    azimuthal_height = 400
     wgs84_width = 360
     wgs84_height = 180
-    orthographic_test_cases = get_orthographic_test_cases()
+    azimuthal_test_cases = get_azimuthal_test_cases()
     geodesic_test_cases = get_geodesic_test_cases()
     sea_color = (0/255, 101/255, 204/255)
     land_color = (183/255, 218/255, 158/255)
@@ -42,13 +42,13 @@ class TestOrthographicRendering(unittest.TestCase):
         Path(__file__).parent.joinpath('output/') \
             .mkdir(parents=True, exist_ok=True)
 
-    def test_orthographic_mask_outputs_expected_polygons(self):
-        for case in self.orthographic_test_cases:
+    def test_azimuthal_mask_outputs_expected_polygons(self):
+        for case in self.azimuthal_test_cases:
             proj4_str = case['proj4']
 
             crs = CRS.from_proj4(proj4_str)
-            mask = orthographic_mask(crs)
-            mask_wgs84 = orthographic_mask_wgs84(crs)
+            mask = azimuthal_mask(crs)
+            mask_wgs84 = azimuthal_mask_wgs84(crs)
 
             world_map = self.get_world_map()
             world_map = world_map.intersection(mask_wgs84)
@@ -57,14 +57,14 @@ class TestOrthographicRendering(unittest.TestCase):
             flight_paths = flight_paths.intersection(mask_wgs84)
 
             canvas = self.build_canvas(proj4_str)
-            self.draw_orthographic(canvas, crs, mask, world_map, flight_paths)
+            self.draw_azimuthal(canvas, crs, mask, world_map, flight_paths)
             self.draw_wgs84(canvas, mask_wgs84, world_map, flight_paths)
             canvas.close()
 
     def build_canvas(self, name: str) -> Canvas:
         name = re.sub(r'[^0-9A-Za-z_-]', '', name)
         path = Path(__file__).parent.joinpath(
-            'output/orthographic_rendering_%s.svg' % name
+            'output/azimuthal_rendering_%s.svg' % name
         )
         path.unlink(missing_ok=True)
         canvas_builder = CanvasBuilder()
@@ -72,10 +72,10 @@ class TestOrthographicRendering(unittest.TestCase):
 
         canvas_builder.set_size(
             Cu.from_px(
-                self.margin * 3 + self.orthographic_width + self.wgs84_width
+                self.margin * 3 + self.azimuthal_width + self.wgs84_width
             ),
             Cu.from_px(
-                self.margin * 2 + self.orthographic_height
+                self.margin * 2 + self.azimuthal_height
             )
         )
 
@@ -97,7 +97,7 @@ class TestOrthographicRendering(unittest.TestCase):
             line_strings.append(line_string)
         return interpolate_geodesic(MultiLineString(line_strings))
 
-    def draw_orthographic(
+    def draw_azimuthal(
             self,
             canvas: Canvas,
             crs: CRS,
@@ -107,14 +107,14 @@ class TestOrthographicRendering(unittest.TestCase):
     ):
         origin_for_geo = GeoCoordinate(0, 0, crs)
 
-        origin_x = Cu.from_px(self.margin + self.orthographic_width / 2)
-        origin_y = Cu.from_px(self.margin + self.orthographic_height / 2)
+        origin_x = Cu.from_px(self.margin + self.azimuthal_width / 2)
+        origin_y = Cu.from_px(self.margin + self.azimuthal_height / 2)
         origin_for_canvas = CanvasCoordinate(origin_x, origin_y)
 
         # Fit the projected radius as the width of the canvas
         geo_to_canvas_scale = geo_canvas_ops.GeoCanvasScale(
             crs.ellipsoid.semi_major_metre,
-            Cu.from_px(self.orthographic_width / 2)
+            Cu.from_px(self.azimuthal_width / 2)
         )
 
         # Convert the projected mask to the canvas.
@@ -176,7 +176,7 @@ class TestOrthographicRendering(unittest.TestCase):
             wgs84_crs
         )
         origin_for_canvas = CanvasCoordinate(
-            Cu.from_px(self.margin * 2 + self.orthographic_width +
+            Cu.from_px(self.margin * 2 + self.azimuthal_width +
                        self.wgs84_width / 2),
             Cu.from_px(self.margin + self.wgs84_height / 2)
         )

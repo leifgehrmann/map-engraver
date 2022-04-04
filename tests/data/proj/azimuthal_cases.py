@@ -1,4 +1,4 @@
-def get_orthographic_test_cases():
+def get_azimuthal_test_cases():
     return [
         {
             'proj4': '+proj=ortho +lon_0=0 +lat_0=0',

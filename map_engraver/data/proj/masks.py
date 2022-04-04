@@ -6,7 +6,7 @@ from pyproj import CRS, Transformer
 from shapely.geometry import Polygon, MultiPolygon, box
 
 
-def orthographic_mask(
+def azimuthal_mask(
         crs: CRS,
         resolution=64,
         threshold=1
@@ -34,7 +34,7 @@ def orthographic_mask(
     return Polygon(points)
 
 
-def orthographic_mask_wgs84(
+def azimuthal_mask_wgs84(
         crs: CRS,
         resolution=64,
         threshold=1
@@ -121,7 +121,7 @@ def _covers_hemisphere(wgs84_to_proj: Transformer) -> bool:
     covers_southern = wgs84_to_proj.transform(-90, 0)[0] != float('inf')
 
     # We don't really support projections like this, where the north and south
-    # poles are visible at the same, but it is possible in orthographic
+    # poles are visible at the same, but it is possible in azimuthal
     # projections where the lat_0 is 0. For our purposes, we don't consider
     # this projection as covering both hemisphere; it merely touches it.
     if covers_northern and covers_southern:
