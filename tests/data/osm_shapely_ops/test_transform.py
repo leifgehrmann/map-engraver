@@ -98,7 +98,7 @@ class TestTransform(unittest.TestCase):
             LineString([(1, 2), (2, 3), (3, 4)])
         )
         assert transformed_line_string.bounds == (1, 8, 27, 64)
-        assert len(transformed_line_string.coords) == 9
+        assert len(transformed_line_string.coords) == 12
 
         transformed_multi_line_string = transform_interpolated_euclidean(
             faux_transformation,
@@ -108,8 +108,8 @@ class TestTransform(unittest.TestCase):
             ])
         )
         assert transformed_multi_line_string.bounds == (-27, -64, 27, 64)
-        assert len(transformed_multi_line_string.geoms[0].coords) == 9
-        assert len(transformed_multi_line_string.geoms[1].coords) == 9
+        assert len(transformed_multi_line_string.geoms[0].coords) == 12
+        assert len(transformed_multi_line_string.geoms[1].coords) == 12
 
         # Empty objects are a thing in shapely, so we need to test that we can
         # still handle them!
@@ -150,6 +150,10 @@ class TestTransform(unittest.TestCase):
         )
         assert transformed_multi_polygon.bounds == (-64, -64, 64, 64)
         assert len(transformed_multi_polygon.geoms) == 2
+        assert len(transformed_multi_polygon.geoms[0].exterior.coords) == \
+               5
+        assert len(transformed_multi_polygon.geoms[1].exterior.coords) == \
+               5
         assert transformed_multi_polygon.geoms[0].exterior.bounds == \
                (1, 1, 64, 64)
         assert transformed_multi_polygon.geoms[1].exterior.bounds == \

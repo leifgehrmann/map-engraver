@@ -3,6 +3,8 @@ from math import sqrt, sin, cos, atan2, copysign, acos, pi
 from shapely.geometry import LineString, MultiLineString
 from typing import Union, Tuple, List, Optional
 
+from map_engraver.data.math.trig import obtuse_angle
+
 Coord = Tuple[float, float]  # (latitude, longitude)
 Vector = Tuple[float, float]
 LineSegments = List[Coord]
@@ -233,8 +235,12 @@ def _interpolate_geodesic_coords(
     has_s_curve = _sign(a_wgs84[0]) != _sign(a_wgs84[1])
     far_apart = abs(a_wgs84[0] - b_wgs84[0]) > 10
 
-    angular_distortion = _obtuse_angle(a_wgs84, b_wgs84, mid_point_wgs84)
-    is_distorted = angular_distortion_threshold < 180 - angular_distortion
+    angular_distortion = obtuse_angle(a_wgs84, b_wgs84, mid_point_wgs84)
+
+    is_distorted = (
+            angular_distortion != float('inf') and
+            angular_distortion_threshold < 180 - angular_distortion
+    )
 
     should_split = (has_s_curve and far_apart) or is_distorted
 
@@ -255,40 +261,6 @@ def _interpolate_geodesic_coords(
         angular_distortion_threshold
     ))
     return new_points
-
-
-def _diff(a: Coord, b: Coord) -> Coord:
-    return (
-        (b[0] - a[0]),
-        (b[1] - a[1])
-    )
-
-
-def _magnitude(v: Vector) -> float:
-    return sqrt(v[0] * v[0] + v[1] * v[1])
-
-
-def _obtuse_angle(a: Coord, b: Coord, c: Coord):
-    """
-    Given all three coordinates of a triangle, this function returns the
-    angle between `ca` and `cb` in degrees.
-
-    :param a:
-    :param b:
-    :param c:
-    :return:
-    """
-    ca = _diff(c, a)
-    cb = _diff(c, b)
-    ca_dot_bc = ca[0] * cb[0] + ca[1] * cb[1]
-    adj_hyp = ca_dot_bc / (_magnitude(ca) * _magnitude(cb))
-    # Sigh... we need to handle floating point errors.
-    if adj_hyp < -1:
-        return 180
-    if adj_hyp > 1:
-        return 0
-    angle_radians = acos(adj_hyp)
-    return angle_radians / pi * 180
 
 
 def _interpolate_geodesic_coords_at_mid_point(p1: Coord, p2: Coord):

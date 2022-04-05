@@ -4,6 +4,7 @@ from shapely import ops
 from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString
 from typing import TypeVar, Tuple, List
 
+from map_engraver.data.math.trig import obtuse_angle
 from map_engraver.data.osm_shapely.osm_line_string import OsmLineString
 from map_engraver.data.osm_shapely.osm_point import OsmPoint
 from map_engraver.data.osm_shapely.osm_polygon import OsmPolygon
@@ -31,7 +32,7 @@ def transform(func, geom: T) -> T:
 def transform_interpolated_euclidean(
         func,
         geom: T,
-        distortion_threshold=0.25
+        angular_distortion_threshold=1
 ) -> T:
     """
     ...
@@ -41,28 +42,29 @@ def transform_interpolated_euclidean(
 
     :param func:
     :param geom:
-    :param distortion_threshold: Maximum distance that interpolated coordinates
-                                 can be from the real coordinates.
+    :param angular_distortion_threshold: The maximum obtuse angle that can
+                                         exist between two interpolated
+                                         line-segments.
     :return:
     """
     if isinstance(geom, LineString):
         return LineString(_transform_interpolated_euclidean_coords(
             func,
             geom.coords,
-            distortion_threshold=distortion_threshold
+            angular_distortion_threshold=angular_distortion_threshold
         ))
     elif isinstance(geom, Polygon):
         new_exterior = _transform_interpolated_euclidean_coords(
             func,
             geom.exterior.coords,
-            distortion_threshold=distortion_threshold
+            angular_distortion_threshold=angular_distortion_threshold
         )
         new_interiors = []
         for interior in geom.interiors:
             new_interiors.append(_transform_interpolated_euclidean_coords(
                 func,
                 interior.coords,
-                distortion_threshold=distortion_threshold
+                angular_distortion_threshold=angular_distortion_threshold
             ))
         return Polygon(new_exterior, new_interiors)
     elif isinstance(geom, MultiLineString):
@@ -71,7 +73,7 @@ def transform_interpolated_euclidean(
             new_line_strings.append(transform_interpolated_euclidean(
                 func,
                 line_string,
-                distortion_threshold=distortion_threshold
+                angular_distortion_threshold=angular_distortion_threshold
             ))
         return MultiLineString(new_line_strings)
     elif isinstance(geom, MultiPolygon):
@@ -80,7 +82,7 @@ def transform_interpolated_euclidean(
             new_polygons.append(transform_interpolated_euclidean(
                 func,
                 polygon,
-                distortion_threshold=distortion_threshold
+                angular_distortion_threshold=angular_distortion_threshold
             ))
         return MultiPolygon(new_polygons)
     return ops.transform(func, geom)
@@ -89,7 +91,7 @@ def transform_interpolated_euclidean(
 def _transform_interpolated_euclidean_coords(
         func,
         coords: List[Tuple[float, float]],
-        distortion_threshold=0.25
+        angular_distortion_threshold
 ) -> List[Tuple[float, float]]:
     if len(coords) == 0:
         return []
@@ -101,7 +103,7 @@ def _transform_interpolated_euclidean_coords(
             func,
             a,
             b,
-            distortion_threshold=distortion_threshold
+            angular_distortion_threshold=angular_distortion_threshold
         )
         new_coords.append(func(*a))
         new_coords.extend(interpolated_points)
@@ -115,7 +117,7 @@ def _transform_interpolated_euclidean_segment(
         func,
         a: Tuple[float, float],
         b: Tuple[float, float],
-        distortion_threshold
+        angular_distortion_threshold
 ) -> List[Tuple[float, float]]:
     """
     This function interpolates points between two points, in a way to minimizes
@@ -132,7 +134,7 @@ def _transform_interpolated_euclidean_segment(
     :param func: The transformation function.
     :param a: The starting point of a line segment.
     :param b: The starting point of a line segment.
-    :param distortion_threshold:
+    :param angular_distortion_threshold:
     :return: A list of points between a and b that minimize the transformed
              distortion.
     """
@@ -141,10 +143,6 @@ def _transform_interpolated_euclidean_segment(
     b_proj = func(*b)
     euclidean_mid_point_proj = func(*euclidean_mid_point)
 
-    # This is the mid-point that would be displayed if we did not use
-    # euclidean interpolation.
-    fake_mid_point_proj = ((a_proj[0]+b_proj[0])/2, (a_proj[1]+b_proj[1])/2)
-
     # Ideally this should not happen, but there will be edge cases (literally!)
     # where an interpolated point could dip in and out of a map. The shape
     # should ideally be clipped to avoid this from happening, using a mask that
@@ -152,22 +150,24 @@ def _transform_interpolated_euclidean_segment(
     if euclidean_mid_point_proj[0] == float('inf'):
         return []
 
-    distortion = math.sqrt(
-        ((euclidean_mid_point_proj[0]-fake_mid_point_proj[0])**2) +
-        ((euclidean_mid_point_proj[1]-fake_mid_point_proj[1])**2)
+    angular_distortion = obtuse_angle(a_proj, b_proj, euclidean_mid_point_proj)
+    is_distorted = (
+            angular_distortion != float('inf') and
+            angular_distortion_threshold < 180 - angular_distortion
     )
-    if distortion > distortion_threshold:
+
+    if is_distorted:
         left_points = _transform_interpolated_euclidean_segment(
             func,
             a,
             euclidean_mid_point,
-            distortion_threshold=distortion_threshold
+            angular_distortion_threshold=angular_distortion_threshold
         )
         right_points = _transform_interpolated_euclidean_segment(
             func,
             euclidean_mid_point,
             b,
-            distortion_threshold=distortion_threshold
+            angular_distortion_threshold=angular_distortion_threshold
         )
         new_points = left_points
         new_points.append(euclidean_mid_point_proj)
