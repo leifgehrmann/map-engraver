@@ -64,7 +64,6 @@ def transform_interpolated_euclidean(
                 interior.coords,
                 distortion_threshold=distortion_threshold
             ))
-        new_interiors = geom.interiors
         return Polygon(new_exterior, new_interiors)
     elif isinstance(geom, MultiLineString):
         new_line_strings = []
@@ -84,7 +83,7 @@ def transform_interpolated_euclidean(
                 distortion_threshold=distortion_threshold
             ))
         return MultiPolygon(new_polygons)
-    return geom
+    return ops.transform(func, geom)
 
 
 def _transform_interpolated_euclidean_coords(
