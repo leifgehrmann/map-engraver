@@ -33,7 +33,11 @@ def transform_interpolated_euclidean(
         angular_distortion_threshold=1
 ) -> T:
     """
-    ...
+    Todo: provide a better description.
+
+    Todo: This function might not result the right results if the transformed
+     line-segment's midpoint happens to be co-linear... Probably should fix
+     this later.
 
     This function is generally only useful when displaying work maps. If
     geodesic distortion is not expected, use `transform()` instead.
