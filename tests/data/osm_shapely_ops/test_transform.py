@@ -1,11 +1,14 @@
 import unittest
-from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
+from shapely.geometry import Point, MultiPoint, \
+    LineString, MultiLineString, \
+    Polygon, MultiPolygon
 
 from map_engraver.data import osm_shapely_ops
 from map_engraver.data.osm_shapely.osm_line_string import OsmLineString
 from map_engraver.data.osm_shapely.osm_point import OsmPoint
 from map_engraver.data.osm_shapely.osm_polygon import OsmPolygon
-from map_engraver.data.osm_shapely_ops.transform import transform_interpolated_euclidean
+from map_engraver.data.osm_shapely_ops.transform import \
+    transform_interpolated_euclidean
 
 
 class TestTransform(unittest.TestCase):

@@ -1,5 +1,3 @@
-import math
-
 from shapely import ops
 from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString
 from typing import TypeVar, Tuple, List

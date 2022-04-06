@@ -1,4 +1,4 @@
-from math import sqrt, sin, cos, atan2, copysign, acos, pi
+from math import sqrt, sin, cos, atan2, copysign, pi
 
 from shapely.geometry import LineString, MultiLineString
 from typing import Union, Tuple, List, Optional

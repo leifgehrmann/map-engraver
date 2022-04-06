@@ -17,15 +17,10 @@ def _magnitude(v: Vector) -> float:
     return sqrt(v[0] * v[0] + v[1] * v[1])
 
 
-def obtuse_angle(a: Coord, b: Coord, c: Coord):
+def obtuse_angle(a: Coord, b: Coord, c: Coord) -> float:
     """
     Given all three coordinates of a triangle, this function returns the
     angle between `ca` and `cb` in degrees.
-
-    :param a:
-    :param b:
-    :param c:
-    :return:
     """
     ca = _diff(c, a)
     cb = _diff(c, b)

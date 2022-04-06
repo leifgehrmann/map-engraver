@@ -104,10 +104,30 @@ class TestMasks(unittest.TestCase):
             for i in range(len(geom.exterior.coords) - 1):
                 a = geom.exterior.coords[i]
                 b = geom.exterior.coords[i + 1]
-                # Take a subsample of 100 points, just to check that all
-                # for r in range(100):
                 m = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
                 assert transformer.transform(*m)[0] != float('inf')
+
+                # Todo: This commented-out test proves this algorithm is not
+                #  completely reliable. For context, see the function
+                #  documentation of `azimuthal_mask_wgs84`.
+                # Take a subsample of 100 points, just to check that all points
+                # between `a` and `b` are valid coordinates in the `crs`.
+                # failed = False
+                # for r in range(100):
+                #    r_a = r / 100
+                #    r_b = 1 - r_a
+                #    m = ((a[0] * r_a + b[0] * r_b),
+                #         (a[1] * r_a + b[1] * r_b))
+                #    if transformer.transform(*m)[0] == float('inf'):
+                #        failed = True
+                #        print(r)
+                #        print(a)
+                #        print(b)
+                #        print(m)
+                #    # assert transformer.transform(*m)[0] != float('inf')
+                # if failed:
+                #    print('-------')
+                #    assert not failed
 
     @staticmethod
     def assert_mask_has_bounds(
