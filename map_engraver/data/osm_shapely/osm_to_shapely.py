@@ -1,4 +1,4 @@
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, Point, LineString, MultiPolygon
 from typing import Optional, List, Tuple, Dict, Callable, Union
 
 from map_engraver.data.osm import Node
@@ -7,10 +7,6 @@ from map_engraver.data.osm import Relation
 from map_engraver.data.osm import MemberTypes
 from map_engraver.data.osm import Osm
 from map_engraver.data.osm.util import get_nodes_for_way
-
-from map_engraver.data.osm_shapely.osm_line_string import OsmLineString
-from map_engraver.data.osm_shapely.osm_point import OsmPoint
-from map_engraver.data.osm_shapely.osm_polygon import OsmPolygon
 
 
 class OsmToShapely:
@@ -22,6 +18,15 @@ class OsmToShapely:
                 Tuple[float, float]
             ]] = None
     ):
+        """
+        :param osm:
+        :param transform: In rare situations it might be useful to transform
+                          the coordinate data to a different projection when
+                          creating the shapely objects. By default, coordinates
+                          are transformed to the WGS 84 projection (lat, lon),
+                          but this optional parameter can be used to pass in
+                          a custom transformer.
+        """
         self.osm = osm
         if transform is None:
             self.transform = lambda x, y: (x, y)
@@ -43,46 +48,38 @@ class OsmToShapely:
     def node_to_point(
             self,
             node: Node
-    ) -> Optional[OsmPoint]:
-        point = OsmPoint(*self.transform(node.lat, node.lon))
-        point.osm_tags = node.tags
-        return point
+    ) -> Optional[Point]:
+        return Point(*self.transform(node.lat, node.lon))
 
     def nodes_to_points(
             self,
             nodes: Dict[str, Node]
-    ) -> List[OsmPoint]:
-        return list(filter(
-            None,
-            map(lambda node: self.node_to_point(node), nodes.values())
-        ))
+    ) -> Dict[str, Optional[Point]]:
+        return {k: self.node_to_point(v) for k, v in nodes.items()}
 
     def way_to_linestring(
             self,
             way: Way
-    ) -> Optional[OsmLineString]:
+    ) -> Optional[LineString]:
         nodes = get_nodes_for_way(self.osm, way.id)
         linestring_array = []
         for node in nodes:
             linestring_array.append(self.transform(node.lat, node.lon))
-        line_string = OsmLineString(linestring_array)
-        line_string.osm_tags = way.tags
-        return line_string
+        return LineString(linestring_array)
 
     def way_to_polygon(
             self,
             way: Way
-    ) -> Optional[OsmPolygon]:
+    ) -> Optional[Polygon]:
         nodes = get_nodes_for_way(self.osm, way.id)
         polygon_array = []
         for node in nodes:
             polygon_array.append(self.transform(node.lat, node.lon))
         if polygon_array[len(polygon_array)-1] == polygon_array[0] and \
                 len(polygon_array) > 2:
-            p = OsmPolygon(polygon_array)
+            p = Polygon(polygon_array)
             if p.exterior.is_ccw:
-                p = OsmPolygon(reversed(polygon_array))
-            p.osm_tags = way.tags
+                p = Polygon(reversed(polygon_array))
             return p
         raise WayToPolygonError("Could not convert way to polygon: " + way.id)
 
@@ -166,10 +163,10 @@ class OsmToShapely:
 
         return way_refs, output_ways
 
-    def relation_to_polygon(
+    def relation_to_multi_polygon(
             self,
             relation: Relation
-    ) -> Optional[OsmPolygon]:
+    ) -> Optional[MultiPolygon]:
         outer_way_refs = []
         outer_way_all_nodes = {}
         outer_way_start_nodes = {}
@@ -220,20 +217,16 @@ class OsmToShapely:
             self.incomplete_refs_handler(relation, [])
             return None
 
-        # Fail completely if we somehow end up with more than 1 exterior
-        # polygon. Technically this is permitted by OSM to have multiple OUTER
-        # ways, but we haven't yet decided how to handle them yet.
-        if len(outer_ways_nodes) > 1:
-            raise RelationToPolygonError(
-                "Could not convert way to polygon: " + relation.id +
-                " . Did not expect " + str(len(outer_ways_nodes)) +
-                " exterior ways. This needs to be properly implemented."
-            )
-
-        # create exterior of polygon
-        exterior = []
-        for node in outer_ways_nodes[0]:
-            exterior.append(self.transform(node.lat, node.lon))
+        # create exteriors of polygons
+        exterior_polygons = []
+        for outer_way_nodes in outer_ways_nodes:
+            exterior_nodes = []
+            for node in outer_way_nodes:
+                exterior_nodes.append(self.transform(node.lat, node.lon))
+            exterior_polygon = Polygon(exterior_nodes)
+            if exterior_polygon.exterior.is_ccw:
+                exterior_polygon = Polygon(reversed(exterior_nodes))
+            exterior_polygons.append(exterior_polygon)
 
         # now piece together the inner way
         incomplete_way_refs, inner_ways_nodes = self._piece_together_ways(
@@ -248,30 +241,33 @@ class OsmToShapely:
             # Continuing as normal, but the shape might look wrong...
             self.incomplete_refs_handler(relation, incomplete_way_refs)
 
-        interiors = []
+        exterior_polygons_interiors = [
+            [] for _ in range(len(exterior_polygons))
+        ]
         for inner_way_nodes in inner_ways_nodes:
             interior_coordinates = []
             for node in inner_way_nodes:
-                interior_coordinates.append((node.lat, node.lon))
+                interior_coordinates.append(self.transform(node.lat, node.lon))
             interior_polygon = Polygon(interior_coordinates)
             if not interior_polygon.exterior.is_ccw:
                 interior_coordinates = list(reversed(interior_coordinates))
-            interiors.append(interior_coordinates)
 
-        polygon = OsmPolygon(exterior, interiors)
-        if polygon.exterior.is_ccw:
-            polygon = OsmPolygon(reversed(exterior), interiors)
-        polygon.osm_tags = relation.tags
-        return polygon
+            for e_p in range(len(exterior_polygons)):
+                if exterior_polygons[e_p].intersects(interior_polygon):
+                    exterior_polygons_interiors[e_p].append(
+                        interior_coordinates
+                    )
+
+        # Finally, combine the exterior_polygons with the interiors
+        geoms = []
+        for e_p in range(len(exterior_polygons)):
+            geoms.append((
+                exterior_polygons[e_p].exterior.coords,
+                exterior_polygons_interiors[e_p]
+            ))
+
+        return MultiPolygon(geoms)
 
 
 class WayToPolygonError(Exception):
-    pass
-
-
-class WayToLineStringError(Exception):
-    pass
-
-
-class RelationToPolygonError(Exception):
     pass
