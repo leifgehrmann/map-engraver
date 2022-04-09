@@ -26,7 +26,7 @@ class TestPolygonDrawer(unittest.TestCase):
         canvas = canvas_builder.build()
 
         class MySymbolDrawer(SymbolDrawer):
-            def draw_symbol(self, point: Point, canvas: Canvas):
+            def draw_symbol(self, key, point: Point, canvas: Canvas):
                 canvas.context.set_source_rgba(point.x/100, point.y/100, 0, 1)
                 CairoHelper.draw_point(
                     canvas.context,
@@ -58,3 +58,47 @@ class TestPolygonDrawer(unittest.TestCase):
             assert data.find('rgb(50%,30%,0%)') != -1
             assert data.find('rgb(50%,30%,0%)') < data.find('rgb(45%,40%,0%)')
             assert data.find('rgb(45%,40%,0%)') < data.find('rgb(55%,40%,0%)')
+
+    def test_can_iterate_dict(self):
+        path = Path(__file__).parent.joinpath(
+            'output/symbol_drawer_can_iterate_dict.svg'
+        )
+        path.unlink(missing_ok=True)
+        canvas_builder = CanvasBuilder()
+        canvas_builder.set_path(path)
+        canvas_builder.set_size(Cu.from_pt(100), Cu.from_pt(100))
+
+        canvas = canvas_builder.build()
+
+        class MySymbolDrawer(SymbolDrawer):
+            def draw_symbol(self, key, point: Point, canvas: Canvas):
+                canvas.context.set_source_rgba(point.x/100, point.y/100, 0, 1)
+                CairoHelper.draw_point(
+                    canvas.context,
+                    point,
+                    Cu.from_pt(key).pt
+                )
+
+        my_symbol_drawer = MySymbolDrawer()
+        my_symbol_drawer.points = {
+            2: Point(30, 70),
+            4: Point(35, 60),
+            6: Point(40, 50),
+            8: Point(45, 40),
+            10: Point(50, 30),
+            12: Point(55, 40),
+            14: Point(60, 50),
+            16: Point(65, 60),
+            18: Point(70, 70)
+        }
+        my_symbol_drawer.draw(canvas)
+
+        canvas.close()
+
+        assert path.exists()
+
+        with open(path, 'r') as file:
+            data = file.read()
+            # Assert that the symbols appear with correct size
+            assert data.find('d="M 55 30 C') != -1
+            assert data.find('d="M 79 70 C') != -1
