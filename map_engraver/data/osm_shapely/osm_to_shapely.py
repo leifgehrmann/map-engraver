@@ -57,15 +57,21 @@ class OsmToShapely:
     ) -> Dict[str, Optional[Point]]:
         return {k: self.node_to_point(v) for k, v in nodes.items()}
 
-    def way_to_linestring(
+    def way_to_line_string(
             self,
             way: Way
     ) -> Optional[LineString]:
         nodes = get_nodes_for_way(self.osm, way.id)
-        linestring_array = []
+        line_string_array = []
         for node in nodes:
-            linestring_array.append(self.transform(node.lat, node.lon))
-        return LineString(linestring_array)
+            line_string_array.append(self.transform(node.lat, node.lon))
+        return LineString(line_string_array)
+
+    def ways_to_line_strings(
+            self,
+            ways: Dict[str, Way]
+    ) -> Dict[str, Optional[LineString]]:
+        return {k: self.way_to_line_string(v) for k, v in ways.items()}
 
     def way_to_polygon(
             self,
@@ -82,6 +88,12 @@ class OsmToShapely:
                 p = Polygon(reversed(polygon_array))
             return p
         raise WayToPolygonError("Could not convert way to polygon: " + way.id)
+
+    def ways_to_polygons(
+            self,
+            ways: Dict[str, Way]
+    ) -> Dict[str, Optional[Polygon]]:
+        return {k: self.way_to_polygon(v) for k, v in ways.items()}
 
     def _piece_together_ways(
             self,
@@ -267,6 +279,12 @@ class OsmToShapely:
             ))
 
         return MultiPolygon(geoms)
+
+    def relations_to_multi_polygons(
+            self,
+            relations: Dict[str, Relation]
+    ) -> Dict[str, Optional[MultiPolygon]]:
+        return {k: self.relation_to_multi_polygon(v) for k, v in relations.items()}
 
 
 class WayToPolygonError(Exception):
