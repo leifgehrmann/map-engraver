@@ -186,6 +186,16 @@ class TestOsmToShapely(unittest.TestCase):
             (59.01042080809, 5.78229880667)
         ]
 
+        # Relations to MultiPolygons
+        relations_to_query = {
+            '-99778': osm_map.get_relation('-99778'),
+            '-99805': osm_map.get_relation('-99805')
+        }
+        multi_polygons = osm_to_shapely.relations_to_multi_polygons(
+            relations_to_query
+        )
+        assert len(multi_polygons) == 2
+
     def test_conversion_fails_for_invalid_types(self):
         path = Path(__file__).parent.joinpath('data.osm')
 
