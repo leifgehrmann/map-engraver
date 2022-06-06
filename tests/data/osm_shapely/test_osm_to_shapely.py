@@ -41,10 +41,25 @@ class TestOsmToShapely(unittest.TestCase):
 
         # Way to LineString
         highway_service_way = osm_map.get_way('-101873')
-        highway_service_linestring = osm_to_shapely.way_to_linestring(
+        highway_service_line_string = osm_to_shapely.way_to_line_string(
             highway_service_way
         )
-        assert list(highway_service_linestring.coords) == [
+        assert list(highway_service_line_string.coords) == [
+            (59.00609795619, 5.71135378422),
+            (59.01678200227, 5.71135378422),
+            (59.01675888021, 5.72491834501)
+        ]
+
+        # Ways to LineStrings
+        highway_service_ways_to_query = {
+            '-101873': osm_map.get_way('-101873'),
+            '-101889': osm_map.get_way('-101889')
+        }
+        highway_service_line_strings = osm_to_shapely.ways_to_line_strings(
+            highway_service_ways_to_query
+        )
+        assert len(highway_service_line_strings) == 2
+        assert list(highway_service_line_strings['-101873'].coords) == [
             (59.00609795619, 5.71135378422),
             (59.01678200227, 5.71135378422),
             (59.01675888021, 5.72491834501)
@@ -67,6 +82,21 @@ class TestOsmToShapely(unittest.TestCase):
             ccw_bank_building_way
         )
         assert list(ccw_bank_building_polygon.exterior.coords) == [
+            (59.0023220992, 5.71703365152), (58.99515046446, 5.71710932524),
+            (58.99519673761, 5.73363832647), (59.00236836271, 5.73356265275),
+            (59.0023220992, 5.71703365152)
+        ]
+
+        # Ways to Polygons
+        building_ways_to_query = {
+            '-101787': osm_map.get_way('-101787'),
+            '-102178': osm_map.get_way('-102178')
+        }
+        building_polygons = osm_to_shapely.ways_to_polygons(
+            building_ways_to_query
+        )
+        assert len(building_polygons) == 2
+        assert list(building_polygons['-102178'].exterior.coords) == [
             (59.0023220992, 5.71703365152), (58.99515046446, 5.71710932524),
             (58.99519673761, 5.73363832647), (59.00236836271, 5.73356265275),
             (59.0023220992, 5.71703365152)
@@ -173,10 +203,10 @@ class TestOsmToShapely(unittest.TestCase):
         osm_to_shapely = OsmToShapely(osm_map, lambda x, y: (0, 0))
 
         highway_service_way = osm_map.get_way('-101873')
-        highway_service_linestring = osm_to_shapely.way_to_linestring(
+        highway_service_line_string = osm_to_shapely.way_to_line_string(
             highway_service_way
         )
-        assert list(highway_service_linestring.coords) == [
+        assert list(highway_service_line_string.coords) == [
             (0, 0), (0, 0), (0, 0)
         ]
 
