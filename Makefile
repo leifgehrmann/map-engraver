@@ -41,7 +41,8 @@ test: ## run pytests
 coverage: ## generate code coverage results
 	poetry run pytest --cov --cov-report html
 
-coverage-view: coverage ## open code coverage results in a browser
+coverage-view: ## open code coverage results in a browser
+	make coverage || true
 	$(BROWSER) htmlcov/index.html
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
