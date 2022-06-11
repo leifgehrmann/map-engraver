@@ -1,10 +1,11 @@
 from math import acos, pi, sqrt
 
-from typing import Tuple
+from typing import Tuple, Optional
 
 Coord = Tuple[float, float]
 Vector = Tuple[float, float]
 UnitVector = Vector
+Matrix2D = Tuple[Vector, Vector]
 
 # A line is defined by two vectors, its origin, and its direction
 Line = Tuple[Coord, UnitVector]
@@ -23,6 +24,10 @@ def _magnitude(v: Vector) -> float:
 
 def _dot(a: Vector, b: Vector) -> float:
     return a[0] * b[0] + a[1] * b[1]
+
+
+def _det(m: Matrix2D) -> float:
+    return m[0][0] * m[1][1] - m[0][1] * m[1][0]
 
 
 def obtuse_angle(a: Coord, b: Coord, c: Coord) -> float:
@@ -44,6 +49,24 @@ def obtuse_angle(a: Coord, b: Coord, c: Coord) -> float:
         return 0
     angle_radians = acos(adj_hyp)
     return angle_radians / pi * 180
+
+
+def line_intersection(l1: Line, l2: Line) -> Optional[Coord]:
+    # https://math.stackexchange.com/a/406895
+    a = _det((
+        (l1[1][0], -l2[1][0]),
+        (l1[1][1], -l2[1][1])
+    ))
+    if a == 0:
+        return None
+    a1 = _det((
+        (l2[0][0] - l1[0][0], -l2[1][0]),
+        (l2[0][1] - l1[0][1], -l2[1][1])
+    ))
+    return (
+        l1[0][0] + (a1 / a) * l1[1][0],
+        l1[0][1] + (a1 / a) * l1[1][1]
+    )
 
 
 def scalar_between_lines_origin_and_projected_point(
