@@ -284,7 +284,9 @@ class OsmToShapely:
             self,
             relations: Dict[str, Relation]
     ) -> Dict[str, Optional[MultiPolygon]]:
-        return {k: self.relation_to_multi_polygon(v) for k, v in relations.items()}
+        return {
+            k: self.relation_to_multi_polygon(v) for k, v in relations.items()
+        }
 
 
 class WayToPolygonError(Exception):

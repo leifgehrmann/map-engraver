@@ -1,5 +1,6 @@
 import unittest
-from shapely.geometry import Polygon, MultiPolygon, LineString, GeometryCollection
+from shapely.geometry import Polygon, MultiPolygon, LineString, \
+    GeometryCollection
 
 from map_engraver.data.osm_shapely_ops.homogenize import geoms_to_multi_polygon
 
