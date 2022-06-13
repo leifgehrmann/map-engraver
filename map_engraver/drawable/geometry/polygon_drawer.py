@@ -15,7 +15,7 @@ class PolygonDrawer(Drawable):
     geoms: List[Union[Polygon, MultiPolygon]]
 
     def __init__(self):
-        self.polygons = []
+        self.geoms = []
         self.fill_color = None
         self.stroke_color = (0, 0, 0, 1)
         self.stroke_width = None
