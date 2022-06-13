@@ -4,7 +4,7 @@ from pathlib import Path
 
 import unittest
 from unittest.mock import MagicMock
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, MultiPolygon
 
 from map_engraver.canvas import CanvasBuilder
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
@@ -173,4 +173,58 @@ class TestPolygonDrawer(unittest.TestCase):
             assert data.find('stroke:none') != -1
             assert data.find('stroke-width:') == -1
 
-    # Todo: test multi_polygons
+    def test_multi_polygons(self):
+        path = Path(__file__).parent.joinpath(
+            'output/stripe_filled_polygon_drawer_multi_polygons.svg'
+        )
+        path.unlink(missing_ok=True)
+        canvas_builder = CanvasBuilder()
+        canvas_builder.set_path(path)
+        canvas_builder.set_size(Cu.from_pt(100), Cu.from_pt(100))
+
+        canvas = canvas_builder.build()
+
+        drawer = StripeFilledPolygonDrawer()
+        drawer.stripe_colors = [(1, 1, 0), None, (0.7, 0, 0.7), (0, 0, 0)]
+        drawer.stripe_widths = [
+            Cu.from_pt(5), Cu.from_pt(5), Cu.from_pt(5), Cu.from_pt(5),
+        ]
+        drawer.stripe_origin = CanvasCoordinate.from_pt(30, 30)
+        drawer.stripe_angle = math.pi / 8  # Vertical stripes
+        drawer.geoms = [
+            MultiPolygon([
+                Polygon([
+                    (30, 30),
+                    (70, 30),
+                    (70, 70),
+                    (30, 70),
+                    (30, 30),
+                ], [[
+                    (35, 35),
+                    (65, 35),
+                    (65, 65),
+                    (35, 65),
+                    (35, 35),
+                ]]),
+                Polygon([
+                    (40, 40),
+                    (60, 40),
+                    (60, 60),
+                    (40, 60),
+                    (40, 40),
+                ])
+            ])
+        ]
+        drawer.draw(canvas)
+
+        canvas.close()
+
+        assert path.exists()
+
+        with open(path, 'r') as file:
+            data = file.read()
+            assert data.find('fill:rgb(100%,100%,0%)') != -1
+            assert data.find('fill:rgb(0%,0%,0%)') != -1
+            assert data.find('fill:rgb(70%,0%,70%)') != -1
+            assert data.find('stroke:none') != -1
+            assert data.find('stroke-width:') == -1

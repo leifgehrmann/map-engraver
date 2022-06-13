@@ -14,7 +14,7 @@ def geoms_to_multi_polygon(
             elif isinstance(inner_geom, Polygon):
                 new_polygons.append(inner_geom)
     elif isinstance(geoms, MultiPolygon):
-        new_polygons.extend(geoms.geoms)
+        return geoms
     elif isinstance(geoms, Polygon):
         new_polygons.append(geoms)
 

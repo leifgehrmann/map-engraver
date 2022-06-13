@@ -57,9 +57,14 @@ class StripeFilledPolygonDrawer(Drawable):
             self.stripe_origin.pt,
             (math.cos(self.stripe_angle), math.sin(self.stripe_angle))
         )
-        stripe_widths_pt = list(
-            map(lambda stripe: stripe.pt, self.stripe_widths)
-        )
+        stripe_widths_pt = list(map(
+            lambda stripe: stripe.pt,
+            self.stripe_widths
+        ))
+        stripe_visible = list(map(
+            lambda stripe_color: stripe_color is not None,
+            self.stripe_colors
+        ))
 
         # Create stripes out of every geom.
         geoms_per_stripe = [[] for _ in range(len(self.stripe_widths))]
@@ -67,7 +72,8 @@ class StripeFilledPolygonDrawer(Drawable):
             new_geoms_per_stripe = create_polygons_from_stripe_data(
                 geom,
                 stripe_line,
-                stripe_widths_pt
+                stripe_widths_pt,
+                stripe_visible
             )
             for (stripe_index, new_geom_for_stripe) in \
                     enumerate(new_geoms_per_stripe):
@@ -77,6 +83,8 @@ class StripeFilledPolygonDrawer(Drawable):
 
         # Then we draw each stripe using the defined colors.
         for (stripe_index, geoms_for_stripe) in enumerate(geoms_per_stripe):
+            if len(geoms_for_stripe) == 0:
+                continue
             polygon_drawer = PolygonDrawer()
             polygon_drawer.fill_color = self.stripe_colors[stripe_index]
             polygon_drawer.geoms = geoms_per_stripe[stripe_index]

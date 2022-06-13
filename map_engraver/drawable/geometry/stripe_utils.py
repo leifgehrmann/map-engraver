@@ -21,7 +21,8 @@ Bounds = Tuple[float, float, float, float]
 def create_polygons_from_stripe_data(
         geom: Union[Polygon, MultiPolygon],
         line: Line,
-        stripe_widths: List[float]
+        stripe_widths: List[float],
+        stripe_visible: List[bool]
 ) -> List[Optional[Union[Polygon, MultiPolygon]]]:
     perpendicular_line = _create_perpendicular_line(line, 0)
     offset_range = _calculate_stripe_range(geom.bounds, perpendicular_line)
@@ -53,7 +54,8 @@ def create_polygons_from_stripe_data(
         )
 
         stripe_index = start_stripe_info[0]
-        polygons_per_stripe[stripe_index].append(polygon)
+        if stripe_visible[stripe_index]:
+            polygons_per_stripe[stripe_index].append(polygon)
 
         start_stripe_info = end_stripe_info
 
@@ -64,9 +66,7 @@ def create_polygons_from_stripe_data(
 
         intersected_geom = geom.intersection(stripe_multipolygon)
         intersected_geom = geoms_to_multi_polygon(intersected_geom)
-        if intersected_geom.is_empty:
-            geoms_per_stripe[stripe_index] = None
-        else:
+        if not intersected_geom.is_empty:
             geoms_per_stripe[stripe_index] = intersected_geom
 
     return geoms_per_stripe
