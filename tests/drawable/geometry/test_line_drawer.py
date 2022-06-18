@@ -1,3 +1,4 @@
+import cairocffi.constants
 from pathlib import Path
 
 import unittest
@@ -27,6 +28,12 @@ class TestLineDrawer(unittest.TestCase):
         line_drawer = LineDrawer()
         line_drawer.stroke_color = (0, 1, 0)
         line_drawer.stroke_width = Cu.from_pt(1.5)
+        line_drawer.stroke_dashes = (
+            [Cu.from_pt(1), Cu.from_pt(3), Cu.from_pt(3), Cu.from_pt(3)],
+            Cu.from_pt(4)
+        )
+        line_drawer.stroke_line_cap = cairocffi.constants.LINE_CAP_ROUND
+        line_drawer.stroke_line_join = cairocffi.constants.LINE_JOIN_MITER
         line_drawer.geoms = [
             LineString([
                 (30, 30),
