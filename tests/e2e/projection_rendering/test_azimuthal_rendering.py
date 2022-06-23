@@ -17,7 +17,7 @@ from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely
 from map_engraver.data.osm_shapely_ops.transform import \
     transform_interpolated_euclidean
 from map_engraver.data.proj.geodesics import interpolate_geodesic
-from map_engraver.data.proj.masks import azimuthal_mask, \
+from map_engraver.data.proj.azimuthal_masks import azimuthal_mask, \
     azimuthal_mask_wgs84
 from map_engraver.drawable.geometry.line_drawer import LineDrawer
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer

@@ -7,7 +7,7 @@ from pyproj import CRS, Transformer
 from shapely.geometry import Polygon, MultiPolygon
 from shapely.geometry.base import BaseGeometry
 
-from map_engraver.data.proj.masks import azimuthal_mask, \
+from map_engraver.data.proj.azimuthal_masks import azimuthal_mask, \
     azimuthal_mask_wgs84
 from tests.data.proj.azimuthal_cases import get_azimuthal_test_cases
 
