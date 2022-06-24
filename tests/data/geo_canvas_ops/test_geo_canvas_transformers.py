@@ -8,7 +8,8 @@ import unittest
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
-from map_engraver.data import geo_canvas_ops
+from map_engraver.data.geo_canvas_ops.geo_canvas_scale import GeoCanvasScale
+from map_engraver.data.geo_canvas_ops.geo_canvas_transformers import build_crs_to_canvas_transformer
 
 
 class TestProjectGeoToCanvas(unittest.TestCase):
@@ -62,12 +63,12 @@ class TestProjectGeoToCanvas(unittest.TestCase):
         )
 
         # 100 meters for every centimeter
-        geo_to_canvas_scale = geo_canvas_ops.GeoCanvasScale(
+        geo_to_canvas_scale = GeoCanvasScale(
             100,
             CanvasUnit.from_cm(1)
         )
 
-        transformation_func = geo_canvas_ops.build_transformer(
+        transformation_func = build_crs_to_canvas_transformer(
             crs=british_crs,
             data_crs=wgs84_crs,
             scale=geo_to_canvas_scale,
@@ -80,7 +81,7 @@ class TestProjectGeoToCanvas(unittest.TestCase):
         )
 
         # Repeat the same test, but this time without data_crs:
-        transformation_func = geo_canvas_ops.build_transformer(
+        transformation_func = build_crs_to_canvas_transformer(
             crs=british_crs,
             scale=geo_to_canvas_scale,
             origin_for_geo=origin_for_geo,

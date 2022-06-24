@@ -10,8 +10,9 @@ from shapely.geometry import MultiPolygon, Polygon, MultiLineString, LineString
 from map_engraver.canvas import Canvas, CanvasBuilder
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
-from map_engraver.data import geo_canvas_ops
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
+from map_engraver.data.geo_canvas_ops.geo_canvas_scale import GeoCanvasScale
+from map_engraver.data.geo_canvas_ops.geo_canvas_transformers import build_crs_to_canvas_transformer
 from map_engraver.data.osm import Parser
 from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely
 from map_engraver.data.osm_shapely_ops.transform import \
@@ -112,13 +113,13 @@ class TestAzimuthalRendering(unittest.TestCase):
         origin_for_canvas = CanvasCoordinate(origin_x, origin_y)
 
         # Fit the projected radius as the width of the canvas
-        geo_to_canvas_scale = geo_canvas_ops.GeoCanvasScale(
+        geo_to_canvas_scale = GeoCanvasScale(
             crs.ellipsoid.semi_major_metre,
             Cu.from_px(self.azimuthal_width / 2)
         )
 
         # Convert the projected mask to the canvas.
-        proj_to_canvas = geo_canvas_ops.build_transformer(
+        proj_to_canvas = build_crs_to_canvas_transformer(
             crs=crs,
             data_crs=crs,
             scale=geo_to_canvas_scale,
@@ -129,7 +130,7 @@ class TestAzimuthalRendering(unittest.TestCase):
 
         # Convert the world map, from wgs84 to proj to canvas
         wgs84_crs = CRS.from_epsg(4326)
-        wgs84_to_canvas = geo_canvas_ops.build_transformer(
+        wgs84_to_canvas = build_crs_to_canvas_transformer(
             crs=crs,
             data_crs=wgs84_crs,
             scale=geo_to_canvas_scale,
@@ -182,7 +183,7 @@ class TestAzimuthalRendering(unittest.TestCase):
         )
 
         # 1 pixel for every degree
-        geo_to_canvas_scale = geo_canvas_ops.GeoCanvasScale(
+        geo_to_canvas_scale = GeoCanvasScale(
             1,
             Cu.from_px(1)
         )
@@ -199,7 +200,7 @@ class TestAzimuthalRendering(unittest.TestCase):
             [(-180, -90), (180, -90), (180, 90), (-180, 90)]
         )
 
-        wgs84_to_canvas = geo_canvas_ops.build_transformer(
+        wgs84_to_canvas = build_crs_to_canvas_transformer(
             crs=wgs84_crs,
             data_crs=wgs84_crs,
             scale=geo_to_canvas_scale,
