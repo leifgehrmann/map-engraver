@@ -12,7 +12,7 @@ from map_engraver.data.geo_canvas_ops.geo_canvas_scale import GeoCanvasScale
 from map_engraver.data.geo_canvas_ops.geo_canvas_transformers import build_crs_to_canvas_transformer
 
 
-class TestProjectGeoToCanvas(unittest.TestCase):
+class TestGeoCanvasTransformers(unittest.TestCase):
     @staticmethod
     def assert_coordinates_are_close(
             expected_coordinate: Tuple[float, float],
