@@ -91,7 +91,6 @@ class GeoCanvasTransformersBuilder:
             CanvasUnit.from_pt(canvas_distance)
         )
 
-
     def build_crs_to_canvas_transformer(self):
         if (
                 self.crs is None or

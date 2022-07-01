@@ -7,6 +7,8 @@ from map_engraver.data.geo.geo_coordinate import GeoCoordinate
 from map_engraver.data.geo_canvas_ops.geo_canvas_scale import GeoCanvasScale
 from map_engraver.data.geo_canvas_ops.geo_canvas_transformers_builder import \
     GeoCanvasTransformersBuilder
+from tests.data.geo_canvas_ops.test_geo_canvas_transformers import \
+    TestGeoCanvasTransformers
 
 
 class TestGeoCanvasTransformersBuilder(unittest.TestCase):
@@ -19,5 +21,25 @@ class TestGeoCanvasTransformersBuilder(unittest.TestCase):
         builder.set_data_crs(wgs84_crs)
         builder.set_origin_for_geo(GeoCoordinate(325600, 673400, british_crs))
         builder.set_origin_for_canvas(CanvasCoordinate.from_pt(200, 200))
-        builder.set_scale(GeoCanvasScale(100, CanvasUnit.from_pt(100)))
+        builder.set_scale(GeoCanvasScale(1000, CanvasUnit.from_pt(100)))
+
+        crs_to_canvas = builder.build_crs_to_canvas_transformer()
+        TestGeoCanvasTransformers.assert_coordinates_are_close(
+            crs_to_canvas(55.947854, -3.192893),
+            (200, 200)
+        )
+        TestGeoCanvasTransformers.assert_coordinates_are_close(
+            crs_to_canvas(55.956836, -3.193169),
+            (200, 100)
+        )
+
+        canvas_to_crs = builder.build_canvas_to_crs_transformer()
+        TestGeoCanvasTransformers.assert_coordinates_are_close(
+            canvas_to_crs(200, 200),
+            (55.947854, -3.192893)
+        )
+        TestGeoCanvasTransformers.assert_coordinates_are_close(
+            canvas_to_crs(200, 100),
+            (55.956836, -3.193169)
+        )
         pass
