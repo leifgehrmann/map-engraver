@@ -77,13 +77,13 @@ class GeoCanvasTransformersBuilder:
         )
 
         geo_distance = math.sqrt(
-            math.pow(new_geo_b.x - new_geo_b.x, 2) +
-            math.pow(new_geo_b.y - new_geo_b.y, 2)
+            math.pow(new_geo_b.x - new_geo_a.x, 2) +
+            math.pow(new_geo_b.y - new_geo_a.y, 2)
         )
 
         canvas_distance = math.sqrt(
-            math.pow(canvas_b.x.pt + canvas_a.x.pt, 2) +
-            math.pow(canvas_b.y.pt + canvas_a.y.pt, 2)
+            math.pow(canvas_b.x.pt - canvas_a.x.pt, 2) +
+            math.pow(canvas_b.y.pt - canvas_a.y.pt, 2)
         )
 
         self.scale = GeoCanvasScale(
