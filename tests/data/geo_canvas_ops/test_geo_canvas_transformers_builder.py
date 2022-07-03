@@ -49,6 +49,18 @@ class TestGeoCanvasTransformersBuilder(unittest.TestCase):
 
         builder = GeoCanvasTransformersBuilder()
         builder.set_data_crs(wgs84_crs)
+
+        with self.assertRaises(Exception):
+            # Test that the method fails if the input geoCoordinates cannot be
+            # projected to the british_crs.
+            builder.set_scale_and_origin_from_coordinates_and_crs(
+                british_crs,
+                GeoCoordinate(1800, 900, wgs84_crs),
+                GeoCoordinate(1800, 900, wgs84_crs),
+                CanvasCoordinate.from_pt(0, 0),
+                CanvasCoordinate.from_pt(400, 400),
+            )
+
         builder.set_scale_and_origin_from_coordinates_and_crs(
             british_crs,
             GeoCoordinate(327600, 671400, british_crs),
@@ -76,3 +88,13 @@ class TestGeoCanvasTransformersBuilder(unittest.TestCase):
             canvas_to_crs(200, 100),
             (55.956836, -3.193169)
         )
+
+    def test_not_calling_any_setters(self):
+        builder = GeoCanvasTransformersBuilder()
+
+        with self.assertRaises(Exception):
+            builder.build_crs_to_canvas_transformer()
+
+        with self.assertRaises(Exception):
+            builder.build_canvas_to_crs_transformer()
+
