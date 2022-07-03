@@ -97,4 +97,3 @@ class TestGeoCanvasTransformersBuilder(unittest.TestCase):
 
         with self.assertRaises(Exception):
             builder.build_canvas_to_crs_transformer()
-
