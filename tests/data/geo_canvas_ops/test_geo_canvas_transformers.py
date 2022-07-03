@@ -96,11 +96,11 @@ class TestGeoCanvasTransformers(unittest.TestCase):
         )
 
     """
-        This test projects a coordinate that is 600m east and 400m south from the
-        projection origin. If the scale is 100m to 1cm, then we should expect
-        an offset of 6cm, 4cm from the canvas origin. In this example, the canvas
-        origin is the top-left, inset by 1cm.
-        """
+    This test projects a coordinate that is 600m east and 400m south from the
+    projection origin. If the scale is 100m to 1cm, then we should expect
+    an offset of 6cm, 4cm from the canvas origin. In this example, the canvas
+    origin is the top-left, inset by 1cm.
+    """
 
     def test_build_canvas_to_crs_transformer(self):
         wgs84_crs = pyproj.CRS.from_epsg(4326)

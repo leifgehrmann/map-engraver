@@ -12,7 +12,8 @@ from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
 from map_engraver.data.geo_canvas_ops.geo_canvas_scale import GeoCanvasScale
-from map_engraver.data.geo_canvas_ops.geo_canvas_transformers import build_crs_to_canvas_transformer
+from map_engraver.data.geo_canvas_ops.geo_canvas_transformers import \
+    build_crs_to_canvas_transformer
 from map_engraver.data.osm import Parser
 from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely
 from map_engraver.data.osm_shapely_ops.transform import \
