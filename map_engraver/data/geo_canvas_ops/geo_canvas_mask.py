@@ -1,8 +1,11 @@
-from shapely.geometry import MultiPolygon
+from shapely.geometry import MultiPolygon, Polygon
+from shapely.ops import transform
 
 from map_engraver.canvas.canvas_bbox import CanvasBbox
 from map_engraver.data.geo_canvas_ops.geo_canvas_transformers_builder import \
     GeoCanvasTransformersBuilder
+from map_engraver.data.proj.azimuthal_masks import \
+    azimuthal_mask, azimuthal_mask_wgs84
 
 
 def canvas_mask(
@@ -27,7 +30,15 @@ def canvas_mask(
     :param transformers_builder:
     :return:
     """
-    pass
+    canvas_polygon = _create_canvas_polygon(canvas_bbox)
+
+    # Todo: Switch mask based on CRS.
+    crs_polygon = azimuthal_mask(transformers_builder.crs)
+    # Todo: Clone the builder, because we want to ignore data_crs
+    crs_to_canvas = transformers_builder.build_crs_to_canvas_transformer()
+    crs_polygon = transform(crs_to_canvas, crs_polygon)
+
+    return canvas_polygon.intersection(crs_polygon)
 
 
 def crs_mask(
@@ -42,7 +53,15 @@ def crs_mask(
     :param transformers_builder:
     :return:
     """
-    pass
+    canvas_polygon = _create_canvas_polygon(canvas_bbox)
+    # Todo: Clone the builder, because we want to ignore data_crs
+    canvas_to_crs = transformers_builder.build_canvas_to_crs_transformer()
+    canvas_polygon = transform(canvas_to_crs, canvas_polygon)
+
+    # Todo: Switch mask based on CRS.
+    crs_polygon = azimuthal_mask(transformers_builder.crs)
+
+    return canvas_polygon.intersection(crs_polygon)
 
 
 def wgs84_mask(
@@ -59,4 +78,25 @@ def wgs84_mask(
     :param transformers_builder:
     :return:
     """
-    pass
+    canvas_polygon = _create_canvas_polygon(canvas_bbox)
+    # Todo: Clone the builder, because we want to set the CRS to WGS-84
+    canvas_to_crs = transformers_builder.build_canvas_to_crs_transformer()
+    canvas_polygon = transform(canvas_to_crs, canvas_polygon)
+
+    # Todo: Switch mask based on CRS.
+    crs_polygon = azimuthal_mask_wgs84(transformers_builder.crs)
+
+    return canvas_polygon.intersection(crs_polygon)
+
+
+def _create_canvas_polygon(canvas_bbox: CanvasBbox) -> Polygon:
+    pos = canvas_bbox.pos
+    width = canvas_bbox.width
+    height = canvas_bbox.height
+    return Polygon([
+        (pos.x, pos.y),
+        (pos.x + width, pos.y),
+        (pos.x + width, pos.y + height),
+        (pos.x, pos.y + height),
+        (pos.x, pos.y),
+    ])
