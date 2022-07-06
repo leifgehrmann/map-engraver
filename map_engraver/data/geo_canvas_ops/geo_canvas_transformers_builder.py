@@ -29,19 +29,21 @@ class GeoCanvasTransformersBuilder:
         self.origin_for_canvas = None
         self.data_crs = None
 
-    def set_crs(self, crs: pyproj.CRS):
+    def set_crs(self, crs: Optional[pyproj.CRS]):
         self.crs = crs
 
-    def set_scale(self, scale: GeoCanvasScale):
+    def set_scale(self, scale: Optional[GeoCanvasScale]):
         self.scale = scale
 
-    def set_origin_for_geo(self, origin_for_geo: GeoCoordinate):
+    def set_origin_for_geo(self, origin_for_geo: Optional[GeoCoordinate]):
         self.origin_for_geo = origin_for_geo
 
-    def set_origin_for_canvas(self, origin_for_canvas: CanvasCoordinate):
+    def set_origin_for_canvas(
+            self, origin_for_canvas: Optional[CanvasCoordinate]
+    ):
         self.origin_for_canvas = origin_for_canvas
 
-    def set_data_crs(self, data_crs: pyproj.CRS):
+    def set_data_crs(self, data_crs: Optional[pyproj.CRS]):
         self.data_crs = data_crs
 
     def set_scale_and_origin_from_coordinates_and_crs(
@@ -90,6 +92,15 @@ class GeoCanvasTransformersBuilder:
             geo_distance,
             CanvasUnit.from_pt(canvas_distance)
         )
+
+    def copy(self) -> 'GeoCanvasTransformersBuilder':
+        builder = GeoCanvasTransformersBuilder()
+        builder.set_crs(self.crs)
+        builder.set_origin_for_geo(self.origin_for_geo)
+        builder.set_origin_for_canvas(self.origin_for_canvas)
+        builder.set_scale(self.scale)
+        builder.set_data_crs(self.data_crs)
+        return builder
 
     def build_crs_to_canvas_transformer(self):
         if (

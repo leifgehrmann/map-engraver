@@ -97,3 +97,46 @@ class TestGeoCanvasTransformersBuilder(unittest.TestCase):
 
         with self.assertRaises(Exception):
             builder.build_canvas_to_crs_transformer()
+
+    def test_copy(self):
+        wgs84_crs = pyproj.CRS.from_epsg(4326)
+        british_crs = pyproj.CRS.from_epsg(27700)
+
+        builder = GeoCanvasTransformersBuilder()
+        builder.set_crs(british_crs)
+        builder.set_data_crs(wgs84_crs)
+        builder.set_origin_for_geo(GeoCoordinate(325600, 673400, british_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(200, 200))
+        builder.set_scale(GeoCanvasScale(1000, CanvasUnit.from_pt(100)))
+
+        builder_copy = builder.copy()
+
+        self.assertEqual(builder.crs, builder_copy.crs)
+        self.assertEqual(builder.data_crs, builder_copy.data_crs)
+        self.assertEqual(
+            builder.origin_for_geo,
+            builder_copy.origin_for_geo
+        )
+        self.assertEqual(
+            builder.origin_for_canvas,
+            builder_copy.origin_for_canvas
+        )
+        self.assertEqual(builder.scale, builder_copy.scale)
+
+        builder_copy.set_crs(wgs84_crs)
+        builder_copy.set_data_crs(british_crs)
+        builder_copy.set_origin_for_geo(GeoCoordinate(0, 0, british_crs))
+        builder_copy.set_origin_for_canvas(CanvasCoordinate.from_pt(100, 100))
+        builder_copy.set_scale(GeoCanvasScale(100, CanvasUnit.from_pt(200)))
+
+        self.assertNotEqual(builder.crs, builder_copy.crs)
+        self.assertNotEqual(builder.data_crs, builder_copy.data_crs)
+        self.assertNotEqual(
+            builder.origin_for_geo,
+            builder_copy.origin_for_geo
+        )
+        self.assertNotEqual(
+            builder.origin_for_canvas,
+            builder_copy.origin_for_canvas
+        )
+        self.assertNotEqual(builder.scale, builder_copy.scale)
