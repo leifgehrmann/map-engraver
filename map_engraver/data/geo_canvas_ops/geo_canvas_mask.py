@@ -1,3 +1,4 @@
+from pyproj import CRS
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import transform
 
@@ -34,7 +35,8 @@ def canvas_mask(
 
     # Todo: Switch mask based on CRS.
     crs_polygon = azimuthal_mask(transformers_builder.crs)
-    # Todo: Clone the builder, because we want to ignore data_crs
+    transformers_builder = transformers_builder.copy()
+    transformers_builder.set_data_crs(None)
     crs_to_canvas = transformers_builder.build_crs_to_canvas_transformer()
     crs_polygon = transform(crs_to_canvas, crs_polygon)
 
@@ -54,7 +56,8 @@ def crs_mask(
     :return:
     """
     canvas_polygon = _create_canvas_polygon(canvas_bbox)
-    # Todo: Clone the builder, because we want to ignore data_crs
+    transformers_builder = transformers_builder.copy()
+    transformers_builder.set_data_crs(None)
     canvas_to_crs = transformers_builder.build_canvas_to_crs_transformer()
     canvas_polygon = transform(canvas_to_crs, canvas_polygon)
 
@@ -79,7 +82,8 @@ def wgs84_mask(
     :return:
     """
     canvas_polygon = _create_canvas_polygon(canvas_bbox)
-    # Todo: Clone the builder, because we want to set the CRS to WGS-84
+    transformers_builder = transformers_builder.copy()
+    transformers_builder.set_data_crs(CRS.from_epsg(4326))
     canvas_to_crs = transformers_builder.build_canvas_to_crs_transformer()
     canvas_polygon = transform(canvas_to_crs, canvas_polygon)
 
