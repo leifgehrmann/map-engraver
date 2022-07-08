@@ -12,11 +12,7 @@ from map_engraver.data.proj.azimuthal_masks import azimuthal_mask, \
 from tests.data.proj.azimuthal_cases import get_azimuthal_test_cases
 
 
-class TestMasks(unittest.TestCase):
-    def setUp(self):
-        Path(__file__).parent.joinpath('output/') \
-            .mkdir(parents=True, exist_ok=True)
-
+class TestAzimuthalMasks(unittest.TestCase):
     def test_azimuthal_mask_raises_error_for_unsupported_proj(self):
         unsupported_projs = [
             '+proj=aeqd',
