@@ -6,6 +6,16 @@ from pyproj import CRS, Transformer
 from shapely.geometry import Polygon, MultiPolygon, box
 
 
+def is_supported_azimuthal_projection(crs: CRS) -> bool:
+    return crs.coordinate_operation.method_name in [
+        'Orthographic',  # ortho
+        'Geostationary Satellite (Sweep X)',  # geos
+        'Geostationary Satellite (Sweep Y)',  # geos
+        'Vertical Perspective',  # nsper
+        'PROJ tpers',  # tpers
+    ]
+
+
 def azimuthal_mask(
         crs: CRS,
         resolution=64,
@@ -33,7 +43,7 @@ def azimuthal_mask(
              projection.
     """
     # Throw an error if an unknown projection is passed in.
-    if not _is_supported_projection_method(crs):
+    if not is_supported_azimuthal_projection(crs):
         raise Exception(
             'projection method name not supported: ' +
             crs.coordinate_operation.method_name
@@ -92,7 +102,7 @@ def azimuthal_mask_wgs84(
              projection.
     """
     # Throw an error if an unknown projection is passed in.
-    if not _is_supported_projection_method(crs):
+    if not is_supported_azimuthal_projection(crs):
         raise Exception(
             'projection method name not supported: ' +
             crs.coordinate_operation.method_name
@@ -148,16 +158,6 @@ def azimuthal_mask_wgs84(
             lambda point_group: _trim_polygon(crs, Polygon(point_group)),
             point_groups
         )))
-
-
-def _is_supported_projection_method(crs: CRS) -> bool:
-    return crs.coordinate_operation.method_name in [
-        'Orthographic',  # ortho
-        'Geostationary Satellite (Sweep X)',  # geos
-        'Geostationary Satellite (Sweep Y)',  # geos
-        'Vertical Perspective',  # nsper
-        'PROJ tpers',  # tpers
-    ]
 
 
 def _sign(x: float) -> float:
