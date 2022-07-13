@@ -95,6 +95,54 @@ class TestGeoCanvasTransformers(unittest.TestCase):
             expected_canvas_coordinates
         )
 
+        # Repeat the same test, but this time with a `rotation` of 90 degrees:
+        transformation_func = build_crs_to_canvas_transformer(
+            crs=british_crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas,
+            rotation=math.pi/2
+        )
+        coordinate_to_project = GeoCoordinate(258600, 665600, british_crs)
+        self.assert_coordinates_are_close(
+            transformation_func(*coordinate_to_project.tuple),
+            CanvasCoordinate(
+                CanvasUnit.from_cm(1 - 4),
+                CanvasUnit.from_cm(1 + 6)
+            ).pt
+        )
+
+        # Repeat the same test, but this time with `is_data_yx` set to True:
+        transformation_func = build_crs_to_canvas_transformer(
+            crs=british_crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas,
+            is_crs_yx=True
+        )
+        coordinate_to_project = GeoCoordinate(258600, 665600, british_crs)
+        self.assert_coordinates_are_close(
+            transformation_func(*coordinate_to_project.tuple),
+            CanvasCoordinate(
+                CanvasUnit.from_cm(1 - 4),
+                CanvasUnit.from_cm(1 - 6)
+            ).pt
+        )
+
+        # Repeat the same test, but this time with `is_data_yx` set to True:
+        transformation_func = build_crs_to_canvas_transformer(
+            crs=british_crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas,
+            is_data_yx=True
+        )
+        coordinate_to_project = GeoCoordinate(665600, 258600, british_crs)
+        self.assert_coordinates_are_close(
+            transformation_func(*coordinate_to_project.tuple),
+            expected_canvas_coordinates
+        )
+
     """
     This test projects a coordinate that is 600m east and 400m south from the
     projection origin. If the scale is 100m to 1cm, then we should expect
@@ -148,6 +196,54 @@ class TestGeoCanvasTransformers(unittest.TestCase):
             origin_for_canvas=origin_for_canvas
         )
         coordinate_to_project = GeoCoordinate(258600, 665600, british_crs)
+        self.assert_coordinates_are_close(
+            transformation_func(*expected_canvas_coordinates),
+            coordinate_to_project.tuple
+        )
+
+        # Repeat the same test, but this time with a `rotation` of 90 degrees:
+        transformation_func = build_canvas_to_crs_transformer(
+            crs=british_crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas,
+            rotation=math.pi/2
+        )
+        coordinate_to_project = GeoCoordinate(258600, 665600, british_crs)
+        self.assert_coordinates_are_close(
+            transformation_func(*CanvasCoordinate(
+                CanvasUnit.from_cm(1 - 4),
+                CanvasUnit.from_cm(1 + 6)
+            ).pt),
+            coordinate_to_project.tuple
+        )
+
+        # Repeat the same test, but this time with `is_crs_yx` set to True:
+        transformation_func = build_canvas_to_crs_transformer(
+            crs=british_crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas,
+            is_crs_yx=True
+        )
+        coordinate_to_project = GeoCoordinate(258600, 665600, british_crs)
+        self.assert_coordinates_are_close(
+            transformation_func(*CanvasCoordinate(
+                CanvasUnit.from_cm(1 - 4),
+                CanvasUnit.from_cm(1 - 6)
+            ).pt),
+            coordinate_to_project.tuple
+        )
+
+        # Repeat the same test, but this time with `is_data_yx` set to True:
+        transformation_func = build_canvas_to_crs_transformer(
+            crs=british_crs,
+            scale=geo_to_canvas_scale,
+            origin_for_geo=origin_for_geo,
+            origin_for_canvas=origin_for_canvas,
+            is_data_yx=True
+        )
+        coordinate_to_project = GeoCoordinate(665600, 258600, british_crs)
         self.assert_coordinates_are_close(
             transformation_func(*expected_canvas_coordinates),
             coordinate_to_project.tuple
