@@ -1,7 +1,6 @@
 import unittest
 from typing import Tuple
 from math import isclose
-from pathlib import Path
 
 from pyproj import CRS, Transformer
 from shapely.geometry import Polygon, MultiPolygon
