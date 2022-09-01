@@ -1,6 +1,10 @@
 from typing import Union, List
 
-from shapely.geometry import MultiPolygon, GeometryCollection, Polygon, MultiLineString, LineString
+from shapely.geometry import MultiPolygon,\
+    GeometryCollection,\
+    Polygon,\
+    MultiLineString,\
+    LineString
 
 
 def geoms_to_multi_polygon(
