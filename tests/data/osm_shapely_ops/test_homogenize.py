@@ -35,6 +35,11 @@ class TestHomogenize(unittest.TestCase):
             geoms_to_multi_polygon(geometry_collection)
         )
 
+        self.assertEqual(
+            MultiPolygon(),
+            geoms_to_multi_polygon(Polygon())
+        )
+
     def test_geoms_to_multi_line_string(self):
         line_string_a = LineString([(0, 0), (1, 0), (0, 1)])
         line_string_b = LineString([(2, 2), (2, 1), (1, 2)])
@@ -58,4 +63,9 @@ class TestHomogenize(unittest.TestCase):
         self.assertEqual(
             MultiLineString([line_string_a, line_string_b, line_string_c]),
             geoms_to_multi_line_string(geometry_collection)
+        )
+
+        self.assertEqual(
+            MultiLineString(),
+            geoms_to_multi_line_string(LineString())
         )
