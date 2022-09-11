@@ -4,8 +4,9 @@ import re
 
 from pyproj import CRS
 from shapely.affinity import translate
-from shapely.geometry import MultiPolygon, Point
+from shapely.geometry import MultiPolygon, Point, Polygon
 
+from map_engraver.data.osm_shapely_ops.homogenize import geoms_to_multi_polygon
 from map_engraver.data.proj.wgs84_masks import wgs84_mask
 
 
@@ -63,10 +64,10 @@ def cylindrical_mask_wgs84(
         # to be circles that exist 90 degrees east and west of the UTM zone
         # along the equator. The circles are roughly 9 degrees in radius, both
         # on the latitude and longitude axis.
-        lon1 = ((-3 + zone * 6 - 90) + 360) % 360 - 360
-        lon2 = ((-3 + zone * 6 + 90) + 360) % 360 - 360
-        left_circle = Point(0, 0).buffer(9.0)
-        right_circle = Point(0, 0).buffer(9.0)
+        lon1 = (-3 + zone * 6 - 90) - 360
+        lon2 = (-3 + zone * 6 + 90) - 360
+        left_circle = Point(0, 0).buffer(10.0)
+        right_circle = Point(0, 0).buffer(10.0)
         left_circle = translate(left_circle, yoff=lon1)
         right_circle = translate(right_circle, yoff=lon2)
 
@@ -81,7 +82,23 @@ def cylindrical_mask_wgs84(
         right_circle = translate(right_circle, yoff=360)
         mask = mask.difference(right_circle)
 
-        return MultiPolygon([mask])
+        # We also need to account for the top and bottom edges of the map. We
+        # handle this lazily by subtracting a thin slice on the 0-degree
+        # latitude between the right circle and the left circle.
+        mask = mask.difference(Polygon([
+            (0.000001, lon1),
+            (0.000001, lon2),
+            (-0.000001, lon2),
+            (-0.000001, lon1),
+        ]))
+        mask = mask.difference(Polygon([
+            (0.000001, lon1 + 360),
+            (0.000001, lon2 + 360),
+            (-0.000001, lon2 + 360),
+            (-0.000001, lon1 + 360),
+        ]))
+
+        return geoms_to_multi_polygon(mask)
     else:
         raise RuntimeError(
             'Cannot generate WGS 84 mask for CRS: ' + crs.name

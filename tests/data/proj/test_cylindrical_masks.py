@@ -45,23 +45,23 @@ class TestCylindricalMasks(unittest.TestCase):
         # UTM should have "dead-spots".
         utm_crs = CRS.from_proj4('+proj=utm +zone=1 +south')
         utm_multi_polygon = cylindrical_mask_wgs84(utm_crs)
-        self._assert_holes(utm_multi_polygon, 2)
+        self._assert_holes(utm_multi_polygon, 1)
 
         utm_crs = CRS.from_proj4('+proj=utm +zone=15 +south')
         utm_multi_polygon = cylindrical_mask_wgs84(utm_crs)
-        self._assert_holes(utm_multi_polygon, 1)
+        self._assert_holes(utm_multi_polygon, 0)
 
         utm_crs = CRS.from_proj4('+proj=utm +zone=30 +south')
         utm_multi_polygon = cylindrical_mask_wgs84(utm_crs)
-        self._assert_holes(utm_multi_polygon, 2)
+        self._assert_holes(utm_multi_polygon, 0)
 
         utm_crs = CRS.from_proj4('+proj=utm +zone=45 +south')
         utm_multi_polygon = cylindrical_mask_wgs84(utm_crs)
-        self._assert_holes(utm_multi_polygon, 1)
+        self._assert_holes(utm_multi_polygon, 0)
 
         utm_crs = CRS.from_proj4('+proj=utm +zone=60 +south')
         utm_multi_polygon = cylindrical_mask_wgs84(utm_crs)
-        self._assert_holes(utm_multi_polygon, 2)
+        self._assert_holes(utm_multi_polygon, 1)
 
     def _assert_holes(self, multi_polygon: MultiPolygon, holes: int):
         polygon: Polygon = multi_polygon.geoms[0]
