@@ -6,6 +6,19 @@ from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit
 
 
+def rect(bbox: CanvasBbox) -> Polygon:
+    if bbox.width.pt <= 0:
+        raise Exception('width of bbox cannot be 0 or less.')
+    if bbox.height.pt <= 0:
+        raise Exception('height of bbox cannot be 0 or less.')
+    return Polygon([
+        bbox.pos.pt,
+        CanvasCoordinate(bbox.pos.x + bbox.width, bbox.pos.y).pt,
+        CanvasCoordinate(bbox.pos.x + bbox.width, bbox.pos.y + bbox.height).pt,
+        CanvasCoordinate(bbox.pos.x, bbox.pos.y + bbox.height).pt
+    ])
+
+
 def rounded_rect(
         bbox: CanvasBbox,
         radius=CanvasUnit(0)
