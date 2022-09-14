@@ -5,24 +5,25 @@ from pathlib import Path
 import unittest
 from pyproj import CRS
 from shapely import ops
-from shapely.geometry import MultiPolygon, Polygon, MultiLineString, LineString
+from shapely.geometry import MultiPolygon, Polygon, MultiLineString
 
 from map_engraver.canvas import Canvas, CanvasBuilder
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
-from map_engraver.data import geo_canvas_ops
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
-from map_engraver.data.osm import Parser
-from map_engraver.data.osm_shapely.osm_to_shapely import OsmToShapely
+from map_engraver.data.geo_canvas_ops.geo_canvas_scale import GeoCanvasScale
+from map_engraver.data.geo_canvas_ops.geo_canvas_transformers import \
+    build_crs_to_canvas_transformer
 from map_engraver.data.osm_shapely_ops.transform import \
     transform_interpolated_euclidean
-from map_engraver.data.proj.geodesics import interpolate_geodesic
-from map_engraver.data.proj.masks import azimuthal_mask, \
+from map_engraver.data.proj.azimuthal_masks import azimuthal_mask, \
     azimuthal_mask_wgs84
 from map_engraver.drawable.geometry.line_drawer import LineDrawer
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
-from tests.data.proj.geodesic_cases import get_geodesic_test_cases
 from tests.data.proj.azimuthal_cases import get_azimuthal_test_cases
+from tests.e2e.projection_rendering.world_objects import \
+    get_world_map, \
+    get_flight_paths
 
 
 class TestAzimuthalRendering(unittest.TestCase):
@@ -33,7 +34,6 @@ class TestAzimuthalRendering(unittest.TestCase):
     wgs84_width = 360
     wgs84_height = 180
     azimuthal_test_cases = get_azimuthal_test_cases()
-    geodesic_test_cases = get_geodesic_test_cases()
     sea_color = (0/255, 101/255, 204/255)
     land_color = (183/255, 218/255, 158/255)
     line_color = (1, 0, 0, 0.75)
@@ -50,10 +50,10 @@ class TestAzimuthalRendering(unittest.TestCase):
             mask = azimuthal_mask(crs)
             mask_wgs84 = azimuthal_mask_wgs84(crs)
 
-            world_map = self.get_world_map()
+            world_map = get_world_map()
             world_map = world_map.intersection(mask_wgs84)
 
-            flight_paths = self.get_flight_paths()
+            flight_paths = get_flight_paths()
             flight_paths = flight_paths.intersection(mask_wgs84)
 
             canvas = self.build_canvas(proj4_str)
@@ -81,22 +81,6 @@ class TestAzimuthalRendering(unittest.TestCase):
 
         return canvas_builder.build()
 
-    def get_world_map(self) -> MultiPolygon:
-        path = Path(__file__).parent.joinpath(self.world_map_path)
-
-        osm_map = Parser.parse(path)
-        osm_to_shapely = OsmToShapely(osm_map)
-
-        polygons = map(osm_to_shapely.way_to_polygon, osm_map.ways.values())
-        return MultiPolygon(polygons)
-
-    def get_flight_paths(self) -> MultiLineString:
-        line_strings = []
-        for case in self.geodesic_test_cases:
-            line_string = LineString(case['lineString'])
-            line_strings.append(line_string)
-        return interpolate_geodesic(MultiLineString(line_strings))
-
     def draw_azimuthal(
             self,
             canvas: Canvas,
@@ -112,13 +96,13 @@ class TestAzimuthalRendering(unittest.TestCase):
         origin_for_canvas = CanvasCoordinate(origin_x, origin_y)
 
         # Fit the projected radius as the width of the canvas
-        geo_to_canvas_scale = geo_canvas_ops.GeoCanvasScale(
+        geo_to_canvas_scale = GeoCanvasScale(
             crs.ellipsoid.semi_major_metre,
             Cu.from_px(self.azimuthal_width / 2)
         )
 
         # Convert the projected mask to the canvas.
-        proj_to_canvas = geo_canvas_ops.build_transformer(
+        proj_to_canvas = build_crs_to_canvas_transformer(
             crs=crs,
             data_crs=crs,
             scale=geo_to_canvas_scale,
@@ -129,7 +113,7 @@ class TestAzimuthalRendering(unittest.TestCase):
 
         # Convert the world map, from wgs84 to proj to canvas
         wgs84_crs = CRS.from_epsg(4326)
-        wgs84_to_canvas = geo_canvas_ops.build_transformer(
+        wgs84_to_canvas = build_crs_to_canvas_transformer(
             crs=crs,
             data_crs=wgs84_crs,
             scale=geo_to_canvas_scale,
@@ -182,29 +166,23 @@ class TestAzimuthalRendering(unittest.TestCase):
         )
 
         # 1 pixel for every degree
-        geo_to_canvas_scale = geo_canvas_ops.GeoCanvasScale(
+        geo_to_canvas_scale = GeoCanvasScale(
             1,
             Cu.from_px(1)
         )
 
-        # Todo: These transformations should be handled by build_transformer.
-        mask_wgs84 = ops.transform(lambda x, y: (y, x), mask_wgs84)
-        world_map_wgs84 = ops.transform(lambda x, y: (y, x), world_map_wgs84)
-        flight_paths_wgs84 = ops.transform(
-            lambda x, y: (y, x), flight_paths_wgs84
-        )
-
         # Generate a polygon that represents the full range.
         domain_wgs84 = Polygon(
-            [(-180, -90), (180, -90), (180, 90), (-180, 90)]
+            [(-90, -180), (90, -180), (90, 180), (-90, 180)]
         )
 
-        wgs84_to_canvas = geo_canvas_ops.build_transformer(
+        wgs84_to_canvas = build_crs_to_canvas_transformer(
             crs=wgs84_crs,
             data_crs=wgs84_crs,
             scale=geo_to_canvas_scale,
             origin_for_geo=origin_for_geo,
-            origin_for_canvas=origin_for_canvas
+            origin_for_canvas=origin_for_canvas,
+            is_crs_yx=True
         )
 
         mask_canvas = ops.transform(wgs84_to_canvas, mask_wgs84)
