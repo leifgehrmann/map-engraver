@@ -45,7 +45,7 @@ def canvas_mask(
     transformers_builder.set_data_crs(None)
     crs_to_canvas = transformers_builder.build_crs_to_canvas_transformer()
     crs_polygon = transform(crs_to_canvas, crs_polygon)
-    return canvas_polygon.intersection(crs_polygon)
+    return geoms_to_multi_polygon(canvas_polygon.intersection(crs_polygon))
 
 
 def canvas_crs_mask(
@@ -70,7 +70,7 @@ def canvas_crs_mask(
     if crs_polygon is None:
         return MultiPolygon([canvas_polygon])
 
-    return canvas_polygon.intersection(crs_polygon)
+    return geoms_to_multi_polygon(canvas_polygon.intersection(crs_polygon))
 
 
 def canvas_wgs84_mask(
