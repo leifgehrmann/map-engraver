@@ -39,10 +39,12 @@ jobs:
           sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
           sudo apt-get update
           sudo apt-get install gdal-bin libgdal-dev
-          export CPLUS_INCLUDE_PATH=/usr/include/gdal
-          export C_INCLUDE_PATH=/usr/include/gdal
-          # Print the gdal version so we know what the minimum version we can
-          # support in pyproject.toml.
+      # Print the gdal version, so we know what the minimum version we can
+      # support in pyproject.toml. Unlike homebrew for macOS, ubuntugis for
+      # Ubuntu seems to be a bit behind the latest version by a few months.
+      - name: GDAL version info (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
           gdal-config --version
       - name: Install dependencies
         run: |
