@@ -17,11 +17,6 @@ def transform_geotiff_to_crs_within_canvas(
 ):
     gdal.UseExceptions()
     dataset = gdal.Open(geotiff.as_posix(), gdal.GA_ReadOnly)
-    if not dataset:
-        raise Exception(
-            'Failed to open raster using GDAL: ' +
-            geotiff.as_posix()
-        )
     crs_mask = canvas_crs_mask(canvas_polygon, transformers_builder)
     options = gdal.WarpOptions(
         format='GTiff',

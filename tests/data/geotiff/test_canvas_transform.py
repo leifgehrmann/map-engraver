@@ -22,6 +22,37 @@ class TestCanvasTransform(unittest.TestCase):
         Path(__file__).parent.joinpath('output/') \
             .mkdir(parents=True, exist_ok=True)
 
+    def test_transform_geotiff_to_crs_within_canvas_invalid(self):
+        input_file = Path(__file__).parent.joinpath('invalid.tif')
+        output_file = Path(__file__).parent.joinpath('output/invalid.tif')
+
+        canvas_width = CanvasUnit.from_px(500)
+        canvas_height = CanvasUnit.from_px(500)
+        canvas_mask = rect(CanvasBbox(
+            CanvasCoordinate.origin(),
+            canvas_width,
+            canvas_height
+        ))
+
+        wgs84_crs = CRS.from_epsg(4326)
+        builder = GeoCanvasTransformersBuilder()
+        builder.set_scale_and_origin_from_coordinates_and_crs(
+            wgs84_crs,
+            GeoCoordinate(0, 0, wgs84_crs),
+            GeoCoordinate(1, 1, wgs84_crs),
+            CanvasCoordinate.from_px(0, 0),
+            CanvasCoordinate.from_px(1, 1)
+        )
+        builder.set_data_crs(wgs84_crs)
+
+        with self.assertRaisesRegex(
+                RuntimeError,
+                'not recognized as a supported file format.'
+        ):
+            transform_geotiff_to_crs_within_canvas(
+                input_file, canvas_mask, builder, output_file
+            )
+
     def test_transform_geotiff_to_crs_within_canvas(self):
         input_file = Path(__file__).parent.joinpath('test.tif')
         output_file = Path(__file__).parent.joinpath(
