@@ -22,17 +22,17 @@ class Layout:
 
     @property
     def width(self) -> Optional[CanvasUnit]:
-        pango_width = self._layout.get_width()
+        pango_width = self._layout.width
         if pango_width == -1:
             return None
         return CanvasUnit.from_pt(pangocffi.units_to_double(pango_width))
 
     @width.setter
     def width(self, x: CanvasUnit):
-        self._layout.set_width(pangocffi.units_from_double(x.pt))
+        self._layout.width = pangocffi.units_from_double(x.pt)
 
     def reset_width(self):
-        self._layout.set_width(-1)
+        self._layout.width = -1
 
     @property
     def logical_extents(self) -> CanvasBbox:
@@ -51,31 +51,36 @@ class Layout:
 
     @property
     def height(self) -> Optional[CanvasUnit]:
-        pango_height = self._layout.get_height()
+        pango_height = self._layout.height
         if pango_height == -1:
             return None
         return CanvasUnit.from_pt(pangocffi.units_to_double(pango_height))
 
     @height.setter
     def height(self, x: CanvasUnit):
-        self._layout.set_height(pangocffi.units_from_double(x.pt))
+        self._layout.height = pangocffi.units_from_double(x.pt)
 
     def reset_height(self):
-        self._layout.set_height(-1)
+        self._layout.height = -1
 
     @property
     def alignment(self) -> Alignment:
-        return self._layout.get_alignment()
+        return self._layout.alignment
 
     @alignment.setter
     def alignment(self, x: Alignment):
-        self._layout.set_alignment(x)
+        self._layout.alignment = x
 
-    def set_text(self, text: str):
-        self._layout.set_text(text)
+    @property
+    def text(self) -> str:
+        return self._layout.text
 
-    def set_markup(self, markup: str):
-        self._layout.set_markup(markup)
+    @text.setter
+    def text(self, text: str):
+        self._layout.text = text
+
+    def apply_markup(self, markup: str):
+        self._layout.apply_markup(markup)
 
     @property
     def position(self) -> CanvasCoordinate:

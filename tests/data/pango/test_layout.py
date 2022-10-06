@@ -26,8 +26,8 @@ class TestLayout(unittest.TestCase):
         canvas = canvas_builder.build()
 
         layout = Layout(canvas)
-        layout.set_text('Hello world')
-        layout.set_markup('<span weight="bold">Hello world!</span>')
+        layout.text = 'Hello world'
+        layout.apply_markup('<span weight="bold">Hello world!</span>')
 
         assert layout.width is None
         assert layout.height is None
