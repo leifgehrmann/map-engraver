@@ -30,7 +30,7 @@ class TestPangoDrawer(unittest.TestCase):
         layout.color = (0, 0, 1, 0.5)
         layout.width = Cu.from_pt(80)
         layout.height = Cu.from_pt(80)
-        layout.set_markup(
+        layout.apply_markup(
             '<span font="10px">Hello '
             '<span font="italic" color="#FF0000FF">World</span>'
             '</span>'
