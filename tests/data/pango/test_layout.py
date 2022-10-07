@@ -27,6 +27,8 @@ class TestLayout(unittest.TestCase):
 
         layout = Layout(canvas)
         layout.text = 'Hello world'
+        assert layout.text == 'Hello world'
+
         layout.apply_markup('<span weight="bold">Hello world!</span>')
 
         assert layout.width is None
