@@ -26,12 +26,26 @@ jobs:
         with:
           poetry-version: ${{ matrix.poetry-version }}
       - name: Install System Dependencies (macOS)
-        if: runner.os == 'macOS'
+        if: matrix.os == 'macOS-latest'
         run: |
           brew install pkg-config
           brew install libffi
           brew install cairo
           brew install pango
+          brew install gdal
+      - name: Install System Dependencies (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-add-repository ppa:ubuntugis/ubuntugis-unstable
+          sudo apt-get update
+          sudo apt-get install gdal-bin libgdal-dev
+      # Print the gdal version, so we know what the minimum version we can
+      # support in pyproject.toml. Unlike homebrew for macOS, ubuntugis for
+      # Ubuntu seems to be a bit behind the latest version by a few months.
+      - name: GDAL version info (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          gdal-config --version
       - name: Install dependencies
         run: |
           poetry install
