@@ -17,6 +17,7 @@ from map_engraver.data.geo_canvas_ops.geo_canvas_transformers import \
 
 class GeoCanvasTransformersBuilder:
     crs: Optional[pyproj.CRS]
+    rotation: float
     scale: Optional[GeoCanvasScale]
     origin_for_geo: Optional[GeoCoordinate]
     origin_for_canvas: Optional[CanvasCoordinate]
@@ -26,6 +27,7 @@ class GeoCanvasTransformersBuilder:
 
     def __init__(self):
         self.crs = None
+        self.rotation = 0
         self.scale = None
         self.origin_for_geo = None
         self.origin_for_canvas = None
@@ -35,6 +37,9 @@ class GeoCanvasTransformersBuilder:
 
     def set_crs(self, crs: Optional[pyproj.CRS]):
         self.crs = crs
+
+    def set_rotation(self, rotation: float):
+        self.rotation = rotation
 
     def set_scale(self, scale: Optional[GeoCanvasScale]):
         self.scale = scale
@@ -112,6 +117,7 @@ class GeoCanvasTransformersBuilder:
         builder.set_data_crs(self.data_crs)
         builder.set_is_crs_yx(self.is_crs_yx)
         builder.set_is_data_yx(self.is_data_yx)
+        builder.set_rotation(self.rotation)
         return builder
 
     def build_crs_to_canvas_transformer(self):
@@ -130,6 +136,7 @@ class GeoCanvasTransformersBuilder:
             self.origin_for_geo,
             self.origin_for_canvas,
             self.data_crs,
+            rotation=self.rotation,
             is_crs_yx=self.is_crs_yx,
             is_data_yx=self.is_data_yx
         )
@@ -150,6 +157,7 @@ class GeoCanvasTransformersBuilder:
             self.origin_for_geo,
             self.origin_for_canvas,
             self.data_crs,
+            rotation=self.rotation,
             is_crs_yx=self.is_crs_yx,
             is_data_yx=self.is_data_yx
         )

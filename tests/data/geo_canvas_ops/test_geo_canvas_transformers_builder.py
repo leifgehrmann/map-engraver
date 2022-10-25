@@ -104,6 +104,7 @@ class TestGeoCanvasTransformersBuilder(unittest.TestCase):
 
         builder = GeoCanvasTransformersBuilder()
         builder.set_crs(british_crs)
+        builder.set_rotation(0.1)
         builder.set_data_crs(wgs84_crs)
         builder.set_origin_for_geo(GeoCoordinate(325600, 673400, british_crs))
         builder.set_origin_for_canvas(CanvasCoordinate.from_pt(200, 200))
@@ -123,12 +124,14 @@ class TestGeoCanvasTransformersBuilder(unittest.TestCase):
         )
         self.assertEqual(builder.scale, builder_copy.scale)
 
+        builder_copy.set_rotation(0.2)
         builder_copy.set_crs(wgs84_crs)
         builder_copy.set_data_crs(british_crs)
         builder_copy.set_origin_for_geo(GeoCoordinate(0, 0, british_crs))
         builder_copy.set_origin_for_canvas(CanvasCoordinate.from_pt(100, 100))
         builder_copy.set_scale(GeoCanvasScale(100, CanvasUnit.from_pt(200)))
 
+        self.assertNotEqual(builder.rotation, builder_copy.rotation)
         self.assertNotEqual(builder.crs, builder_copy.crs)
         self.assertNotEqual(builder.data_crs, builder_copy.data_crs)
         self.assertNotEqual(
