@@ -206,20 +206,6 @@ class TestOsmToShapely(unittest.TestCase):
         with self.assertRaises(WayToPolygonError):
             osm_to_shapely.way_to_polygon(highway_service_way)
 
-    def test_transform(self):
-        path = Path(__file__).parent.joinpath('data.osm')
-
-        osm_map = Parser.parse(path)
-        osm_to_shapely = OsmToShapely(osm_map, lambda x, y: (0, 0))
-
-        highway_service_way = osm_map.get_way('-101873')
-        highway_service_line_string = osm_to_shapely.way_to_line_string(
-            highway_service_way
-        )
-        assert list(highway_service_line_string.coords) == [
-            (0, 0), (0, 0), (0, 0)
-        ]
-
     def test_incomplete_refs_handler(self):
         path = Path(__file__).parent.joinpath('incomplete_data.osm')
 

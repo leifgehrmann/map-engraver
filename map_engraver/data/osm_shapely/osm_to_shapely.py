@@ -12,26 +12,12 @@ from map_engraver.data.osm.util import get_nodes_for_way
 class OsmToShapely:
     def __init__(
             self,
-            osm: Osm,
-            transform: Optional[Callable[
-                [float, float],
-                Tuple[float, float]
-            ]] = None
+            osm: Osm
     ):
         """
         :param osm:
-        :param transform: In rare situations it might be useful to transform
-                          the coordinate data to a different projection when
-                          creating the shapely objects. By default, coordinates
-                          are transformed to the WGS 84 projection (lat, lon),
-                          but this optional parameter can be used to pass in
-                          a custom transformer.
         """
         self.osm = osm
-        if transform is None:
-            self.transform = lambda x, y: (x, y)
-        else:
-            self.transform = transform
         self._incomplete_refs_handler = lambda element, refs: None
 
     @property
@@ -49,7 +35,7 @@ class OsmToShapely:
             self,
             node: Node
     ) -> Optional[Point]:
-        return Point(*self.transform(node.lat, node.lon))
+        return Point(node.lat, node.lon)
 
     def nodes_to_points(
             self,
@@ -64,7 +50,7 @@ class OsmToShapely:
         nodes = get_nodes_for_way(self.osm, way.id)
         line_string_array = []
         for node in nodes:
-            line_string_array.append(self.transform(node.lat, node.lon))
+            line_string_array.append((node.lat, node.lon))
         return LineString(line_string_array)
 
     def ways_to_line_strings(
@@ -80,7 +66,7 @@ class OsmToShapely:
         nodes = get_nodes_for_way(self.osm, way.id)
         polygon_array = []
         for node in nodes:
-            polygon_array.append(self.transform(node.lat, node.lon))
+            polygon_array.append((node.lat, node.lon))
         if polygon_array[len(polygon_array)-1] == polygon_array[0] and \
                 len(polygon_array) > 2:
             p = Polygon(polygon_array)
@@ -234,7 +220,7 @@ class OsmToShapely:
         for outer_way_nodes in outer_ways_nodes:
             exterior_nodes = []
             for node in outer_way_nodes:
-                exterior_nodes.append(self.transform(node.lat, node.lon))
+                exterior_nodes.append((node.lat, node.lon))
             exterior_polygon = Polygon(exterior_nodes)
             if exterior_polygon.exterior.is_ccw:
                 exterior_polygon = Polygon(reversed(exterior_nodes))
@@ -259,7 +245,7 @@ class OsmToShapely:
         for inner_way_nodes in inner_ways_nodes:
             interior_coordinates = []
             for node in inner_way_nodes:
-                interior_coordinates.append(self.transform(node.lat, node.lon))
+                interior_coordinates.append((node.lat, node.lon))
             interior_polygon = Polygon(interior_coordinates)
             if not interior_polygon.exterior.is_ccw:
                 interior_coordinates = list(reversed(interior_coordinates))
