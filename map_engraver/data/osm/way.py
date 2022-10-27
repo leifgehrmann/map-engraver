@@ -11,7 +11,6 @@ class Way(Element):
     def __init__(self, osm_element):
         super().__init__(osm_element)
         self.node_refs = Way._get_way_node_refs(osm_element)
-        self.nodes = None
 
     @staticmethod
     def _get_way_node_refs(osm_element: ElementTree) -> List[str]:
