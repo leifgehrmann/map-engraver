@@ -10,7 +10,6 @@ class Relation(Element):
     def __init__(self, osm_element):
         super().__init__(osm_element)
         self.members = Relation._get_relation_members(osm_element)
-        self.nodes = []
         self.relations = []
         self.neighboring_ways = []
         self.neighboring_relations = []
