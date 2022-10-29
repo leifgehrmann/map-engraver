@@ -51,17 +51,19 @@ def natural_coastline_to_multi_polygon(
     """
     osm_coastline = filter_elements(
         osm,
-        lambda _, way: (
-                'natural' in way.tags and
-                way.tags['natural'] == 'coastline'
+        lambda _, way_element: (
+                'natural' in way_element.tags and
+                way_element.tags['natural'] == 'coastline'
         ),
         filter_nodes=False,
         filter_relations=False
     )
 
     if len(osm_coastline.ways) == 0:
-        raise Exception('Failed to generate coastline. One or more OSM ways'
-                        'with the tag natural=coastline are required.')
+        raise Exception(
+            'Failed to generate coastline. One or more OSM ways with the tag '
+            'natural=coastline are required.'
+        )
 
     bounds_polygon = Polygon([
         (bounds[0], bounds[1]),
@@ -101,9 +103,13 @@ def natural_coastline_to_multi_polygon(
             coordinates.append((way_node.lat, way_node.lon))
         linear_ring = LinearRing(coordinates)
         if linear_ring.is_ccw:
-            complete_water_polygons.append(Polygon(coordinates))
+            complete_water_polygons.append(
+                Polygon(coordinates).intersection(bounds_polygon)
+            )
         else:
-            complete_land_polygons.append(Polygon(coordinates))
+            complete_land_polygons.append(
+                Polygon(coordinates).intersection(bounds_polygon)
+            )
 
     # Convert all incomplete ways to MultiLineStrings.
     incomplete_linear_strings = []
@@ -183,12 +189,12 @@ def natural_coastline_to_multi_polygon(
                 # 2. Manually updating the OSM file to move the terminating
                 #    coordinate out of bounds.
                 # 3. Removing the coastline altogether.
-                raise Exception("""
-                Failed to generate coastline. An incomplete coastline way
-                starts with a point that is inside the bounds. Incomplete
-                coastlines must start and end with coordinates outside of the
-                bounds.
-                """)
+                raise Exception(
+                    'Failed to generate coastline. An incomplete coastline '
+                    'way starts with a point that is inside the bounds. '
+                    'Incomplete coastlines must start and end with '
+                    'coordinates outside of the bounds.'
+                )
             # Section 1
             if (
                     end_coordinate[1] == bounds[1] and
@@ -248,11 +254,12 @@ def natural_coastline_to_multi_polygon(
                 # 2. Manually updating the OSM file to move the terminating
                 #    coordinate out of bounds.
                 # 3. Removing the coastline altogether.
-                raise Exception("""
-                Failed to generate coastline. An incomplete coastline way ends
-                with a point that is inside the bounds. Incomplete coastlines
-                must start and end with coordinates outside of the bounds.
-                """)
+                raise Exception(
+                    'Failed to generate coastline. An incomplete coastline '
+                    'way ends with a point that is inside the bounds. '
+                    'Incomplete coastlines must start and end with '
+                    'coordinates outside of the bounds.'
+                )
 
             new_coordinates.append(new_coordinate)
             end_coordinate = new_coordinate
@@ -280,9 +287,16 @@ def natural_coastline_to_multi_polygon(
 
     # Add the complete land shapes.
     if len(complete_land_polygons) > 0:
-        culled_land_polygons = unary_union(complete_land_polygons)\
-            .intersection(bounds_polygon)
-        composite_geom = unary_union([composite_geom, culled_land_polygons])
+        for complete_land_polygon in complete_land_polygons:
+            if composite_geom.contains(complete_land_polygon):
+                raise NotImplementedError(
+                    'Failed to generate coastline. The current algorithm does '
+                    'not support nested coastlines more than 2 layers deep. '
+                    'For now convert islands into multipolygons.'
+                )
+            composite_geom = unary_union(
+                [composite_geom, complete_land_polygon]
+            )
 
     # Fun edge case, if there are no incomplete coastlines and no land
     # polygons, but we have water polygons, we can assume that the bounds are
@@ -292,9 +306,16 @@ def natural_coastline_to_multi_polygon(
 
     # Subtract the complete water shapes.
     if len(complete_water_polygons) > 0:
-        composite_geom = composite_geom.difference(unary_union(
-            complete_water_polygons
-        ))
+        for complete_water_polygon in complete_water_polygons:
+            if not composite_geom.contains(complete_water_polygon):
+                raise NotImplementedError(
+                    'Failed to generate coastline. The current algorithm does '
+                    'not support nested coastlines more than 2 layers deep. '
+                    'For now, convert lakes within islands into multipolygons.'
+                )
+            composite_geom = composite_geom.difference(
+                complete_water_polygon
+            )
 
     # To return the water instead of land, we simply perform a symmetric
     # difference of the land geom with the bounds polygon.
