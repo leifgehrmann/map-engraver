@@ -7,7 +7,8 @@ from map_engraver.data.osm import Relation
 from map_engraver.data.osm import MemberTypes
 from map_engraver.data.osm import Osm
 from map_engraver.data.osm.util import get_nodes_for_way
-from map_engraver.data.osm_shapely.piece_together_ways import piece_together_ways
+from map_engraver.data.osm_shapely.piece_together_ways import \
+    piece_together_ways
 
 
 class OsmToShapely:

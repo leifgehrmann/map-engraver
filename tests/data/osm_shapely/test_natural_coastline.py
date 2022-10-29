@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 
-from map_engraver.data.osm import Parser, Node
+from map_engraver.data.osm import Parser
 from map_engraver.data.osm.filter import filter_elements
 from map_engraver.data.osm_shapely.natural_coastline import \
     natural_coastline_to_multi_polygon, CoastlineOutputType
@@ -30,6 +30,19 @@ class TestNaturalCoastline(unittest.TestCase):
             max_node = bbox_nodes[0]
 
         bounds = (min_node.lat, min_node.lon, max_node.lat, max_node.lon)
-        print(bounds)
 
-        natural_coastline_to_multi_polygon(osm_map, bounds, CoastlineOutputType.LAND)
+        land = natural_coastline_to_multi_polygon(
+            osm_map,
+            bounds,
+            CoastlineOutputType.LAND
+        )
+
+        self.assertEqual(len(land.geoms), 8)
+
+        water = natural_coastline_to_multi_polygon(
+            osm_map,
+            bounds,
+            CoastlineOutputType.WATER
+        )
+
+        self.assertEqual(len(water.geoms), 3)
