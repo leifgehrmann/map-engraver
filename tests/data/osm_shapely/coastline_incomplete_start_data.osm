@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' generator='JOSM'>
+  <node id='-119013' action='modify' visible='true' lat='51.31689423723' lon='-10.76662353516'>
+    <tag k='bbox' v='min' />
+  </node>
+  <node id='-119014' action='modify' visible='true' lat='52.37561259058' lon='-9.17360595704'>
+    <tag k='bbox' v='max' />
+  </node>
+  <node id='-119099' action='modify' visible='true' lat='52.24126287701' lon='-9.76685668945' />
+  <node id='-119100' action='modify' visible='true' lat='52.22107625398' lon='-9.95362426758' />
+  <node id='-119101' action='modify' visible='true' lat='52.30176768191' lon='-10.04151489258' />
+  <node id='-119102' action='modify' visible='true' lat='52.16720037398' lon='-10.42603637695' />
+  <node id='-119103' action='modify' visible='true' lat='52.07951275564' lon='-10.45899536133' />
+  <node id='-119104' action='modify' visible='true' lat='52.14023794373' lon='-9.76685668945' />
+  <node id='-119105' action='modify' visible='true' lat='51.9036195863' lon='-10.42603637695' />
+  <node id='-119106' action='modify' visible='true' lat='51.72703496208' lon='-10.1843371582' />
+  <node id='-119107' action='modify' visible='true' lat='51.89006071568' lon='-9.58008911133' />
+  <node id='-119108' action='modify' visible='true' lat='51.5770763648' lon='-10.2282824707' />
+  <node id='-119109' action='modify' visible='true' lat='51.74744543313' lon='-9.33838989258' />
+  <node id='-119110' action='modify' visible='true' lat='51.53609243552' lon='-9.9206652832' />
+  <node id='-119111' action='modify' visible='true' lat='51.6180233702' lon='-9.41529418945' />
+  <node id='-119112' action='modify' visible='true' lat='51.44716719406' lon='-9.8767199707' />
+  <node id='-119113' action='modify' visible='true' lat='51.6384830303' lon='-8.4704699707' />
+  <way id='-104898' action='modify' visible='true'>
+    <nd ref='-119099' />
+    <nd ref='-119100' />
+    <nd ref='-119101' />
+    <nd ref='-119102' />
+    <nd ref='-119103' />
+    <nd ref='-119104' />
+    <nd ref='-119105' />
+    <nd ref='-119106' />
+    <nd ref='-119107' />
+    <nd ref='-119108' />
+    <nd ref='-119109' />
+    <nd ref='-119110' />
+    <nd ref='-119111' />
+    <nd ref='-119112' />
+    <nd ref='-119113' />
+    <tag k='natural' v='coastline' />
+  </way>
+</osm>

@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' generator='JOSM'>
+  <node id='-119114' action='modify' visible='true' lat='51.31689423723' lon='-10.76662353516'>
+    <tag k='bbox' v='min' />
+  </node>
+  <node id='-119115' action='modify' visible='true' lat='52.37561259058' lon='-9.17360595704'>
+    <tag k='bbox' v='max' />
+  </node>
+</osm>
