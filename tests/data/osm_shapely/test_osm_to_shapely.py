@@ -196,6 +196,50 @@ class TestOsmToShapely(unittest.TestCase):
         )
         assert len(multi_polygons) == 2
 
+    def test_multipolygon_relation(self):
+        path = Path(__file__).parent.joinpath(
+            'relation_same_direction_data.osm'
+        )
+
+        osm_map = Parser.parse(path)
+        osm_to_shapely = OsmToShapely(osm_map)
+
+        # Node to Point
+        beach_relation = osm_map.get_relation('-99959')
+        beach_multi_polygon = osm_to_shapely.relation_to_multi_polygon(
+            beach_relation
+        )
+        self.assertEqual(len(beach_multi_polygon.geoms), 1)
+        self.assertEqual(
+            list(list(beach_multi_polygon.geoms)[0].exterior.coords),
+            [(41.40584898473, 2.21960304022),
+             (41.40285539667, 2.2154617095),
+             (41.40023187009, 2.21378801107),
+             (41.3992500323, 2.21228597403),
+             (41.39651368477, 2.2100758338),
+             (41.3960951744, 2.20951793432),
+             (41.39641710569, 2.20913169622),
+             (41.39432452379, 2.20621345282),
+             (41.39182943425, 2.20441100836),
+             (41.39047721669, 2.20138547659),
+             (41.3893664455, 2.20039842367),
+             (41.38883520039, 2.20117089987),
+             (41.39054965763, 2.20280168295),
+             (41.39178114125, 2.20496890783),
+             (41.39147528475, 2.20535514593),
+             (41.39480743329, 2.20775840521),
+             (41.39580543487, 2.2098397994),
+             (41.39614346419, 2.21048352957),
+             (41.39820379538, 2.21223232985),
+             (41.39947537343, 2.21421716452),
+             (41.40005481847, 2.21406696081),
+             (41.40167240853, 2.21531150579),
+             (41.40293587127, 2.21687791586),
+             (41.40432806609, 2.2182297492),
+             (41.40538225158, 2.220075109),
+             (41.40584898473, 2.21960304022)]
+        )
+
     def test_conversion_fails_for_invalid_types(self):
         path = Path(__file__).parent.joinpath('data.osm')
 
