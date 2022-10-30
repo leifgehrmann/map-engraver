@@ -7,7 +7,8 @@ def piece_together_ways(
         way_refs: List[str],
         way_nodes: Dict[str, List[Node]],
         way_start_nodes: Dict[str, Node],
-        way_end_nodes: Dict[str, Node]
+        way_end_nodes: Dict[str, Node],
+        check_both_sides: bool
 ) -> Tuple[Dict[str, List[Node]], Dict[str, List[Node]]]:
     output_ways = dict()
     way_ref_index_1 = 0
@@ -42,17 +43,33 @@ def piece_together_ways(
 
             # print("ref2 " + str(way_ref_2))
 
+            ways_are_congruent = (
+                way_end_nodes[way_ref_1] == way_start_nodes[way_ref_2]
+            )
+            ways_are_opposing = (
+                way_end_nodes[way_ref_1] == way_end_nodes[way_ref_2]
+            )
+
             # if the end node of the current way is connected to the start
             # node of the other way
-            if way_end_nodes[way_ref_1] == way_start_nodes[way_ref_2]:
+            if (
+                ways_are_congruent or
+                (check_both_sides and ways_are_opposing)
+            ):
+                if ways_are_congruent:
+                    way_nodes_2 = way_nodes[way_ref_2][1:]
+                else:
+                    way_nodes_2 = reversed(way_nodes[way_ref_2][:-1])
                 # remove the first node of the other way to ensure we don't
                 # have redundant nodes and add it to the end of the current
                 # way
-                way_nodes_2 = way_nodes[way_ref_2][1:]
                 way_nodes[way_ref_1].extend(way_nodes_2)
 
                 # updated the linked list attributes
-                way_end_nodes[way_ref_1] = way_end_nodes[way_ref_2]
+                if ways_are_congruent:
+                    way_end_nodes[way_ref_1] = way_end_nodes[way_ref_2]
+                else:
+                    way_end_nodes[way_ref_1] = way_start_nodes[way_ref_2]
 
                 # Delete any mention of this way entirely!
                 del way_nodes[way_ref_2]

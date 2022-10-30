@@ -91,6 +91,7 @@ def natural_coastline_to_multi_polygon(
         way_all_nodes,
         way_start_nodes,
         way_end_nodes,
+        False
     )
 
     # Convert all complete_way_nodes to Polygons. Clockwise polygons are

@@ -120,7 +120,8 @@ class OsmToShapely:
             outer_way_refs,
             outer_way_all_nodes,
             outer_way_start_nodes,
-            outer_way_end_nodes
+            outer_way_end_nodes,
+            True
         )
 
         # Fail completely if there are any instances of incomplete_way_refs
@@ -156,7 +157,8 @@ class OsmToShapely:
             inner_way_refs,
             inner_way_all_nodes,
             inner_way_start_node,
-            inner_way_end_node
+            inner_way_end_node,
+            True
         )
 
         if len(incomplete_ways_nodes) > 0:
