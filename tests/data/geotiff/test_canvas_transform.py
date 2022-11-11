@@ -14,7 +14,8 @@ from map_engraver.data.geo.geo_coordinate import GeoCoordinate
 from map_engraver.data.geo_canvas_ops.geo_canvas_transformers_builder import \
     GeoCanvasTransformersBuilder
 from map_engraver.data.geotiff.canvas_transform import \
-    transform_geotiff_to_crs_within_canvas, build_geotiff_crs_within_canvas_matrix
+    transform_geotiff_to_crs_within_canvas, \
+    build_geotiff_crs_within_canvas_matrix
 
 from osgeo import gdal
 
