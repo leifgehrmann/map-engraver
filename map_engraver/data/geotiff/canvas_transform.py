@@ -57,34 +57,20 @@ def build_geotiff_crs_within_canvas_matrix(
     matrix = matrix * unit_scale_to_crs_scale
     # 3. Translate the image's top-left coordinate to the coordinate space of
     #    the CRS.
-    unit_offset_to_crs_offset = cairocffi.Matrix()
-    unit_offset_to_crs_offset.translate(crs_bounds[0], crs_bounds[3])
-    matrix = matrix * unit_offset_to_crs_offset
+    matrix.x0 += crs_bounds[0]
+    matrix.y0 += crs_bounds[1]
 
     # Next, convert CRS coordinate space to canvas space.
-    #
     crs_origin = transform_geo_coordinates_to_new_crs(
         [transformers_builder.origin_for_geo], transformers_builder.crs
     )[0]
-    print('top-left', crs_bounds[0], crs_bounds[3])
-    print('origin', crs_origin.x, crs_origin.y)
-    print('origin', crs_origin.x - crs_bounds[0], crs_origin.y - crs_bounds[3])
-    print('translate', -crs_origin.x, -crs_origin.y)
-    crs_offset_to_geo_origin = cairocffi.Matrix()
-    crs_offset_to_geo_origin.translate(-crs_origin.x, -crs_origin.y)
-    matrix = matrix * crs_offset_to_geo_origin
-    print('canvas-space', matrix)
+    matrix.x0 += -crs_origin.x
+    matrix.y0 += -crs_origin.y
 
-    print('scale', transformers_builder.scale.canvas_units.pt /
-        transformers_builder.scale.geo_units)
-    matrix.scale(
-        transformers_builder.scale.canvas_units.pt /
-        transformers_builder.scale.geo_units
-    )
     crs_scale_to_canvas_scale = cairocffi.Matrix()
     crs_scale_to_canvas_scale.scale(
         transformers_builder.scale.canvas_units.pt /
-        transformers_builder.scale.geo_units * 1000
+        transformers_builder.scale.geo_units
     )
     matrix = matrix * crs_scale_to_canvas_scale
 
@@ -93,23 +79,8 @@ def build_geotiff_crs_within_canvas_matrix(
         transformers_builder.rotation
     )
     matrix = matrix * canvas_rotate
-    # matrix.rotate(-transformers_builder.rotation)
 
-    print(
-        -transformers_builder.origin_for_canvas.x.pt,
-        -transformers_builder.origin_for_canvas.y.pt
-    )
-    print(matrix)
-    # matrix.x0 += -transformers_builder.origin_for_canvas.x.pt
-    # matrix.y0 += -transformers_builder.origin_for_canvas.y.pt
-    print(matrix)
-
-    canvas_origin = cairocffi.Matrix()
-    canvas_origin.translate(
-        transformers_builder.origin_for_canvas.x.pt,
-        -transformers_builder.origin_for_canvas.y.pt
-    )
-    matrix = matrix * canvas_origin
-    print(matrix)
+    matrix.x0 += transformers_builder.origin_for_canvas.x.pt
+    matrix.y0 += transformers_builder.origin_for_canvas.y.pt
 
     return matrix

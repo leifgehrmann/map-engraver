@@ -18,6 +18,8 @@ from map_engraver.data.geotiff.canvas_transform import \
 
 from osgeo import gdal
 
+from map_engraver.graphicshelper import CairoHelper
+
 
 class TestCanvasTransform(unittest.TestCase):
     def setUp(self):
@@ -151,13 +153,11 @@ class TestCanvasTransform(unittest.TestCase):
             output_file
         )
 
-        # canvas.context.save()
-        print(surface_matrix)
-        print('what?')
-        print('what?')
-        print('what?')
-        print('what?')
-        print('what?')
+        canvas.context.set_source_rgba(0, 0, 1, 0.5)
+        CairoHelper.draw_polygon(canvas.context, canvas_mask)
+        canvas.context.fill()
+
+        canvas.context.save()
         canvas.context.transform(surface_matrix)
 
         # For sake of simplicity, pretend that we converted the output image
@@ -166,6 +166,31 @@ class TestCanvasTransform(unittest.TestCase):
         canvas.context.set_source_surface(surface, 0, 0)
         canvas.context.paint()
 
-        # canvas.context.restore()
+        canvas.context.set_source_rgba(0, 1, 0, 0.5)
+        CairoHelper.draw_polygon(
+            canvas.context,
+            rect(
+                CanvasBbox(
+                    CanvasCoordinate.origin(),
+                    CanvasUnit.from_pt(97),
+                    CanvasUnit.from_pt(97)
+                )
+            )
+        )
+        canvas.context.fill()
+
+        canvas.context.restore()
 
         canvas.close()
+
+        assert canvas_file.exists()
+
+        with open(canvas_file, 'r') as file:
+            data = file.read()
+            assert data.find(
+                'M 187.351562 -187.5 '
+                'L 562.5 187.351562 '
+                'L 187.648438 562.5 '
+                'L -187.5 187.648438 Z '
+                'M 187.351562 -187.5 '
+            ) != -1
