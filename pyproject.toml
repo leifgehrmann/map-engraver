@@ -7,12 +7,12 @@ license = "LGPL-3.0-only"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-cairocffi = "^1.2.0"
+cairocffi = "^1.4.0"
 tqdm = "^4.64.0"
-Shapely = "^1.7.1"
+Shapely = "^1.8.2"
 CairoSVG = "^2.5.2"
-pyproj = "^3.1.0"
-Pillow = "^9.1.1"
+pyproj = "^3.4.0"
+Pillow = "^9.3.0"
 pangocffi = "^0.11.0"
 pangocairocffi = "^0.7.0"
 # We need to lock ourselves to 3.4.3 as that is the version that is supported
@@ -20,10 +20,10 @@ pangocairocffi = "^0.7.0"
 GDAL = "3.4.3"
 
 [tool.poetry.dev-dependencies]
-flake8 = "^4.0.1"
-pytest = "^7.1.1"
-coverage = "^6.3.2"
-pytest-cov = "^3.0.0"
+flake8 = "^5.0.4"
+pytest = "^7.2.0"
+coverage = "^6.5.0"
+pytest-cov = "^4.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
