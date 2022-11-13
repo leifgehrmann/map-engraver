@@ -1,7 +1,9 @@
+import math
 from pathlib import Path
 
 import unittest
 
+from PIL import Image
 from cairocffi import ImageSurface
 from pyproj import CRS
 
@@ -11,6 +13,7 @@ from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit
 from map_engraver.data.canvas_geometry.rect import rect
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
+from map_engraver.data.geo_canvas_ops.geo_canvas_scale import GeoCanvasScale
 from map_engraver.data.geo_canvas_ops.geo_canvas_transformers_builder import \
     GeoCanvasTransformersBuilder
 from map_engraver.data.geotiff.canvas_transform import \
@@ -107,51 +110,61 @@ class TestCanvasTransform(unittest.TestCase):
         )
 
     def test_build_geotiff_crs_within_canvas_matrix(self):
-        input_file = Path(__file__).parent.joinpath('test.tif')
-        output_file = Path(__file__).parent.joinpath(
-            'output/build_geotiff_crs_within_canvas_matrix.tif'
+        input_tif_file = Path(__file__).parent.joinpath('test.tif')
+        output_dir = Path(__file__).parent.joinpath('output')
+        output_tif_file = output_dir.joinpath(
+            'build_geotiff_crs_within_canvas_matrix.tif'
         )
-        output_png_file = Path(__file__).parent.joinpath('test.png')
+        output_png_file = output_dir.joinpath(
+            'build_geotiff_crs_within_canvas_matrix.png'
+        )
         canvas_file = Path(__file__).parent.joinpath(
             'output/build_geotiff_crs_within_canvas_matrix.svg'
         )
-        output_file.unlink(missing_ok=True)
+        output_tif_file.unlink(missing_ok=True)
+        output_png_file.unlink(missing_ok=True)
         canvas_file.unlink(missing_ok=True)
 
-        canvas_width = CanvasUnit.from_px(500)
-        canvas_height = CanvasUnit.from_px(500)
+        canvas_width = CanvasUnit.from_px(200)
+        canvas_height = CanvasUnit.from_px(100)
         canvas_mask = rect(CanvasBbox(
             CanvasCoordinate.origin(),
             canvas_width,
             canvas_height
         ))
-
-        crs = CRS.from_proj4('+proj=utm +zone=30')
-        wgs84_crs = CRS.from_epsg(4326)
-        builder = GeoCanvasTransformersBuilder()
-        builder.set_scale_and_origin_from_coordinates_and_crs(
-            crs,
-            GeoCoordinate(54.9, -3.1, wgs84_crs),
-            GeoCoordinate(54.0, -3.1, wgs84_crs),
-            CanvasCoordinate.from_px(canvas_width.px / 2, canvas_height.px),
-            CanvasCoordinate.from_px(canvas_width.px / 2, 0)
-        )
-        builder.rotation = 3.14 / 4
-        builder.set_data_crs(wgs84_crs)
-
-        transform_geotiff_to_crs_within_canvas(
-            input_file, canvas_mask, builder, output_file
-        )
-
         canvas_builder = CanvasBuilder()
         canvas_builder.set_path(canvas_file)
         canvas_builder.set_size(canvas_width, canvas_height)
         canvas = canvas_builder.build()
 
+        crs = CRS.from_proj4('+proj=utm +zone=30')
+        wgs84_crs = CRS.from_epsg(4326)
+        builder = GeoCanvasTransformersBuilder()
+        builder.set_crs(crs)
+        builder.set_scale(GeoCanvasScale(50000, canvas_width))
+        builder.set_origin_for_geo(GeoCoordinate(57.3, -4.45, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_px(
+            canvas_width.px / 2,
+            canvas_height.px / 2
+        ))
+        builder.rotation = -math.pi / 4
+        builder.set_data_crs(wgs84_crs)
+
+        # Create the image to display on the map. We also will convert the tiff
+        # to png, so we can load it easily in cairocffi.
+        transform_geotiff_to_crs_within_canvas(
+            input_tif_file,
+            canvas_mask,
+            builder,
+            output_tif_file
+        )
+        output_bitmap = Image.open(output_tif_file)
+        output_bitmap.save(output_png_file)
+
         surface_matrix = build_geotiff_crs_within_canvas_matrix(
             canvas_mask,
             builder,
-            output_file
+            output_tif_file
         )
 
         canvas.context.set_source_rgba(0, 0, 1, 0.5)
@@ -173,8 +186,8 @@ class TestCanvasTransform(unittest.TestCase):
             rect(
                 CanvasBbox(
                     CanvasCoordinate.origin(),
-                    CanvasUnit.from_pt(97),
-                    CanvasUnit.from_pt(97)
+                    CanvasUnit.from_pt(output_bitmap.width),
+                    CanvasUnit.from_pt(output_bitmap.height)
                 )
             )
         )
