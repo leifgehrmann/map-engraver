@@ -207,14 +207,14 @@
   </way>
   <way id='-102209' action='modify' visible='true'>
     <nd ref='-106810' />
-    <nd ref='-106811' />
-    <nd ref='-106812' />
-    <nd ref='-106813' />
-    <nd ref='-106814' />
-    <nd ref='-106815' />
-    <nd ref='-106816' />
-    <nd ref='-106817' />
     <nd ref='-106818' />
+    <nd ref='-106817' />
+    <nd ref='-106816' />
+    <nd ref='-106815' />
+    <nd ref='-106814' />
+    <nd ref='-106813' />
+    <nd ref='-106812' />
+    <nd ref='-106811' />
     <nd ref='-106810' />
     <tag k='natural' v='coastline' />
   </way>
