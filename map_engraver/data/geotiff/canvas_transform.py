@@ -6,6 +6,7 @@ from shapely.geometry import Polygon
 from PIL import Image
 from osgeo import gdal
 
+from map_engraver.canvas.canvas_unit import CanvasUnit
 from map_engraver.data.geo.geo_coordinate_transformers import \
     transform_geo_coordinates_to_new_crs
 from map_engraver.data.geo_canvas_ops.geo_canvas_mask import canvas_crs_mask
@@ -47,7 +48,7 @@ def build_geotiff_crs_within_canvas_matrix(
     # Convert bitmap coordinate space to CRS coordinate space.
     # 1. Reduce the width of image to "1 unit".
     image_scale_to_unit_scale = cairocffi.Matrix()
-    image_scale_to_unit_scale.scale(1 / geotiff_width)
+    image_scale_to_unit_scale.scale(1 / CanvasUnit.from_px(geotiff_width).pt)
     matrix = matrix * image_scale_to_unit_scale
 
     # 2. Enlarge the image to be the size of the CRS's mask bounds. The units
