@@ -21,52 +21,53 @@ class Bitmap(Drawable):
 
     def __init__(self, path: Path):
         self.path = path
+        self.image = Image.open(self.path)
         self.bitmap_origin = CanvasCoordinate.origin()
         self.position = CanvasCoordinate.origin()
         self.width = None
         self.height = None
         self.rotation = 0
-
-    def read_bitmap_size(self) -> Tuple[CanvasUnit, CanvasUnit]:
-        image = Image.open(self.path)
-        if image.format != 'PNG':
+        if self.image.format != 'PNG':
             raise NotImplementedError(
                 'Bitmap formats other than PNG are not supported yet'
             )
+
+    @property
+    def bitmap_resolution(self) -> Tuple[int, int]:
+        return self.image.size[0], self.image.size[1]
+
+    @property
+    def bitmap_size(self) -> Tuple[CanvasUnit, CanvasUnit]:
+        pixels_per_inch = 96, 96
+        if 'dpi' in self.image.info:
+            pixels_per_inch = self.image.info['dpi']
         return (
-            CanvasUnit.from_px(image.size[0]),
-            CanvasUnit.from_px(image.size[1])
+            CanvasUnit.from_in(self.image.size[0] / pixels_per_inch[0]),
+            CanvasUnit.from_in(self.image.size[1] / pixels_per_inch[1])
         )
 
     def draw(self, canvas: Canvas):
-        image = Image.open(self.path)
-        if image.format != 'PNG':
-            raise NotImplementedError(
-                'Bitmap formats other than PNG are not supported yet'
-            )
         # Images are rendered in points, despite the fact that images are
         # typically stored as pixels.
         surface = ImageSurface.create_from_png(
             self.path.as_posix()
         )
-        bmp_width = surface.get_width()
-        bmp_height = surface.get_height()
+        resolution = self.bitmap_resolution
+        size = self.bitmap_size
         canvas.context.save()
         canvas.context.translate(
             self.position.x.pt,
             self.position.y.pt
         )
-        canvas.context.scale(CanvasUnit.from_pt(1).px)
+        # In Cairocffi, by default, images are rendered in the scale of
+        # 1 bitmap pixel = 1 canvas point.
+        # This is counter-intuitive
+        # canvas.context.scale(CanvasUnit.from_px(1).pt)
         canvas.context.rotate(self.rotation)
-        # if self.width is not None and \
-        #         self.height is not None:
-        #     svg_surface.set_width(self.width.pt, preserve_ratio=False)
-        #     svg_surface.set_height(self.height.pt, preserve_ratio=False)
-        # elif self.width is not None:
-        #     svg_surface.set_width(self.width.pt, preserve_ratio=True)
-        # elif self.height is not None:
-        #     svg_surface.set_height(self.height.pt, preserve_ratio=True)
-        canvas.context.scale(self.width / bmp_width, self.height / bmp_height)
+        canvas.context.scale(
+            size[0].pt / resolution[0],
+            size[1].pt / resolution[1]
+        )
         canvas.context.translate(
             -self.bitmap_origin.x.px, -self.bitmap_origin.y.px
         )
