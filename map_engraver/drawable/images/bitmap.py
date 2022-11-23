@@ -33,17 +33,26 @@ class Bitmap(Drawable):
             )
 
     @property
-    def bitmap_resolution(self) -> Tuple[int, int]:
+    def bitmap_pixel_size(self) -> Tuple[int, int]:
         return self.image.size[0], self.image.size[1]
 
     @property
     def bitmap_size(self) -> Tuple[CanvasUnit, CanvasUnit]:
-        pixels_per_inch = 96, 96
-        if 'dpi' in self.image.info:
-            pixels_per_inch = self.image.info['dpi']
+        # Default resolution in cairocffi is 96 pixels per inch.
+        x_resolution, y_resolution = 96, 96
+
+        # According to https://exiftool.org/TagNames/EXIF.html:
+        # 282 = 0x011a = XResolution
+        # 283 = 0x011b = YResolution
+        exif = self.image.getexif()
+        if 282 in exif:
+            x_resolution = exif[282]
+        if 283 in exif:
+            y_resolution = exif[283]
+
         return (
-            CanvasUnit.from_in(self.image.size[0] / pixels_per_inch[0]),
-            CanvasUnit.from_in(self.image.size[1] / pixels_per_inch[1])
+            CanvasUnit.from_in(self.image.size[0] / x_resolution),
+            CanvasUnit.from_in(self.image.size[1] / y_resolution)
         )
 
     def draw(self, canvas: Canvas):
@@ -52,21 +61,17 @@ class Bitmap(Drawable):
         surface = ImageSurface.create_from_png(
             self.path.as_posix()
         )
-        resolution = self.bitmap_resolution
+        pixel_size = self.bitmap_pixel_size
         size = self.bitmap_size
         canvas.context.save()
         canvas.context.translate(
             self.position.x.pt,
             self.position.y.pt
         )
-        # In Cairocffi, by default, images are rendered in the scale of
-        # 1 bitmap pixel = 1 canvas point.
-        # This is counter-intuitive
-        # canvas.context.scale(CanvasUnit.from_px(1).pt)
         canvas.context.rotate(self.rotation)
         canvas.context.scale(
-            size[0].pt / resolution[0],
-            size[1].pt / resolution[1]
+            size[0].pt / pixel_size[0],
+            size[1].pt / pixel_size[1]
         )
         canvas.context.translate(
             -self.bitmap_origin.x.px, -self.bitmap_origin.y.px

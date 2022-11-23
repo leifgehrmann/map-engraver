@@ -8,7 +8,6 @@ from map_engraver.canvas import CanvasBuilder
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate as Cc
 from map_engraver.drawable.images.bitmap import Bitmap
-from map_engraver.drawable.images.svg import Svg
 from map_engraver.drawable.layout.background import Background
 
 
@@ -18,28 +17,30 @@ class TestBitmap(unittest.TestCase):
             .mkdir(parents=True, exist_ok=True)
 
     def test_calculating_dimensions(self):
-        bitmap = Bitmap(Path(__file__).parent.joinpath('test_bitmap_no_px_per_in.png'))
+        input_path = Path(__file__).parent
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_no_px_per_in.png'))
         width, height = bitmap.bitmap_size
         assert width.px == 200
         assert height.px == 100
 
-        bitmap = Bitmap(Path(__file__).parent.joinpath('test_bitmap_96_px_per_in.png'))
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_96_px_per_in.png'))
         width, height = bitmap.bitmap_size
         assert width.px == 200
         assert height.px == 100
 
-        bitmap = Bitmap(Path(__file__).parent.joinpath('test_bitmap_72_px_per_in.png'))
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_72_px_per_in.png'))
         width, height = bitmap.bitmap_size
         assert width.pt == 200
         assert height.pt == 100
 
-    def test_scale(self):
-        path = Path(__file__).parent.joinpath('output/bitmap_scale.svg')
-        path.unlink(missing_ok=True)
+    def test_scale_and_dpi(self):
+        input_path = Path(__file__).parent
+        output_path = Path(__file__).parent.joinpath('output/bitmap_scale.svg')
+        output_path.unlink(missing_ok=True)
         canvas_builder = CanvasBuilder()
-        canvas_builder.set_path(path)
+        canvas_builder.set_path(output_path)
         canvas_builder.set_size(
-            Cu.from_cm(21),
+            Cu.from_cm(31),
             Cu.from_cm(12)
         )
 
@@ -50,19 +51,19 @@ class TestBitmap(unittest.TestCase):
         background.draw(canvas)
 
         # No scaling
-        bitmap = Bitmap(Path(__file__).parent.joinpath('test_bitmap_no_px_per_in.png'))
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_no_px_per_in.png'))
         bitmap.position = Cc.from_cm(1, 1)
         bitmap.draw(canvas)
 
         # Scale 2x by height
-        bitmap = Bitmap(Path(__file__).parent.joinpath('test_bitmap_96_px_per_in.png'))
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_96_px_per_in.png'))
         bitmap.position = Cc.from_cm(11, 1)
         # bitmap.width = Cu.from_cm(3)
         bitmap.draw(canvas)
 
         # Scale 2x by height
-        bitmap = Bitmap(Path(__file__).parent.joinpath('test_bitmap_72_px_per_in.png'))
-        bitmap.position = Cc.from_cm(1, 6)
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_72_px_per_in.png'))
+        bitmap.position = Cc.from_cm(21, 6)
         # bitmap.height = Cu.from_cm(1)
         bitmap.draw(canvas)
 
@@ -75,7 +76,8 @@ class TestBitmap(unittest.TestCase):
 
         canvas.close()
 
-        assert path.exists()
+        assert output_path.exists()
+        # Todo: assert sizes
     #
     # def test_output_translate_rotate_scale(self):
     #     path = Path(__file__).parent.joinpath('output/svg_trs.svg')
