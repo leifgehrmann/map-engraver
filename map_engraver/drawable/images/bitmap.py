@@ -69,13 +69,30 @@ class Bitmap(Drawable):
             self.position.y.pt
         )
         canvas.context.rotate(self.rotation)
+
+        scale_x = 1
+        scale_y = 1
+        if self.width is not None and \
+                self.height is not None:
+            scale_x = self.width.pt / size[0].pt
+            scale_y = self.height.pt / size[1].pt
+        elif self.width is not None:
+            scale_x = self.width.pt / size[0].pt
+            scale_y = scale_x
+        elif self.height is not None:
+            scale_y = self.height.pt / size[1].pt
+            scale_x = scale_y
+        canvas.context.scale(scale_x, scale_y)
+
         canvas.context.scale(
             size[0].pt / pixel_size[0],
             size[1].pt / pixel_size[1]
         )
+
         canvas.context.translate(
             -self.bitmap_origin.x.px, -self.bitmap_origin.y.px
         )
+
         canvas.context.set_source_surface(surface, 0, 0)
         canvas.context.paint()
         canvas.context.restore()

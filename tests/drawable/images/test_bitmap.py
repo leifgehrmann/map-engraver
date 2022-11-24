@@ -40,8 +40,8 @@ class TestBitmap(unittest.TestCase):
         canvas_builder = CanvasBuilder()
         canvas_builder.set_path(output_path)
         canvas_builder.set_size(
-            Cu.from_cm(31),
-            Cu.from_cm(12)
+            Cu.from_px(1000),
+            Cu.from_px(700)
         )
 
         canvas = canvas_builder.build()
@@ -50,29 +50,98 @@ class TestBitmap(unittest.TestCase):
         background.color = (1, 0.8, 0.8, 1)
         background.draw(canvas)
 
-        # No scaling
+        # No resolution info (default to 96px per inch)
         bitmap = Bitmap(input_path.joinpath('test_bitmap_no_px_per_in.png'))
-        bitmap.position = Cc.from_cm(1, 1)
+        bitmap.position = Cc.from_px(50, 50)
         bitmap.draw(canvas)
 
-        # Scale 2x by height
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_no_px_per_in.png'))
+        bitmap.position = Cc.from_px(50, 150)
+        bitmap.width = Cu.from_px(100)
+        bitmap.draw(canvas)
+
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_no_px_per_in.png'))
+        bitmap.position = Cc.from_px(50, 200)
+        bitmap.height = Cu.from_px(50)
+        bitmap.draw(canvas)
+
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_no_px_per_in.png'))
+        bitmap.position = Cc.from_px(150, 150)
+        bitmap.width = Cu.from_px(100)
+        bitmap.height = Cu.from_px(100)
+        bitmap.draw(canvas)
+
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_no_px_per_in.png'))
+        bitmap.bitmap_origin = Cc.from_px(100, 50)
+        bitmap.position = Cc.from_px(150, 250 + math.sqrt(100 * 100 / 2))
+        bitmap.rotation = math.pi / 4
+        bitmap.width = Cu.from_px(100)
+        bitmap.height = Cu.from_px(100)
+        bitmap.draw(canvas)
+
+        # 96 px per inch
         bitmap = Bitmap(input_path.joinpath('test_bitmap_96_px_per_in.png'))
-        bitmap.position = Cc.from_cm(11, 1)
-        # bitmap.width = Cu.from_cm(3)
+        bitmap.position = Cc.from_px(300, 50)
         bitmap.draw(canvas)
 
-        # Scale 2x by height
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_96_px_per_in.png'))
+        bitmap.position = Cc.from_px(300, 150)
+        bitmap.width = Cu.from_px(100)
+        bitmap.draw(canvas)
+
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_96_px_per_in.png'))
+        bitmap.position = Cc.from_px(300, 200)
+        bitmap.height = Cu.from_px(50)
+        bitmap.draw(canvas)
+
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_96_px_per_in.png'))
+        bitmap.position = Cc.from_px(400, 150)
+        bitmap.width = Cu.from_px(100)
+        bitmap.height = Cu.from_px(100)
+        bitmap.draw(canvas)
+
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_96_px_per_in.png'))
+        bitmap.bitmap_origin = Cc.from_px(100, 50)
+        bitmap.position = Cc.from_px(400, 250 + math.sqrt(100 * 100 / 2))
+        bitmap.rotation = math.pi / 4
+        bitmap.width = Cu.from_px(100)
+        bitmap.height = Cu.from_px(100)
+        bitmap.draw(canvas)
+
+        # No resolution info (default to 96px per inch)
         bitmap = Bitmap(input_path.joinpath('test_bitmap_72_px_per_in.png'))
-        bitmap.position = Cc.from_cm(21, 6)
-        # bitmap.height = Cu.from_cm(1)
+        bitmap.position = Cc.from_px(600, 50)
         bitmap.draw(canvas)
 
-        # Scale without ratio preservation
-        # svg = Svg(Path(__file__).parent.joinpath('test_svg.svg'))
-        # svg.position = Cc.from_cm(5, 4)
-        # svg.width = Cu.from_cm(3)
-        # svg.height = Cu.from_cm(1)
-        # svg.draw(canvas)
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_72_px_per_in.png'))
+        bitmap.position = Cc(Cu.from_px(600), Cu.from_px(50) + Cu.from_pt(100))
+        bitmap.width = Cu.from_pt(100)
+        bitmap.draw(canvas)
+
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_72_px_per_in.png'))
+        bitmap.position = Cc(Cu.from_px(600), Cu.from_px(50) + Cu.from_pt(150))
+        bitmap.height = Cu.from_pt(50)
+        bitmap.draw(canvas)
+
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_72_px_per_in.png'))
+        bitmap.position = Cc(
+            Cu.from_px(600) + Cu.from_pt(100),
+            Cu.from_px(50) + Cu.from_pt(100)
+        )
+        bitmap.width = Cu.from_pt(100)
+        bitmap.height = Cu.from_pt(100)
+        bitmap.draw(canvas)
+
+        bitmap = Bitmap(input_path.joinpath('test_bitmap_72_px_per_in.png'))
+        bitmap.bitmap_origin = Cc.from_px(100, 50)
+        bitmap.position = Cc(
+            Cu.from_px(600) + Cu.from_pt(100),
+            Cu.from_px(50) + Cu.from_pt(200 + math.sqrt(100 * 100 / 2))
+        )
+        bitmap.rotation = math.pi / 4
+        bitmap.width = Cu.from_pt(100)
+        bitmap.height = Cu.from_pt(100)
+        bitmap.draw(canvas)
 
         canvas.close()
 
