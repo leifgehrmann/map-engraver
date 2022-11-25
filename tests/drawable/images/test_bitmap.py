@@ -16,6 +16,11 @@ class TestBitmap(unittest.TestCase):
         Path(__file__).parent.joinpath('output/') \
             .mkdir(parents=True, exist_ok=True)
 
+    def test_unsupported_graphics(self):
+        input_path = Path(__file__).parent
+        with self.assertRaises(NotImplementedError):
+            Bitmap(input_path.joinpath('test_bitmap_unsupported.jpg'))
+
     def test_calculating_dimensions(self):
         input_path = Path(__file__).parent
         bitmap = Bitmap(input_path.joinpath('test_bitmap_no_px_per_in.png'))
@@ -146,37 +151,27 @@ class TestBitmap(unittest.TestCase):
         canvas.close()
 
         assert output_path.exists()
-        # Todo: assert sizes
-    #
-    # def test_output_translate_rotate_scale(self):
-    #     path = Path(__file__).parent.joinpath('output/svg_trs.svg')
-    #     path.unlink(missing_ok=True)
-    #     canvas_builder = CanvasBuilder()
-    #     canvas_builder.set_path(path)
-    #     canvas_builder.set_size(
-    #         Cu.from_cm(4),
-    #         Cu.from_cm(4)
-    #     )
-    #
-    #     canvas = canvas_builder.build()
-    #
-    #     background = Background()
-    #     background.color = (0.8, 1, 0.8, 1)
-    #     background.draw(canvas)
-    #
-    #     svg = Svg(Path(__file__).parent.joinpath('test_svg_grid.svg'))
-    #     svg_size = svg.read_svg_size()
-    #     # Should set the origin of the image to the center.
-    #     svg.svg_origin = Cc(svg_size[0] / 2, svg_size[1] / 2)
-    #     # Should position the image in the center of the screen.
-    #     svg.position = Cc.from_cm(2, 2)
-    #     # Should rotate the image clock-wise.
-    #     svg.rotation = math.pi / 8
-    #     # Resizes the image to almost the size of the canvas, but not exactly.
-    #     svg.width = Cu.from_cm(3)
-    #     svg.height = Cu.from_cm(3)
-    #     svg.draw(canvas)
-    #
-    #     canvas.close()
-    #
-    #     assert path.exists()
+
+        with open(output_path, 'r') as file:
+            data = file.read()
+            assert data.find('matrix(0.75,0,0,0.75,37.5,37.5)') != -1
+            assert data.find('matrix(0.375,0,0,0.375,37.5,112.5)') != -1
+            assert data.find('matrix(0.375,0,0,0.375,37.5,150)') != -1
+            assert data.find('matrix(0.375,0,0,0.75,112.5,112.5)') != -1
+            assert data.find(
+                'matrix(0.265165,0.265165,-0.53033,0.53033,112.5,187.5)'
+            ) != -1
+            assert data.find('matrix(0.75,0,0,0.75,225,37.5)') != -1
+            assert data.find('matrix(0.375,0,0,0.375,225,112.5)') != -1
+            assert data.find('matrix(0.375,0,0,0.375,225,150)') != -1
+            assert data.find('matrix(0.375,0,0,0.75,300,112.5)') != -1
+            assert data.find(
+                'matrix(0.265165,0.265165,-0.53033,0.53033,300,187.5)'
+            ) != -1
+            assert data.find('matrix(1,0,0,1,450,37.5)') != -1
+            assert data.find('matrix(0.5,0,0,0.5,450,137.5)') != -1
+            assert data.find('matrix(0.5,0,0,0.5,450,187.5)') != -1
+            assert data.find('matrix(0.5,0,0,1,550,137.5)') != -1
+            assert data.find(
+                'matrix(0.353553,0.353553,-0.707107,0.707107,550,237.5)'
+            ) != -1

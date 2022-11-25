@@ -4,7 +4,6 @@ from pathlib import Path
 import unittest
 
 from PIL import Image
-from cairocffi import ImageSurface
 from pyproj import CRS
 
 from map_engraver.canvas import CanvasBuilder
@@ -22,7 +21,8 @@ from map_engraver.data.geotiff.canvas_transform import \
 
 from osgeo import gdal
 
-from map_engraver.graphicshelper import CairoHelper
+from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
+from map_engraver.drawable.images.bitmap import Bitmap
 
 
 class TestCanvasTransform(unittest.TestCase):
@@ -64,7 +64,7 @@ class TestCanvasTransform(unittest.TestCase):
             )
 
     def test_transform_geotiff_to_crs_within_canvas(self):
-        input_file = Path(__file__).parent.joinpath('test.tif')
+        input_file = Path(__file__).parent.joinpath('scotland_hillshade.tif')
         output_file = Path(__file__).parent.joinpath(
             'output/transform_geotiff_to_crs_within_canvas.tif'
         )
@@ -110,7 +110,9 @@ class TestCanvasTransform(unittest.TestCase):
         )
 
     def test_build_geotiff_crs_within_canvas_matrix(self):
-        input_tif_file = Path(__file__).parent.joinpath('test.tif')
+        input_tif_file = Path(__file__).parent.joinpath(
+            'scotland_hillshade.tif'
+        )
         output_dir = Path(__file__).parent.joinpath('output')
         output_tif_file = output_dir.joinpath(
             'build_geotiff_crs_within_canvas_matrix.tif'
@@ -126,7 +128,7 @@ class TestCanvasTransform(unittest.TestCase):
         canvas_file.unlink(missing_ok=True)
 
         canvas_width = CanvasUnit.from_px(200)
-        canvas_height = CanvasUnit.from_px(100)
+        canvas_height = CanvasUnit.from_px(170)
         canvas_mask = rect(CanvasBbox(
             CanvasCoordinate.origin(),
             canvas_width,
@@ -141,20 +143,24 @@ class TestCanvasTransform(unittest.TestCase):
         wgs84_crs = CRS.from_epsg(4326)
         builder = GeoCanvasTransformersBuilder()
         builder.set_crs(crs)
-        builder.set_scale(GeoCanvasScale(50000, canvas_width))
+        builder.set_scale(GeoCanvasScale(100000, canvas_width))
         builder.set_origin_for_geo(GeoCoordinate(57.3, -4.45, wgs84_crs))
         builder.set_origin_for_canvas(CanvasCoordinate.from_px(
             canvas_width.px / 2,
             canvas_height.px / 2
         ))
-        builder.rotation = -math.pi / 4
+        builder.rotation = -math.pi / 8 * 3
         builder.set_data_crs(wgs84_crs)
+
+        # To visualize how the transformation makes the image fit into the
+        # canvas, we buffer the canvas by a certain amount to add padding.
+        scene_canvas = canvas_mask.buffer(CanvasUnit.from_px(-50).pt)
 
         # Create the image to display on the map. We also will convert the tiff
         # to png, so we can load it easily in cairocffi.
         transform_geotiff_to_crs_within_canvas(
             input_tif_file,
-            canvas_mask,
+            scene_canvas,
             builder,
             output_tif_file
         )
@@ -162,38 +168,36 @@ class TestCanvasTransform(unittest.TestCase):
         output_bitmap.save(output_png_file)
 
         surface_matrix = build_geotiff_crs_within_canvas_matrix(
-            canvas_mask,
+            scene_canvas,
             builder,
             output_tif_file
         )
 
-        canvas.context.set_source_rgba(0, 0, 1, 0.5)
-        CairoHelper.draw_polygon(canvas.context, canvas_mask)
-        canvas.context.fill()
-
         canvas.context.save()
         canvas.context.transform(surface_matrix)
 
-        # For sake of simplicity, pretend that we converted the output image
-        # from *.tif to *.png.
-        surface = ImageSurface.create_from_png(output_png_file.as_posix())
-        canvas.context.set_source_surface(surface, 0, 0)
-        canvas.context.paint()
+        bitmap = Bitmap(output_png_file)
+        bitmap.draw(canvas)
 
-        canvas.context.set_source_rgba(0, 1, 0, 0.5)
-        CairoHelper.draw_polygon(
-            canvas.context,
-            rect(
-                CanvasBbox(
-                    CanvasCoordinate.origin(),
-                    CanvasUnit.from_pt(output_bitmap.width),
-                    CanvasUnit.from_pt(output_bitmap.height)
-                )
+        polygon_drawer = PolygonDrawer()
+        polygon_drawer.stroke_color = (0, 1, 0, 0.5)
+        polygon_drawer.stroke_width = CanvasUnit.from_px(1)
+        polygon_drawer.geoms = [rect(
+            CanvasBbox(
+                CanvasCoordinate.origin(),
+                CanvasUnit.from_px(output_bitmap.width),
+                CanvasUnit.from_px(output_bitmap.height)
             )
-        )
-        canvas.context.fill()
+        )]
+        polygon_drawer.draw(canvas)
 
         canvas.context.restore()
+
+        polygon_drawer = PolygonDrawer()
+        polygon_drawer.stroke_color = (1, 0, 0, 0.5)
+        polygon_drawer.stroke_width = CanvasUnit.from_px(1)
+        polygon_drawer.geoms = [scene_canvas]
+        polygon_drawer.draw(canvas)
 
         canvas.close()
 
@@ -202,9 +206,14 @@ class TestCanvasTransform(unittest.TestCase):
         with open(canvas_file, 'r') as file:
             data = file.read()
             assert data.find(
-                'M 187.351562 -187.5 '
-                'L 562.5 187.351562 '
-                'L 187.648438 562.5 '
-                'L -187.5 187.648438 Z '
-                'M 187.351562 -187.5 '
+                'M -0.000432709 -0.000179234 '
+                'L 26.999834 0.000401775 '
+                'L 26.999823 31.499943 '
+                'L 0.0000793665 31.500624 Z '
+                'M -0.000432709 -0.000179234'
+            ) != -1
+            assert data.find(
+                'matrix('
+                '1.094261,-2.64178,2.64178,1.094261,18.938447,82.311553'
+                ')'
             ) != -1

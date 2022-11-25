@@ -2,7 +2,6 @@ import unittest
 from pathlib import Path
 
 from PIL import Image
-from cairocffi import ImageSurface
 from pyproj import CRS
 from shapely.ops import transform
 
@@ -13,12 +12,18 @@ from map_engraver.data.canvas_geometry.rect import rect
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
 from map_engraver.data.geo_canvas_ops.geo_canvas_mask import canvas_wgs84_mask
 from map_engraver.data.geo_canvas_ops.geo_canvas_scale import GeoCanvasScale
-from map_engraver.data.geo_canvas_ops.geo_canvas_transformers_builder import GeoCanvasTransformersBuilder
-from map_engraver.data.geotiff.canvas_transform import transform_geotiff_to_crs_within_canvas, \
+from map_engraver.data.geo_canvas_ops.geo_canvas_transformers_builder import \
+    GeoCanvasTransformersBuilder
+from map_engraver.data.geotiff.canvas_transform import \
+    transform_geotiff_to_crs_within_canvas, \
     build_geotiff_crs_within_canvas_matrix
 from map_engraver.data.osm import Parser
-from map_engraver.data.osm_shapely.natural_coastline import natural_coastline_to_multi_polygon, CoastlineOutputType
+from map_engraver.data.osm_shapely.natural_coastline import \
+    natural_coastline_to_multi_polygon, \
+    CoastlineOutputType
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
+from map_engraver.drawable.images.bitmap import Bitmap
+from map_engraver.drawable.images.svg import Svg
 
 
 class TestGeotiffDisplay(unittest.TestCase):
@@ -70,19 +75,24 @@ class TestGeotiffDisplay(unittest.TestCase):
         output_bitmap = Image.open(output_tif_utm30_path)
         output_bitmap.save(output_png_utm30_path)
 
-        # Draw hillshade data.
         surface_matrix = build_geotiff_crs_within_canvas_matrix(
             canvas_polygon,
             builder,
             output_tif_utm30_path
         )
+
+        # Draw Bitmap.
         canvas.context.save()
         canvas.context.transform(surface_matrix)
-        surface = ImageSurface.create_from_png(
-            output_png_utm30_path.as_posix()
-        )
-        canvas.context.set_source_surface(surface, 0, 0)
-        canvas.context.paint()
+        bitmap = Bitmap(output_png_utm30_path)
+        bitmap.draw(canvas)
+        canvas.context.restore()
+
+        # Draw SVG.
+        canvas.context.save()
+        canvas.context.transform(surface_matrix)
+        svg_drawer = Svg(rel_path.joinpath('scotland_poi.svg'))
+        svg_drawer.draw(canvas)
         canvas.context.restore()
 
         # Create coastline data from OSM data.

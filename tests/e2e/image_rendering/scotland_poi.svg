@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+ "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="265.000000px" height="320.000000px" viewBox="0 0 265.000000 320.000000"
+ preserveAspectRatio="xMidYMid meet">
+    <g>
+        <circle cx="195" cy="70" r="5" fill="#FF0000" />
+        <circle cx="150" cy="160" r="5" fill="#FF00FF" />
+        <circle cx="95" cy="220" r="5" fill="#00FFFF" />
+        <circle cx="160" cy="270" r="5" fill="#FFFF00" />
+    </g>
+</svg>
