@@ -312,7 +312,10 @@ def natural_coastline_to_multi_polygon(
                 raise NotImplementedError(
                     'Failed to generate coastline. The current algorithm does '
                     'not support nested coastlines more than 2 layers deep. '
-                    'For now, convert lakes within islands into multipolygons.'
+                    'For now, convert lakes within islands into '
+                    'multipolygons. If nested coastlines are not expected, '
+                    'make sure to check the coastlines for ways that are '
+                    'incorrectly oriented as clockwise.'
                 )
             composite_geom = composite_geom.difference(
                 complete_water_polygon
