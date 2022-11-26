@@ -1,11 +1,13 @@
 import math
-from shapely.geometry import Polygon, LineString, MultiPolygon
+from shapely.geometry import Polygon, LineString, MultiPolygon, MultiLineString
 
 from typing import Tuple, Union, List, Iterator, Optional
 
 from map_engraver.data.math.trig import line_intersection, \
     scalar_between_lines_origin_and_projected_point
-from map_engraver.data.osm_shapely_ops.homogenize import geoms_to_multi_polygon
+from map_engraver.data.osm_shapely_ops.homogenize import \
+    geoms_to_multi_polygon, \
+    geoms_to_multi_line_string
 
 Vector = Tuple[float, float]
 Coord = Tuple[float, float]
@@ -66,6 +68,49 @@ def create_polygons_from_stripe_data(
 
         intersected_geom = geom.intersection(stripe_multipolygon)
         intersected_geom = geoms_to_multi_polygon(intersected_geom)
+        if not intersected_geom.is_empty:
+            geoms_per_stripe[stripe_index] = intersected_geom
+
+    return geoms_per_stripe
+
+
+def create_line_strings_from_stripe_data(
+        geom: Union[Polygon, MultiPolygon],
+        line: Line,
+        stripe_widths: List[float],
+        stripe_visible: List[bool]
+) -> List[Optional[Union[LineString, MultiLineString]]]:
+    perpendicular_line = _create_perpendicular_line(line, 0)
+    offset_range = _calculate_stripe_range(geom.bounds, perpendicular_line)
+
+    line_strings_per_stripe = [[] for _ in range(len(stripe_widths))]
+    geoms_per_stripe: List[Optional[Union[LineString, MultiLineString]]] = \
+        [None for _ in range(len(stripe_widths))]
+
+    for stripe_info in _stripe_iterator(
+            offset_range, stripe_widths, True
+    ):
+        stripe_offset = stripe_info[1]
+        stripe_line = _create_perpendicular_line(
+            perpendicular_line, stripe_offset
+        )
+        line_string = create_line_string_from_stripe_line_x_bounded(
+            stripe_line,
+            geom.bounds
+        )
+
+        stripe_index = stripe_info[0]
+        if stripe_visible[stripe_index]:
+            line_strings_per_stripe[stripe_index].append(line_string)
+
+    for (stripe_index, line_strings_for_stripe) in \
+            enumerate(line_strings_per_stripe):
+        if len(line_strings_for_stripe) == 0:
+            continue
+        stripe_multi_line_string = MultiLineString(line_strings_for_stripe)
+
+        intersected_geom = geom.intersection(stripe_multi_line_string)
+        intersected_geom = geoms_to_multi_line_string(intersected_geom)
         if not intersected_geom.is_empty:
             geoms_per_stripe[stripe_index] = intersected_geom
 
