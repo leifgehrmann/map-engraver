@@ -31,18 +31,22 @@ class TestGeotiffDisplay(unittest.TestCase):
         Path(__file__).parent.joinpath('output/') \
             .mkdir(parents=True, exist_ok=True)
 
-    def test_geotiff_display(self):
+    @staticmethod
+    def render(
+            name: str,
+            canvas_box: CanvasBbox,
+            builder: GeoCanvasTransformersBuilder
+    ):
         rel_path = Path(__file__).parent
         output_path = rel_path.joinpath('output/')
         input_osm_path = rel_path.joinpath('scotland_outline.osm')
         input_tif_wgs84_path = rel_path.joinpath('scotland_hillshade.tif')
-        output_tif_utm30_path = output_path.joinpath('geotiff_display.tif')
-        output_png_utm30_path = output_path.joinpath('geotiff_display.png')
-        output_svg_path = output_path.joinpath('geotiff_display.svg')
+        output_tif_utm30_path = output_path.joinpath('%s.tif' % name)
+        output_png_utm30_path = output_path.joinpath('%s.png' % name)
+        output_svg_path = output_path.joinpath('%s.svg' % name)
         output_svg_path.unlink(missing_ok=True)
 
         # Canvas creation.
-        canvas_box = CanvasBbox.from_px(0, 0, 150, 200)
         canvas_polygon = rect(canvas_box)
         canvas_builder = CanvasBuilder()
         canvas_builder.set_path(output_svg_path)
@@ -50,18 +54,6 @@ class TestGeotiffDisplay(unittest.TestCase):
         canvas = canvas_builder.build()
 
         # Map projection.
-        crs = CRS.from_proj4('+proj=utm +zone=30')
-        wgs84_crs = CRS.from_epsg(4326)
-        builder = GeoCanvasTransformersBuilder()
-        builder.set_crs(crs)
-        builder.set_scale(GeoCanvasScale(300000, canvas_box.width))
-        builder.set_origin_for_geo(GeoCoordinate(57.5, -4.5, wgs84_crs))
-        builder.set_origin_for_canvas(CanvasCoordinate(
-            canvas_box.width / 2,
-            canvas_box.height / 2
-        ))
-        builder.rotation = -0.2
-        builder.set_data_crs(wgs84_crs)
         wgs84_to_canvas = builder.build_crs_to_canvas_transformer()
         wgs84_mask_geom = canvas_wgs84_mask(canvas_polygon, builder)
 
@@ -80,6 +72,7 @@ class TestGeotiffDisplay(unittest.TestCase):
             builder,
             output_tif_utm30_path
         )
+        surface_matrix_2 = surface_matrix.copy()
 
         # Draw Bitmap.
         canvas.context.save()
@@ -90,7 +83,7 @@ class TestGeotiffDisplay(unittest.TestCase):
 
         # Draw SVG.
         canvas.context.save()
-        canvas.context.transform(surface_matrix)
+        canvas.context.transform(surface_matrix_2)
         svg_drawer = Svg(rel_path.joinpath('scotland_poi.svg'))
         svg_drawer.draw(canvas)
         canvas.context.restore()
@@ -111,3 +104,38 @@ class TestGeotiffDisplay(unittest.TestCase):
         polygon_drawer.draw(canvas)
 
         canvas.close()
+
+    def test_geotiff_display(self):
+        canvas_box = CanvasBbox.from_px(0, 0, 150, 200)
+        crs = CRS.from_proj4('+proj=utm +zone=30')
+        wgs84_crs = CRS.from_epsg(4326)
+        builder = GeoCanvasTransformersBuilder()
+        builder.set_crs(crs)
+        builder.set_scale(GeoCanvasScale(300000, canvas_box.width))
+        builder.set_origin_for_geo(GeoCoordinate(57.5, -4.5, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate(
+            canvas_box.width / 2,
+            canvas_box.height / 2
+        ))
+        builder.rotation = -0.1
+        builder.set_data_crs(wgs84_crs)
+
+        self.render('default', canvas_box, builder)
+
+        for i in range(10):
+            builder.rotation = -i/10
+            self.render('rotated-%d' % i, canvas_box, builder)
+
+        builder.set_origin_for_canvas(CanvasCoordinate(
+            canvas_box.width / 12 * 7,
+            canvas_box.height / 12 * 7
+        ))
+
+        self.render('move_down_right_1', canvas_box, builder)
+
+        builder.set_origin_for_canvas(CanvasCoordinate(
+            canvas_box.width / 3 * 2,
+            canvas_box.height / 3 * 2
+        ))
+
+        self.render('move_down_right', canvas_box, builder)
