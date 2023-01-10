@@ -1,3 +1,4 @@
+import math
 import unittest
 from pathlib import Path
 
@@ -8,6 +9,7 @@ from shapely.ops import transform
 from map_engraver.canvas import CanvasBuilder
 from map_engraver.canvas.canvas_bbox import CanvasBbox
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
+from map_engraver.canvas.canvas_unit import CanvasUnit
 from map_engraver.data.canvas_geometry.rect import rect
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
 from map_engraver.data.geo_canvas_ops.geo_canvas_mask import canvas_wgs84_mask
@@ -82,11 +84,12 @@ class TestGeotiffDisplay(unittest.TestCase):
         canvas.context.restore()
 
         # Draw SVG.
-        canvas.context.save()
-        canvas.context.transform(surface_matrix_2)
-        svg_drawer = Svg(rel_path.joinpath('scotland_poi.svg'))
-        svg_drawer.draw(canvas)
-        canvas.context.restore()
+        if name == 'rotated':
+            canvas.context.save()
+            canvas.context.transform(surface_matrix_2)
+            svg_drawer = Svg(rel_path.joinpath('scotland_poi.svg'))
+            svg_drawer.draw(canvas)
+            canvas.context.restore()
 
         # Create coastline data from OSM data.
         osm_map = Parser.parse(input_osm_path)
@@ -112,30 +115,81 @@ class TestGeotiffDisplay(unittest.TestCase):
         builder = GeoCanvasTransformersBuilder()
         builder.set_crs(crs)
         builder.set_scale(GeoCanvasScale(300000, canvas_box.width))
+        builder.rotation = 0
+        builder.set_data_crs(wgs84_crs)
+
+        builder.set_origin_for_geo(GeoCoordinate(59.25, -6.75, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(0, 0))
+        self.render('origin_tl', canvas_box, builder)
+
+        builder.set_origin_for_geo(GeoCoordinate(59.25, -2.25, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(
+            canvas_box.width.pt, 0
+        ))
+        self.render('origin_tr', canvas_box, builder)
+
+        builder.set_origin_for_geo(GeoCoordinate(55.75, -6.75, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(
+            0, canvas_box.height.pt
+        ))
+        self.render('origin_bl', canvas_box, builder)
+
+        builder.set_origin_for_geo(GeoCoordinate(55.75, -2.25, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(
+            canvas_box.width.pt, canvas_box.height.pt
+        ))
+        self.render('origin_br', canvas_box, builder)
+
         builder.set_origin_for_geo(GeoCoordinate(57.5, -4.5, wgs84_crs))
         builder.set_origin_for_canvas(CanvasCoordinate(
             canvas_box.width / 2,
             canvas_box.height / 2
         ))
-        builder.rotation = -0.1
-        builder.set_data_crs(wgs84_crs)
+        self.render('center', canvas_box, builder)
 
-        self.render('default', canvas_box, builder)
+        builder.rotation = -0.2
+        self.render('rotated', canvas_box, builder)
 
-        for i in range(10):
-            builder.rotation = -i/10
-            self.render('rotated-%d' % i, canvas_box, builder)
-
-        builder.set_origin_for_canvas(CanvasCoordinate(
-            canvas_box.width / 12 * 7,
-            canvas_box.height / 12 * 7
+        builder.rotation = -math.pi / 2
+        builder.set_origin_for_geo(GeoCoordinate(59.25, -2.25, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(
+            0, 0
         ))
+        self.render('rotated_90', canvas_box, builder)
 
-        self.render('move_down_right_1', canvas_box, builder)
-
-        builder.set_origin_for_canvas(CanvasCoordinate(
-            canvas_box.width / 3 * 2,
-            canvas_box.height / 3 * 2
+        builder.rotation = -math.pi
+        builder.set_origin_for_geo(GeoCoordinate(55.75, -2.25, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(
+            0, 0
         ))
+        self.render('rotated_180', canvas_box, builder)
 
-        self.render('move_down_right', canvas_box, builder)
+        builder.rotation = -math.pi * 3 / 2
+        builder.set_origin_for_geo(GeoCoordinate(55.75, -6.75, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(
+            0, 0
+        ))
+        self.render('rotated_270', canvas_box, builder)
+
+        builder.rotation = -0.2
+        builder.set_origin_for_geo(GeoCoordinate(59.25, -6.75, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(0, 0))
+        self.render('rotated_origin_tl', canvas_box, builder)
+
+        builder.set_origin_for_geo(GeoCoordinate(59.25, -2.25, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(
+            canvas_box.width.pt, 0
+        ))
+        self.render('rotated_origin_tr', canvas_box, builder)
+
+        builder.set_origin_for_geo(GeoCoordinate(55.75, -6.75, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(
+            0, canvas_box.height.pt
+        ))
+        self.render('rotated_origin_bl', canvas_box, builder)
+
+        builder.set_origin_for_geo(GeoCoordinate(55.75, -2.25, wgs84_crs))
+        builder.set_origin_for_canvas(CanvasCoordinate.from_pt(
+            canvas_box.width.pt, canvas_box.height.pt
+        ))
+        self.render('rotated_origin_br', canvas_box, builder)
