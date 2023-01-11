@@ -44,34 +44,40 @@ def build_geotiff_crs_within_canvas_matrix(
 
     matrix = cairocffi.Matrix()
 
-    # Convert bitmap coordinate space to CRS coordinate space.
-    # 1. Reduce the width of image to "1 unit".
-    image_scale_to_unit_scale = cairocffi.Matrix()
-    image_scale_to_unit_scale.scale(1 / CanvasUnit.from_px(geotiff_width).pt)
-    matrix = matrix * image_scale_to_unit_scale
+    # To display a bitmap successfully on the canvas we need to transform
+    # between different coordinate spaces. Specifically:
+    # - Bitmap coordinate space
+    # - CRS coordinate space
+    # - Relative CRS coordinate space
+    # - Relative canvas coordinate space
+    # - Canvas coordinate space
 
-    # 2. Enlarge the image to be the size of the CRS's mask bounds. The units
-    #    will generally be in meters or feet.
-    unit_scale_to_crs_scale = cairocffi.Matrix()
-    unit_scale_to_crs_scale.scale(crs_bounds[2] - crs_bounds[0])
-    matrix = matrix * unit_scale_to_crs_scale
-
-    # 3. Translate the image's top-left coordinate to the coordinate space of
-    #    the CRS. Note: We invert for the y-axis because normally on the canvas
-    #    the y-axis goes down. But on regular map coordinates, y-axis goes up.
+    # Convert "bitmap coordinate space" to "CRS coordinate space".
+    bitmap_scale_to_crs_scale = cairocffi.Matrix()
+    bitmap_scale_to_crs_scale.scale(
+        (crs_bounds[2] - crs_bounds[0]) /
+        CanvasUnit.from_px(geotiff_width).pt
+    )
+    matrix = matrix * bitmap_scale_to_crs_scale
+    # The top-left of the image corresponds to these coordinates in the CRS.
     matrix.x0 += crs_bounds[0]
-    matrix.y0 += crs_bounds[3] * -1
+    matrix.y0 += crs_bounds[3]
 
-    # Next, convert CRS coordinate space to canvas space. Note: We invert for
-    # the y-axis because normally on the canvas the y-axis goes down. But on
-    # regular map coordinates, y-axis goes up.
+    # Next, convert to "relative CRS coordinate space" by translating to the
+    # geographic origin that the `transformers_builder` has.
     crs_origin = transform_geo_coordinate_to_new_crs(
         transformers_builder.origin_for_geo, transformers_builder.crs
     )
     matrix.x0 += -crs_origin.x
-    matrix.y0 += -crs_origin.y * -1
+    matrix.y0 += -crs_origin.y
 
-    # Scale to canvas units
+    # Next, we need to convert to coordinate space.
+    # On maps, coordinate systems are displayed showing the y-axis going
+    # upwards. However, on the canvas, the y-axis goes down. Therefore, we need
+    # to flip y-axis to set us in canvas coordinate space.
+    matrix.y0 = -matrix.y0
+
+    # Scale from CRS units (usually meters, feet, or degrees) to canvas units.
     crs_scale_to_canvas_scale = cairocffi.Matrix()
     crs_scale_to_canvas_scale.scale(
         transformers_builder.scale.canvas_units.pt /
