@@ -9,7 +9,6 @@ from shapely.ops import transform
 from map_engraver.canvas import CanvasBuilder
 from map_engraver.canvas.canvas_bbox import CanvasBbox
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
-from map_engraver.canvas.canvas_unit import CanvasUnit
 from map_engraver.data.canvas_geometry.rect import rect
 from map_engraver.data.geo.geo_coordinate import GeoCoordinate
 from map_engraver.data.geo_canvas_ops.geo_canvas_mask import canvas_wgs84_mask

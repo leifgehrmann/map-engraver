@@ -1,17 +1,14 @@
-import math
 from pathlib import Path
 
 import cairocffi
-from pyproj import CRS
 from shapely.geometry import Polygon
 
 from PIL import Image
 from osgeo import gdal
 
 from map_engraver.canvas.canvas_unit import CanvasUnit
-from map_engraver.data.geo.geo_coordinate import GeoCoordinate
 from map_engraver.data.geo.geo_coordinate_transformers import \
-    transform_geo_coordinates_to_new_crs, transform_geo_coordinate_to_new_crs
+    transform_geo_coordinate_to_new_crs
 from map_engraver.data.geo_canvas_ops.geo_canvas_mask import canvas_crs_mask
 from map_engraver.data.geo_canvas_ops.geo_canvas_transformers_builder import \
     GeoCanvasTransformersBuilder
@@ -44,7 +41,6 @@ def build_geotiff_crs_within_canvas_matrix(
 
     image = Image.open(output_geotiff.as_posix())
     geotiff_width = image.size[0]
-    print(output_geotiff, geotiff_width)
 
     matrix = cairocffi.Matrix()
 
@@ -59,25 +55,23 @@ def build_geotiff_crs_within_canvas_matrix(
     unit_scale_to_crs_scale = cairocffi.Matrix()
     unit_scale_to_crs_scale.scale(crs_bounds[2] - crs_bounds[0])
     matrix = matrix * unit_scale_to_crs_scale
-    # 3. Translate the image's top-left coordinate to the coordinate space of
-    #    the CRS.
-    matrix.x0 += crs_bounds[0]
-    matrix.y0 += crs_bounds[3]
 
-    # Next, convert CRS coordinate space to canvas space.
-    # image_origin_wgs84 = transform_geo_coordinate_to_new_crs(
-    #     GeoCoordinate(crs_bounds[0], crs_bounds[1], transformers_builder.crs), CRS.from_epsg(4326)
-    # )
+    # 3. Translate the image's top-left coordinate to the coordinate space of
+    #    the CRS. Note: We invert for the y-axis because normally on the canvas
+    #    the y-axis goes down. But on regular map coordinates, y-axis goes up.
+    matrix.x0 += crs_bounds[0]
+    matrix.y0 += crs_bounds[3] * -1
+
+    # Next, convert CRS coordinate space to canvas space. Note: We invert for
+    # the y-axis because normally on the canvas the y-axis goes down. But on
+    # regular map coordinates, y-axis goes up.
     crs_origin = transform_geo_coordinate_to_new_crs(
         transformers_builder.origin_for_geo, transformers_builder.crs
     )
     matrix.x0 += -crs_origin.x
-    matrix.y0 += -crs_origin.y
-    print('crs top-left', crs_bounds[0], crs_bounds[3])
-    print('crs origin', crs_origin.x, crs_origin.y)
-    # print(transformers_builder.origin_for_geo.x, transformers_builder.origin_for_geo.y)
-    # print(image_origin_wgs84.x, image_origin_wgs84.y)
+    matrix.y0 += -crs_origin.y * -1
 
+    # Scale to canvas units
     crs_scale_to_canvas_scale = cairocffi.Matrix()
     crs_scale_to_canvas_scale.scale(
         transformers_builder.scale.canvas_units.pt /
@@ -85,29 +79,18 @@ def build_geotiff_crs_within_canvas_matrix(
     )
     matrix = matrix * crs_scale_to_canvas_scale
 
+    # Rotate canvas
     canvas_rotate = cairocffi.Matrix()
     canvas_rotate.rotate(
         transformers_builder.rotation
     )
     matrix = matrix * canvas_rotate
 
-    # The origin will be where the coordinate is on the map. We now need to translate
-    # that origin to where it should be on the canvas based on image offsets of the original image.
-    translate_x1 = transformers_builder.origin_for_canvas.x.pt
-    translate_x2 = (canvas_polygon.bounds[2] - transformers_builder.origin_for_canvas.x.pt)
-    translate_y1 = (canvas_polygon.bounds[3] - transformers_builder.origin_for_canvas.y.pt)
-    translate_y2 = transformers_builder.origin_for_canvas.y.pt
-
-    # canvas_translate = cairocffi.Matrix()
-    # canvas_translate.translate(
-    #     math.fabs(translate_x1 * math.cos(-transformers_builder.rotation)) + math.fabs(translate_x2 * math.sin(-transformers_builder.rotation)),
-    #     math.fabs(translate_y1 * math.cos(-transformers_builder.rotation)) + math.fabs(translate_y2 * math.sin(-transformers_builder.rotation))
-    # )
-    # matrix = matrix * canvas_translate
+    # Translate
     canvas_translate = cairocffi.Matrix()
     canvas_translate.translate(
-        translate_x1,
-        -translate_y2
+        transformers_builder.origin_for_canvas.x.pt,
+        transformers_builder.origin_for_canvas.y.pt
     )
     matrix = matrix * canvas_translate
 
