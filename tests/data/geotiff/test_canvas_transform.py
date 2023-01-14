@@ -40,8 +40,7 @@ class TestCanvasTransform(unittest.TestCase):
         canvas_height = CanvasUnit.from_px(500)
         canvas_mask = rect(CanvasBbox(
             CanvasCoordinate.origin(),
-            canvas_width,
-            canvas_height
+            CanvasCoordinate(canvas_width, canvas_height)
         ))
 
         wgs84_crs = CRS.from_epsg(4326)
@@ -74,8 +73,7 @@ class TestCanvasTransform(unittest.TestCase):
         canvas_height = CanvasUnit.from_px(500)
         canvas_mask = rect(CanvasBbox(
             CanvasCoordinate.origin(),
-            canvas_width,
-            canvas_height
+            CanvasCoordinate(canvas_width, canvas_height)
         ))
 
         crs = CRS.from_proj4('+proj=utm +zone=30')
@@ -131,8 +129,7 @@ class TestCanvasTransform(unittest.TestCase):
         canvas_height = CanvasUnit.from_px(170)
         canvas_mask = rect(CanvasBbox(
             CanvasCoordinate.origin(),
-            canvas_width,
-            canvas_height
+            CanvasCoordinate(canvas_width, canvas_height)
         ))
         canvas_builder = CanvasBuilder()
         canvas_builder.set_path(canvas_file)
@@ -185,8 +182,10 @@ class TestCanvasTransform(unittest.TestCase):
         polygon_drawer.geoms = [rect(
             CanvasBbox(
                 CanvasCoordinate.origin(),
-                CanvasUnit.from_px(output_bitmap.width),
-                CanvasUnit.from_px(output_bitmap.height)
+                CanvasCoordinate.from_px(
+                    output_bitmap.width,
+                    output_bitmap.height
+                )
             )
         )]
         polygon_drawer.draw(canvas)

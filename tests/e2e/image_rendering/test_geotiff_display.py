@@ -108,7 +108,7 @@ class TestGeotiffDisplay(unittest.TestCase):
         canvas.close()
 
     def test_geotiff_display(self):
-        canvas_box = CanvasBbox.from_px(0, 0, 150, 200)
+        canvas_box = CanvasBbox.from_size_px(0, 0, 150, 200)
         crs = CRS.from_proj4('+proj=utm +zone=30')
         wgs84_crs = CRS.from_epsg(4326)
         builder = GeoCanvasTransformersBuilder()

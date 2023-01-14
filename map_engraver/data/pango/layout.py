@@ -43,11 +43,7 @@ class Layout:
         y += self._position.y
         width = CanvasUnit.from_pt(pangocffi.units_to_double(extent.width))
         height = CanvasUnit.from_pt(pangocffi.units_to_double(extent.height))
-        return CanvasBbox(
-            CanvasCoordinate(x, y),
-            width,
-            height
-        )
+        return CanvasBbox.from_size(x, y, width, height)
 
     @property
     def height(self) -> Optional[CanvasUnit]:

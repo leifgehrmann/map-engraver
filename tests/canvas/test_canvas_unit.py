@@ -40,6 +40,29 @@ class TestCanvasUnit(unittest.TestCase):
         assert CanvasUnit.from_cm(2) == CanvasUnit.from_cm(2)
         assert CanvasUnit.from_cm(2) != 2
 
+    # noinspection PyStatementEffect
+    def test_gt_ge_lt_le(self):
+        assert not CanvasUnit.from_cm(3) > CanvasUnit.from_cm(5)
+        assert not CanvasUnit.from_cm(5) > CanvasUnit.from_cm(5)
+        assert CanvasUnit.from_cm(7) > CanvasUnit.from_cm(5)
+        assert not CanvasUnit.from_cm(3) >= CanvasUnit.from_cm(5)
+        assert CanvasUnit.from_cm(5) >= CanvasUnit.from_cm(5)
+        assert CanvasUnit.from_cm(7) >= CanvasUnit.from_cm(5)
+        assert CanvasUnit.from_cm(3) < CanvasUnit.from_cm(5)
+        assert not CanvasUnit.from_cm(5) < CanvasUnit.from_cm(5)
+        assert not CanvasUnit.from_cm(7) < CanvasUnit.from_cm(5)
+        assert CanvasUnit.from_cm(3) <= CanvasUnit.from_cm(5)
+        assert CanvasUnit.from_cm(5) <= CanvasUnit.from_cm(5)
+        assert not CanvasUnit.from_cm(7) <= CanvasUnit.from_cm(5)
+        with self.assertRaises(NotImplementedError):
+            CanvasUnit.from_cm(1) > 1
+        with self.assertRaises(NotImplementedError):
+            CanvasUnit.from_cm(1) >= 1
+        with self.assertRaises(NotImplementedError):
+            CanvasUnit.from_cm(1) < 1
+        with self.assertRaises(NotImplementedError):
+            CanvasUnit.from_cm(1) <= 1
+
     def test_add(self):
         assert CanvasUnit.from_cm(2) + CanvasUnit.from_cm(3) == \
                CanvasUnit.from_cm(5)

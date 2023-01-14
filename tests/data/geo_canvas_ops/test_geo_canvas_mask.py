@@ -15,7 +15,7 @@ from map_engraver.data.geo_canvas_ops.geo_canvas_transformers_builder import \
 
 class TestMasks(unittest.TestCase):
     def test_canvas_mask(self):
-        canvas_size = rect(CanvasBbox.from_pt(-20, 50, 170, 100))
+        canvas_size = rect(CanvasBbox.from_size_pt(-20, 50, 170, 100))
         builder = GeoCanvasTransformersBuilder()
         builder.set_scale_and_origin_from_coordinates_and_crs(
             CRS.from_proj4('+proj=ortho +lon_0=0 +lat_0=0'),
@@ -33,7 +33,7 @@ class TestMasks(unittest.TestCase):
         self.assertAlmostEqual(mask_bounds[3], 150, 4)
 
     def test_canvas_wgs84_mask(self):
-        canvas_size = rect(CanvasBbox.from_pt(-20, 50, 170, 100))
+        canvas_size = rect(CanvasBbox.from_size_pt(-20, 50, 170, 100))
         builder = GeoCanvasTransformersBuilder()
         builder.set_scale_and_origin_from_coordinates_and_crs(
             CRS.from_proj4('+proj=ortho +lon_0=0 +lat_0=0'),
@@ -51,7 +51,7 @@ class TestMasks(unittest.TestCase):
         self.assertAlmostEqual(mask_bounds[3], 27.2961, 4)
 
     def test_canvas_crs_mask(self):
-        canvas_size = rect(CanvasBbox.from_pt(-20, 50, 170, 100))
+        canvas_size = rect(CanvasBbox.from_size_pt(-20, 50, 170, 100))
         builder = GeoCanvasTransformersBuilder()
         builder.set_scale_and_origin_from_coordinates_and_crs(
             CRS.from_proj4('+proj=ortho +lon_0=0 +lat_0=0'),
@@ -69,7 +69,7 @@ class TestMasks(unittest.TestCase):
         self.assertAlmostEqual(mask_bounds[3], 2657152.324517375, 4)
 
     def test_functions_for_crs_with_unknown_mask(self):
-        canvas_size = rect(CanvasBbox.from_pt(-20, 50, 170, 100))
+        canvas_size = rect(CanvasBbox.from_size_pt(-20, 50, 170, 100))
         builder = GeoCanvasTransformersBuilder()
         builder.set_scale_and_origin_from_coordinates_and_crs(
             CRS.from_proj4('+proj=nzmg +lat_0=-41 +lon_0=173 +x_0=0 +y_0=0'),

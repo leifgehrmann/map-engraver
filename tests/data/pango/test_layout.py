@@ -57,7 +57,7 @@ class TestLayout(unittest.TestCase):
         assert layout.alignment == Alignment.RIGHT
 
         extents = layout.logical_extents
-        assert extents.pos.x.pt == 10
-        assert extents.pos.y.pt == 5
+        assert extents.min_pos.x.pt == 10
+        assert extents.min_pos.y.pt == 5
         assert extents.width.pt > 1
         assert extents.height.pt > 1
