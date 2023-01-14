@@ -360,3 +360,15 @@ class TestCanvasBuilder(unittest.TestCase):
             canvas.close()
 
             assert path.exists()
+
+    def test_build_bbox(self):
+        canvas_builder = CanvasBuilder()
+        with self.assertRaises(RuntimeError):
+            canvas_builder.build_bbox()
+
+        canvas_builder.set_size(Cu.from_in(1), Cu.from_in(2))
+        bbox = canvas_builder.build_bbox()
+        assert bbox.min_pos.x.pt == 0
+        assert bbox.min_pos.y.pt == 0
+        assert bbox.width == Cu.from_in(1)
+        assert bbox.height == Cu.from_in(2)

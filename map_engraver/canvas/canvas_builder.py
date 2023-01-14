@@ -4,6 +4,8 @@ import cairocffi as cairo
 from pathlib import Path
 
 from map_engraver.canvas import Canvas
+from map_engraver.canvas.canvas_bbox import CanvasBbox
+from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit
 
 
@@ -51,6 +53,13 @@ class CanvasBuilder:
         canvas.set_antialias_mode(self.antialias_mode)
 
         return canvas
+
+    def build_bbox(self) -> CanvasBbox:
+        self.validate_size()
+        return CanvasBbox(
+            CanvasCoordinate.origin(),
+            CanvasCoordinate(self.width, self.height)
+        )
 
     def set_path(self, path: Path) -> None:
         self.path = path
