@@ -38,19 +38,19 @@ class TestGeoCanvasRendering(unittest.TestCase):
 
     crs_width = 400
     crs_height = 400
-    crs_bbox = CanvasBbox.from_px(
+    crs_bbox = CanvasBbox.from_size_px(
         canvas_margin, canvas_margin,
         crs_width, crs_height
     )
 
     wgs84_width = 360
     wgs84_height = 180
-    wgs84_bbox = CanvasBbox.from_px(
+    wgs84_bbox = CanvasBbox.from_size_px(
         canvas_margin * 2 + crs_width, canvas_margin,
         wgs84_width, wgs84_height
     )
 
-    whole_canvas_bbox = CanvasBbox.from_px(
+    whole_canvas_bbox = CanvasBbox.from_size_px(
         0, 0,
         canvas_margin * 3 + crs_width + wgs84_width,
         crs_height + canvas_margin * 2
@@ -185,7 +185,7 @@ class TestGeoCanvasRendering(unittest.TestCase):
 
         wgs84_transformer = GeoCanvasTransformersBuilder()
         wgs84_transformer.set_crs(CRS.from_epsg(4326))
-        wgs84_transformer.set_origin_for_canvas(self.wgs84_bbox.pos)
+        wgs84_transformer.set_origin_for_canvas(self.wgs84_bbox.min_pos)
         wgs84_transformer.set_origin_for_geo(
             GeoCoordinate(90, -180, CRS.from_epsg(4326))
         )
@@ -231,12 +231,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(0, -70, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(0, 70, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -244,12 +244,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(0, 150, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(0, -150, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -257,12 +257,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(40, -40, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(40, 20, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -270,12 +270,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(10, -180, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(10, 0, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -283,12 +283,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(-10, -180, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(-10, 0, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -296,12 +296,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(0, -140, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(0, 160, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -309,12 +309,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(45, -10, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(45, 56, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -322,12 +322,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(45, -10, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(45, 56, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -335,12 +335,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(55, -15, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(55, 6, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -348,12 +348,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(45, -10, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(45, 56, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
             {
@@ -361,12 +361,12 @@ class TestGeoCanvasRendering(unittest.TestCase):
                 'geo_a': GeoCoordinate(9, -85, CRS.from_epsg(4326)),
                 'geo_b': GeoCoordinate(9, -75, CRS.from_epsg(4326)),
                 'canvas_a': CanvasCoordinate(
-                    self.crs_bbox.pos.x,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 ),
                 'canvas_b': CanvasCoordinate(
-                    self.crs_bbox.pos.x + self.crs_bbox.width,
-                    self.crs_bbox.pos.y + self.crs_bbox.height / 2
+                    self.crs_bbox.min_pos.x + self.crs_bbox.width,
+                    self.crs_bbox.min_pos.y + self.crs_bbox.height / 2
                 )
             },
         ]

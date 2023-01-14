@@ -84,6 +84,30 @@ class CanvasUnit:
         else:
             return False
 
+    def __lt__(self, other):
+        if isinstance(other, CanvasUnit):
+            return self.pt.__lt__(other.pt)
+        else:
+            raise NotImplementedError()
+
+    def __gt__(self, other):
+        if isinstance(other, CanvasUnit):
+            return self.pt.__gt__(other.pt)
+        else:
+            raise NotImplementedError()
+
+    def __le__(self, other):
+        if isinstance(other, CanvasUnit):
+            return self.pt.__le__(other.pt)
+        else:
+            raise NotImplementedError()
+
+    def __ge__(self, other):
+        if isinstance(other, CanvasUnit):
+            return self.pt.__ge__(other.pt)
+        else:
+            raise NotImplementedError()
+
     def __add__(self, other):
         if isinstance(other, CanvasUnit):
             return CanvasUnit(self.pt + other.pt)

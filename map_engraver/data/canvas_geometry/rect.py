@@ -12,10 +12,10 @@ def rect(bbox: CanvasBbox) -> Polygon:
     if bbox.height.pt <= 0:
         raise Exception('height of bbox cannot be 0 or less.')
     return Polygon([
-        bbox.pos.pt,
-        CanvasCoordinate(bbox.pos.x + bbox.width, bbox.pos.y).pt,
-        CanvasCoordinate(bbox.pos.x + bbox.width, bbox.pos.y + bbox.height).pt,
-        CanvasCoordinate(bbox.pos.x, bbox.pos.y + bbox.height).pt
+        bbox.min_pos.pt,
+        CanvasCoordinate(bbox.max_pos.x, bbox.min_pos.y).pt,
+        bbox.max_pos.pt,
+        CanvasCoordinate(bbox.min_pos.x, bbox.max_pos.y).pt
     ])
 
 
@@ -30,10 +30,10 @@ def rounded_rect(
     if radius.pt < 0:
         raise Exception('radius cannot be 0 or less.')
 
-    ul = bbox.pos
-    ur = CanvasCoordinate(bbox.pos.x + bbox.width, bbox.pos.y)
-    br = CanvasCoordinate(bbox.pos.x + bbox.width, bbox.pos.y + bbox.height)
-    bl = CanvasCoordinate(bbox.pos.x, bbox.pos.y + bbox.height)
+    ul = bbox.min_pos
+    ur = CanvasCoordinate(bbox.max_pos.x, bbox.min_pos.y)
+    br = bbox.max_pos
+    bl = CanvasCoordinate(bbox.min_pos.x, bbox.max_pos.y)
 
     max_radius_pt = min(radius.pt, bbox.width.pt / 2, bbox.height.pt / 2)
 

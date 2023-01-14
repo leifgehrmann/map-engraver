@@ -12,32 +12,32 @@ class TestRect(unittest.TestCase):
         # rect()
         with self.assertRaises(Exception):
             rect(
-                CanvasBbox.from_px(10, 20, 0, 40),
+                CanvasBbox.from_size_px(10, 20, 0, 40),
             )
         with self.assertRaises(Exception):
             rect(
-                CanvasBbox.from_px(10, 20, 30, 0),
+                CanvasBbox.from_size_px(10, 20, 30, 0),
             )
         # rounded rect()
         with self.assertRaises(Exception):
             rounded_rect(
-                CanvasBbox.from_px(10, 20, 0, 40),
+                CanvasBbox.from_size_px(10, 20, 0, 40),
                 CanvasUnit.from_px(10)
             )
         with self.assertRaises(Exception):
             rounded_rect(
-                CanvasBbox.from_px(10, 20, 30, 0),
+                CanvasBbox.from_size_px(10, 20, 30, 0),
                 CanvasUnit.from_px(10)
             )
         with self.assertRaises(Exception):
             rounded_rect(
-                CanvasBbox.from_px(10, 20, 30, 40),
+                CanvasBbox.from_size_px(10, 20, 30, 40),
                 CanvasUnit.from_px(-10)
             )
 
     def test_rect_is_returned(self):
         rr = rect(
-            CanvasBbox.from_pt(10, 20, 30, 40),
+            CanvasBbox.from_size_pt(10, 20, 30, 40),
         )
         assert rr.bounds == (10, 20, 40, 60)
         assert rr.touches(Point(*CanvasCoordinate.from_pt(10, 20).pt))
@@ -45,7 +45,7 @@ class TestRect(unittest.TestCase):
 
     def test_rounded_rect_without_radius_is_returned(self):
         rr = rounded_rect(
-            CanvasBbox.from_pt(10, 20, 30, 40),
+            CanvasBbox.from_size_pt(10, 20, 30, 40),
             CanvasUnit.from_pt(0)
         )
         assert rr.bounds == (10, 20, 40, 60)
@@ -54,7 +54,7 @@ class TestRect(unittest.TestCase):
 
     def test_rounded_rect_with_radius_is_returned(self):
         rr = rounded_rect(
-            CanvasBbox.from_pt(10, 20, 30, 40),
+            CanvasBbox.from_size_pt(10, 20, 30, 40),
             CanvasUnit.from_pt(5)
         )
         assert rr.bounds == (10, 20, 40, 60)
