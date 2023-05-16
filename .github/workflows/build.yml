@@ -48,7 +48,7 @@ jobs:
           gdal-config --version
       - name: Install dependencies
         run: |
-          poetry install
+          poetry install --with gdal
       - name: Run linting
         run: |
           poetry run flake8
