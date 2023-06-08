@@ -1,5 +1,7 @@
 import os
 import subprocess
+import tempfile
+import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -11,23 +13,17 @@ from map_engraver.canvas.canvas_unit import CanvasUnit
 
 
 class AutotraceText:
-    cache_directory: Optional[Path] = None
     scale = 5
 
     @staticmethod
     def reset_config():
-        AutotraceText.cache_directory = None
         AutotraceText.scale = 5
 
     @staticmethod
     def convert_pango_layout_to_svg_draw_commands(layout: Layout) -> str:
-        if AutotraceText.cache_directory is None:
-            # This happens because AutotraceText hasn't been configured.
-            raise Exception('AutotraceText: AutotraceText.cache_directory is None')
-
-        # Todo: Use tempfile instead of using a hardcoded directory.
-        filename_input = AutotraceText.cache_directory.joinpath('test.png')
-        filename_output = AutotraceText.cache_directory.joinpath('test.svg')
+        temp_dir = Path(tempfile.gettempdir())
+        filename_input = temp_dir.joinpath(str(uuid.uuid1()) + '.png')
+        filename_output = temp_dir.joinpath(str(uuid.uuid1()) + '.svg')
 
         # Create a cairo canvas and render the Pango Layout
         surface = cairo.ImageSurface(
@@ -72,6 +68,8 @@ class AutotraceText:
         )
 
         # Todo: Read the SVG path
+        os.remove(filename_input)
+        os.remove(filename_output)
 
         return "Todo:"
 
