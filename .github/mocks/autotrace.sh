@@ -7,8 +7,6 @@
 # The autotrace command is used in the file: ./../../map_engraver/drawable/text/autotrace_text.py
 # And is used in the unit test: ./../../tests/drawable/text/test_autotrace_text.py
 
-echo `pwd`
-
 for var in "$@"
 do
     case $var in *.svg)

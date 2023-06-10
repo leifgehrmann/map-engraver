@@ -51,8 +51,6 @@ jobs:
       - name: Install System Dependencies Mock (autotrace)
         run: |
           ln -s `pwd`/.github/mocks/autotrace.sh /usr/local/bin/autotrace
-          autotrace /tmp/example.svg
-          ls -lart /tmp/example.svg
       - name: Install dependencies
         run: |
           poetry install --with gdal
