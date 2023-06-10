@@ -26,11 +26,16 @@ class AutotraceText:
         filename_input = temp_dir.joinpath(str(uuid.uuid1()) + '.png')
         filename_output = temp_dir.joinpath(str(uuid.uuid1()) + '.svg')
 
+        layout_width = CanvasUnit.from_pango(layout.get_extents()[0].width)
+        layout_height = CanvasUnit.from_pango(layout.get_extents()[0].height)
+        surface_width_px = int(layout_width.px * AutotraceText.scale)
+        surface_height_px = int(layout_height.px * AutotraceText.scale)
+
         # Create a cairo canvas and render the Pango Layout
         surface = cairo.ImageSurface(
             cairo.FORMAT_ARGB32,
-            int(CanvasUnit.from_pango(layout.get_extents()[0].width).px * AutotraceText.scale),
-            int(CanvasUnit.from_pango(layout.get_extents()[0].height).px * AutotraceText.scale)
+            surface_width_px,
+            surface_height_px
         )
         context = cairo.Context(surface)
         context.scale(AutotraceText.scale)
@@ -73,7 +78,7 @@ class AutotraceText:
         try:
             with open(filename_output.as_posix()) as file:
                 matches = re.findall(AutotraceText.regex, file.read())
-                # Todo: Catch edge cases where there might be more than one match.
+                # Todo: Catch edge cases where there is more than one match.
                 result = matches[0]
         finally:
             os.remove(filename_output)
@@ -81,5 +86,3 @@ class AutotraceText:
         # Todo: Resize SVG to original scale.
 
         return result
-
-
