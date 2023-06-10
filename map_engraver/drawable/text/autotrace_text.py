@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Optional
+import re
 
 import cairocffi as cairo
 from pangocffi import Layout
@@ -14,6 +14,7 @@ from map_engraver.canvas.canvas_unit import CanvasUnit
 
 class AutotraceText:
     scale = 5
+    regex = re.compile(r" d=\"(.*)\"", re.I)
 
     @staticmethod
     def reset_config():
@@ -67,10 +68,18 @@ class AutotraceText:
             capture_output=True
         )
 
-        # Todo: Read the SVG path
         os.remove(filename_input)
-        os.remove(filename_output)
 
-        return "Todo:"
+        try:
+            with open(filename_output.as_posix()) as file:
+                matches = re.findall(AutotraceText.regex, file.read())
+                # Todo: Catch edge cases where there might be more than one match.
+                result = matches[0]
+        finally:
+            os.remove(filename_output)
+
+        # Todo: Resize SVG to original scale.
+
+        return result
 
 
