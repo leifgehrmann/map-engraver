@@ -13,12 +13,16 @@ from map_engraver.canvas.canvas_unit import CanvasUnit
 
 
 class AutotraceText:
-    scale = 5
-    regex = re.compile(r" d=\"(.*)\"", re.I)
+    scale = 10
 
-    @staticmethod
-    def reset_config():
-        AutotraceText.scale = 5
+    svg_path_d_regex = re.compile(
+        r" d=\"(.*)\"",
+        re.IGNORECASE
+    )
+    path_commands_regex = re.compile(
+        r"((?P<command>[a-z])(?P<arguments>(\s*-?\d+\.?[\d]*\s*)*))",
+        re.IGNORECASE
+    )
 
     @staticmethod
     def convert_pango_layout_to_svg_draw_commands(layout: Layout) -> str:
@@ -77,12 +81,39 @@ class AutotraceText:
 
         try:
             with open(filename_output.as_posix()) as file:
-                matches = re.findall(AutotraceText.regex, file.read())
+                matches = re.findall(
+                    AutotraceText.svg_path_d_regex,
+                    file.read()
+                )
                 # Todo: Catch edge cases where there is more than one match.
-                result = matches[0]
+                commands = matches[0]
         finally:
             os.remove(filename_output)
 
-        # Todo: Resize SVG to original scale.
+        # We do not expect autotrace to return strings with commas, but just in
+        # case it does, we make an assertion here.
+        assert ',' not in commands
 
-        return result
+        # We do not expect autotrace to return arc paths. If it does, the code
+        # should be updated to handle them separately. This is because – unlike
+        # the other path commands – not all the arguments can be scaled. For
+        # example: In `A (rx ry angle large-arc-flag sweep-flag x y)+`, the
+        # `angle`, `large-arc-flag`, and `sweep-flag` arguments should not be
+        # scaled, whereas the other arguments can as they are coordinates.
+        assert 'a' not in commands
+        assert 'A' not in commands
+
+        def replace_non_arc_commands(match):
+            args_list = map(
+                lambda x: str(float(x) / AutotraceText.scale),
+                match.group('arguments').split(' ')
+            )
+            return match.group('command') + ' '.join(args_list)
+
+        commands = re.sub(
+            AutotraceText.path_commands_regex,
+            replace_non_arc_commands,
+            commands
+        )
+
+        return commands
