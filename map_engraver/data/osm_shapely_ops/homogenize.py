@@ -1,9 +1,9 @@
 from typing import Union, List
 
-from shapely.geometry import MultiPolygon,\
-    GeometryCollection,\
-    Polygon,\
-    MultiLineString,\
+from shapely.geometry import MultiPolygon, \
+    GeometryCollection, \
+    Polygon, \
+    MultiLineString, \
     LineString
 
 
