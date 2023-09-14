@@ -2,10 +2,10 @@ from enum import Enum
 from typing import Tuple
 
 from shapely.geometry import \
-    MultiPolygon,\
-    Polygon,\
-    LinearRing,\
-    LineString,\
+    MultiPolygon, \
+    Polygon, \
+    LinearRing, \
+    LineString, \
     GeometryCollection
 from shapely.ops import unary_union
 

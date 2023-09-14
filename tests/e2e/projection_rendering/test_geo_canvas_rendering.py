@@ -29,7 +29,7 @@ from map_engraver.data.proj.masks import wgs84_mask
 from map_engraver.drawable.geometry.line_drawer import LineDrawer
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
 from tests.e2e.projection_rendering.world_objects import \
-    get_world_map,\
+    get_world_map, \
     get_flight_paths
 
 
