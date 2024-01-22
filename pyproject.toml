@@ -12,7 +12,7 @@ tqdm = "^4.64.0"
 Shapely = "^2.0.1"
 CairoSVG = "^2.7.0"
 pyproj = "^3.4.0"
-Pillow = "^10.0.1"
+Pillow = "^10.2.0"
 pangocffi = "^0.11.0"
 pangocairocffi = "^0.7.0"
 
