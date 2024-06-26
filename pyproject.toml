@@ -13,7 +13,7 @@ Shapely = "^2.0.1"
 CairoSVG = "^2.7.0"
 pyproj = "^3.4.0"
 Pillow = "^10.0.1"
-pangocffi = "^0.11.0"
+pangocffi = "^0.13.0"
 pangocairocffi = "^0.7.0"
 
 [tool.poetry.group.gdal]
