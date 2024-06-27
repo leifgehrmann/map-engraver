@@ -39,6 +39,7 @@ class Canvas:
                 width,
                 height
             )
+            surface.set_document_unit(cairo.SVG_UNIT_PT)
         elif surface_type == 'png':
             surface = cairo.ImageSurface(
                 cairo.FORMAT_ARGB32,
