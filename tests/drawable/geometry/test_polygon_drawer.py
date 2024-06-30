@@ -84,7 +84,6 @@ class TestPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            print(data)
             assert svg_has_style_attr(
                 data, 'path', 'd', 'M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30'
             )

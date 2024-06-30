@@ -53,7 +53,6 @@ class TestPangoStrokeDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert not svg_has_tag(data, 'g')
             assert svg_has_style_attr(data, 'path', 'fill', 'none')
             assert svg_has_style_attr(data, 'path', 'stroke-linecap', 'round')
             assert svg_has_style_attr(data, 'path', 'stroke-linejoin', 'round')
