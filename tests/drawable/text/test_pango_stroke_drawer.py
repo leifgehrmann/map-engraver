@@ -10,7 +10,7 @@ from map_engraver.canvas.canvas_coordinate import CanvasCoordinate as Cc
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.data.pango.layout import Layout
 from map_engraver.drawable.text.pango_stroke_drawer import PangoStrokeDrawer
-from tests.utils import svg_has_style_attr, svg_has_tag
+from tests.utils import svg_has_style_attr
 
 
 class TestPangoStrokeDrawer(unittest.TestCase):
