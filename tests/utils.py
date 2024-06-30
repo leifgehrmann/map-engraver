@@ -10,12 +10,11 @@ ns_array = {
 
 def svg_has_tag(svg: str, tag: str) -> bool:
     el = Et.fromstring(svg)
-    print(el.tag)
     if el.tag == tag or el.tag == '{' + ns_array['svg'] + '}' + tag:
         return True
-    if el.find(tag, ns_array) is not None:
+    if el.find('.//' + tag, ns_array) is not None:
         return True
-    if el.find('svg:' + tag, ns_array) is not None:
+    if el.find('.//svg:' + tag, ns_array) is not None:
         return True
     return False
 
@@ -40,12 +39,13 @@ def _svg_get_matches(
     tag: str,
     attr: str,
     value: Optional[str] = None,
-    escape: bool = True
+    escape: bool = True,
+    trim: bool = True
 ) -> Iterator[Et.Element]:
     el = Et.fromstring(svg)
     matches = []
-    matches.extend(el.findall(tag, ns_array))
-    matches.extend(el.findall('svg:' + tag, ns_array))
+    matches.extend(el.findall('.//' + tag, ns_array))
+    matches.extend(el.findall('.//svg:' + tag, ns_array))
     if value is not None and escape:
         value = re.escape(value)
     if el.tag == tag or el.tag == '{' + ns_array['svg'] + '}' + tag:
@@ -54,6 +54,8 @@ def _svg_get_matches(
         match_value = _get_attr_value(match, attr)
         if match_value is None:
             continue
+        if trim:
+            match_value = match_value.strip()
         if value is None:
             yield match
         if re.match(value, match_value) is not None:
@@ -65,9 +67,10 @@ def svg_has_style_attr(
     tag: str,
     attr: str,
     value: Optional[str] = None,
-    escape: bool = True
+    escape: bool = True,
+    trim: bool = True
 ) -> bool:
-    for _ in _svg_get_matches(svg, tag, attr, value, escape=escape):
+    for _ in _svg_get_matches(svg, tag, attr, value, escape=escape, trim=trim):
         return True
     return False
 
@@ -77,6 +80,9 @@ def svg_count_style_attr(
     tag: str,
     attr: str,
     value: Optional[str] = None,
-    escape: bool = True
+    escape: bool = True,
+    trim: bool = True
 ) -> int:
-    return len(list(_svg_get_matches(svg, tag, attr, value, escape=escape)))
+    return len(list(
+        _svg_get_matches(svg, tag, attr, value, escape=escape, trim=trim)
+    ))

@@ -21,6 +21,20 @@ real_svg = """<?xml version="1.0" encoding="UTF-8"?>
     />
 </svg> """
 
+real_svg_2 = """<?xml version="1.0" encoding="UTF-8"?>
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    width="100pt" height="100pt"
+    viewBox="0 0 100 100" version="1.1">
+    <g id="surface132">
+        <path
+            style="fill:none;stroke:rgb(0%,100%,0%);"
+            d="M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30 "
+        />
+    </g>
+</svg>"""
+
 
 class TestUtils(unittest.TestCase):
     def test_svg_has_tag(self):
@@ -34,6 +48,11 @@ class TestUtils(unittest.TestCase):
         assert svg_has_tag(real_svg, 'path')
         assert svg_has_tag(real_svg, 'svg')
         assert not svg_has_tag(real_svg, 'circle')
+
+    def test_svg_has_tag_real_svg_2(self):
+        assert svg_has_tag(real_svg_2, 'svg')
+        assert svg_has_tag(real_svg_2, 'g')
+        assert svg_has_tag(real_svg_2, 'path')
 
     def test_svg_has_style_attr(self):
         svg = '<myElements><myElement myAttr="myValue"/></myElements>'
@@ -60,3 +79,9 @@ class TestUtils(unittest.TestCase):
         assert svg_has_style_attr(real_svg, 'svg', 'width', '100pt')
         assert not svg_has_style_attr(real_svg, 'path', 'missing-prop', '0.5')
         assert not svg_has_style_attr(real_svg, 'path', 'fill', 'fakeValue')
+
+    def test_svg_has_style_attr_real_svg_2(self):
+        assert svg_has_style_attr(
+            real_svg_2, 'path', 'd',
+            'M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30'
+        )
