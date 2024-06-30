@@ -10,7 +10,7 @@ from map_engraver.canvas.canvas_coordinate import CanvasCoordinate as Cc
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.data.pango.layout import Layout
 from map_engraver.drawable.text.pango_stroke_drawer import PangoStrokeDrawer
-from tests.utils import svg_has_style_attr
+from tests.utils import svg_has_style_attr, svg_has_tag
 
 
 class TestPangoStrokeDrawer(unittest.TestCase):
@@ -53,9 +53,7 @@ class TestPangoStrokeDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find(
-                '<g style'
-            ) == -1
+            assert not svg_has_tag(data, 'g')
             assert svg_has_style_attr(data, 'path', 'fill', 'none')
             assert svg_has_style_attr(data, 'path', 'stroke-linecap', 'round')
             assert svg_has_style_attr(data, 'path', 'stroke-linejoin', 'round')

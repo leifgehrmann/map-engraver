@@ -7,6 +7,7 @@ from map_engraver.canvas.canvas_coordinate import CanvasCoordinate as Cc
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.data.pango.layout import Layout
 from map_engraver.drawable.text.pango_drawer import PangoDrawer
+from tests.utils import svg_has_style_attr
 
 
 class TestPangoDrawer(unittest.TestCase):
@@ -46,15 +47,14 @@ class TestPangoDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find(
-                '<g style="fill:rgb(100%,0%,0%);fill-opacity:1;">'
-            ) != -1
-            assert data.find(
-                'xlink:href="#glyph0-1" x="10"'
-            ) != -1
-            assert data.find(
-                'xlink:href="#glyph1-5"'
-            ) != -1
+            assert svg_has_style_attr(
+                data, 'g', 'fill', 'rgb\\(100%, ?0%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(data, 'g', 'fill-opacity', '1')
+            assert data.find('xlink:href="#glyph-0-0" x="10"') != -1 or \
+                   data.find('xlink:href="#glyph0-1" x="10"') != -1
+            assert data.find('xlink:href="#glyph-1-4"') != -1 or \
+                   data.find('xlink:href="#glyph1-5"') != -1
 
     def test_layout_is_drawn_with_color(self):
         path = Path(__file__).parent.joinpath(
@@ -88,15 +88,16 @@ class TestPangoDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find(
-                '<g style="fill:rgb(0%,0%,100%);fill-opacity:0.5;">'
-            ) != -1
-            assert data.find(
-                'xlink:href="#glyph0-1" x="10"'
-            ) != -1
-            assert data.find(
-                '<g style="fill:rgb(100%,0%,0%);fill-opacity:1;">'
-            ) != -1
-            assert data.find(
-                'xlink:href="#glyph1-5"'
-            ) != -1
+            assert svg_has_style_attr(
+                data, 'g', 'fill', 'rgb\\(0%, ?0%, ?100%\\)', escape=False
+            )
+            assert svg_has_style_attr(data, 'g', 'fill-opacity', '0.5')
+            assert data.find('xlink:href="#glyph-0-0" x="10"') != -1 or \
+                data.find('xlink:href="#glyph0-1" x="10"') != -1
+
+            assert svg_has_style_attr(
+                data, 'g', 'fill', 'rgb\\(100%, ?0%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(data, 'g', 'fill-opacity', '1')
+            assert data.find('xlink:href="#glyph-1-4"') != -1 or \
+                data.find('xlink:href="#glyph1-5"') != -1

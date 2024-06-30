@@ -1,6 +1,6 @@
 import re
 import xml.etree.ElementTree as Et
-from typing import Optional
+from typing import Optional, Iterator
 
 ns_array = {
     'svg': 'http://www.w3.org/2000/svg',
@@ -35,13 +35,13 @@ def _get_attr_value(el: Et.Element, attr: str) -> Optional[str]:
     return None
 
 
-def svg_has_style_attr(
-        svg: str,
-        tag: str,
-        attr: str,
-        value: Optional[str] = None,
-        escape: bool = True
-) -> bool:
+def _svg_get_matches(
+    svg: str,
+    tag: str,
+    attr: str,
+    value: Optional[str] = None,
+    escape: bool = True
+) -> Iterator[Et.Element]:
     el = Et.fromstring(svg)
     matches = []
     matches.extend(el.findall(tag, ns_array))
@@ -55,7 +55,28 @@ def svg_has_style_attr(
         if match_value is None:
             continue
         if value is None:
-            return True
+            yield match
         if re.match(value, match_value) is not None:
-            return True
+            yield match
+
+
+def svg_has_style_attr(
+    svg: str,
+    tag: str,
+    attr: str,
+    value: Optional[str] = None,
+    escape: bool = True
+) -> bool:
+    for _ in _svg_get_matches(svg, tag, attr, value, escape=escape):
+        return True
     return False
+
+
+def svg_count_style_attr(
+    svg: str,
+    tag: str,
+    attr: str,
+    value: Optional[str] = None,
+    escape: bool = True
+) -> int:
+    return len(list(_svg_get_matches(svg, tag, attr, value, escape=escape)))

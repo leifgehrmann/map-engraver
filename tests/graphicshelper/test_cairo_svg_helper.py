@@ -5,6 +5,7 @@ import unittest
 from map_engraver.canvas import CanvasBuilder
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.graphicshelper.cairo_svg_helper import CairoSvgHelper
+from tests.utils import svg_has_style_attr
 
 
 class TestCairoSvgHelper(unittest.TestCase):
@@ -37,8 +38,9 @@ class TestCairoSvgHelper(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find(
+            assert svg_has_style_attr(
+                data, 'path', 'd',
                 'M 10 10 L 90 10 '  # Top line
                 'M 90 90 L 10 90 '  # Bottom line
                 'M 10 50 L 50 10 L 90 50 L 50 90'  # Inner Diamond
-            ) != -1
+            )

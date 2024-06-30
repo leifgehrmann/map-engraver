@@ -9,6 +9,7 @@ from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.canvas.canvas_coordinate import CanvasCoordinate as Cc
 from map_engraver.drawable.images.bitmap import Bitmap
 from map_engraver.drawable.layout.background import Background
+from tests.utils import svg_has_style_attr
 
 
 class TestBitmap(unittest.TestCase):
@@ -154,24 +155,31 @@ class TestBitmap(unittest.TestCase):
 
         with open(output_path, 'r') as file:
             data = file.read()
-            assert data.find('matrix(0.75,0,0,0.75,37.5,37.5)') != -1
-            assert data.find('matrix(0.375,0,0,0.375,37.5,112.5)') != -1
-            assert data.find('matrix(0.375,0,0,0.375,37.5,150)') != -1
-            assert data.find('matrix(0.375,0,0,0.75,112.5,112.5)') != -1
-            assert data.find(
-                'matrix(0.265165,0.265165,-0.53033,0.53033,112.5,187.5)'
-            ) != -1
-            assert data.find('matrix(0.75,0,0,0.75,225,37.5)') != -1
-            assert data.find('matrix(0.375,0,0,0.375,225,112.5)') != -1
-            assert data.find('matrix(0.375,0,0,0.375,225,150)') != -1
-            assert data.find('matrix(0.375,0,0,0.75,300,112.5)') != -1
-            assert data.find(
-                'matrix(0.265165,0.265165,-0.53033,0.53033,300,187.5)'
-            ) != -1
-            assert data.find('matrix(1,0,0,1,450,37.5)') != -1
-            assert data.find('matrix(0.5,0,0,0.5,450,137.5)') != -1
-            assert data.find('matrix(0.5,0,0,0.5,450,187.5)') != -1
-            assert data.find('matrix(0.5,0,0,1,550,137.5)') != -1
-            assert data.find(
-                'matrix(0.353553,0.353553,-0.707107,0.707107,550,237.5)'
-            ) != -1
+            for matrix in [
+                'matrix(0.75, 0, 0, 0.75, 37.5, 37.5)',
+                'matrix(0.375, 0, 0, 0.375, 37.5, 112.5)',
+                'matrix(0.375, 0, 0, 0.375, 37.5, 150)',
+                'matrix(0.375, 0, 0, 0.75, 112.5, 112.5)',
+                'matrix(0.265165, 0.265165, -0.53033, 0.53033, 112.5, 187.5)',
+                'matrix(0.75, 0, 0, 0.75, 225, 37.5)',
+                'matrix(0.375, 0, 0, 0.375, 225, 112.5)',
+                'matrix(0.375, 0, 0, 0.375, 225, 150)',
+                'matrix(0.375, 0, 0, 0.75, 300, 112.5)',
+                'matrix(0.265165, 0.265165, -0.53033, 0.53033, 300, 187.5)',
+                'matrix(1, 0, 0, 1, 450, 37.5)',
+                'matrix(0.5, 0, 0, 0.5, 450, 137.5)',
+                'matrix(0.5, 0, 0, 0.5, 450, 187.5)',
+                'matrix(0.5, 0, 0, 1, 550, 137.5)',
+                'matrix(0.353553, 0.353553, -0.707107, 0.707107, 550, 237.5)',
+            ]:
+                matrix_escaped = matrix\
+                    .replace(' ', ' ?')\
+                    .replace('(', '\\(')\
+                    .replace(')', '\\)')
+                assert svg_has_style_attr(
+                    data,
+                    'use',
+                    'transform',
+                    matrix_escaped,
+                    escape=False
+                )

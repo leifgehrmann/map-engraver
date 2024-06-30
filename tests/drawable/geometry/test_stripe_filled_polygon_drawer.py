@@ -11,6 +11,7 @@ from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.drawable.geometry.stripe_filled_polygon_drawer import \
     StripeFilledPolygonDrawer
+from tests.utils import svg_has_style_attr
 
 
 class TestStripeFilledPolygonDrawer(unittest.TestCase):
@@ -88,11 +89,17 @@ class TestStripeFilledPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30') != -1
-            assert data.find('M 40 40 L 60 40 L 60 60 L 40 60 Z M 40 40') == -1
-            assert data.find('fill:rgb(0%,100%,0%)') != -1
-            assert data.find('stroke:none') != -1
-            assert data.find('stroke-width:') == -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30'
+            )
+            assert not svg_has_style_attr(
+                data, 'path', 'd', 'M 40 40 L 60 40 L 60 60 L 40 60 Z M 40 40'
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
+            assert not svg_has_style_attr(data, 'path', 'stroke')
+            assert not svg_has_style_attr(data, 'path', 'stroke-width')
 
     def test_two_vertical_stripes(self):
         path = Path(__file__).parent.joinpath(
@@ -127,12 +134,20 @@ class TestStripeFilledPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 30 70 L 50 70 L 50 30 Z M 30 30') != -1
-            assert data.find('M 50 30 L 50 70 L 70 70 L 70 30 Z M 50 30') != -1
-            assert data.find('fill:rgb(0%,100%,0%)') != -1
-            assert data.find('fill:rgb(0%,0%,100%)') != -1
-            assert data.find('stroke:none') != -1
-            assert data.find('stroke-width:') == -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 30 70 L 50 70 L 50 30 Z M 30 30'
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 50 30 L 50 70 L 70 70 L 70 30 Z M 50 30'
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(0%, ?0%, ?100%\\)', escape=False
+            )
+            assert not svg_has_style_attr(data, 'path', 'stroke')
+            assert not svg_has_style_attr(data, 'path', 'stroke-width')
 
     def test_large_stripes(self):
         path = Path(__file__).parent.joinpath(
@@ -167,11 +182,17 @@ class TestStripeFilledPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 30 70 L 70 70 L 70 30 Z M 30 30') != -1
-            assert data.find('fill:rgb(0%,100%,0%)') != -1
-            assert data.find('fill:rgb(0%,0%,100%)') == -1
-            assert data.find('stroke:none') != -1
-            assert data.find('stroke-width:') == -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 30 70 L 70 70 L 70 30 Z M 30 30'
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
+            assert not svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(0%, ?0%, ?100%\\)', escape=False
+            )
+            assert not svg_has_style_attr(data, 'path', 'stroke')
+            assert not svg_has_style_attr(data, 'path', 'stroke-width')
 
     def test_multi_polygons(self):
         path = Path(__file__).parent.joinpath(
@@ -223,8 +244,14 @@ class TestStripeFilledPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('fill:rgb(100%,100%,0%)') != -1
-            assert data.find('fill:rgb(0%,0%,0%)') != -1
-            assert data.find('fill:rgb(70%,0%,70%)') != -1
-            assert data.find('stroke:none') != -1
-            assert data.find('stroke-width:') == -1
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(100%, ?100%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(0%, ?0%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(70%, ?0%, ?70%\\)', escape=False
+            )
+            assert not svg_has_style_attr(data, 'path', 'stroke')
+            assert not svg_has_style_attr(data, 'path', 'stroke-width')

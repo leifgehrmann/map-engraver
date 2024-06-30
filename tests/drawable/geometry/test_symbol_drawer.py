@@ -7,6 +7,7 @@ from map_engraver.canvas import CanvasBuilder, Canvas
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.drawable.geometry.symbol_drawer import SymbolDrawer
 from map_engraver.graphicshelper import CairoHelper
+from tests.utils import svg_has_style_attr
 
 
 class TestPolygonDrawer(unittest.TestCase):
@@ -55,9 +56,17 @@ class TestPolygonDrawer(unittest.TestCase):
         with open(path, 'r') as file:
             data = file.read()
             # Assert that the symbols appear
-            assert data.find('rgb(50%,30%,0%)') != -1
-            assert data.find('rgb(50%,30%,0%)') < data.find('rgb(45%,40%,0%)')
-            assert data.find('rgb(45%,40%,0%)') < data.find('rgb(55%,40%,0%)')
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(50%, ?30%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(45%, ?40%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(55%, ?40%, ?0%\\)', escape=False
+            )
+            assert data.find('rgb(50%,') < data.find('rgb(45%,')
+            assert data.find('rgb(45%,') < data.find('rgb(55%,')
 
     def test_can_iterate_dict(self):
         path = Path(__file__).parent.joinpath(
@@ -100,5 +109,9 @@ class TestPolygonDrawer(unittest.TestCase):
         with open(path, 'r') as file:
             data = file.read()
             # Assert that the symbols appear with correct size
-            assert data.find('d="M 55 30 C') != -1
-            assert data.find('d="M 79 70 C') != -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 55 30 C.*', escape=False
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 79 70 C.*', escape=False
+            )
