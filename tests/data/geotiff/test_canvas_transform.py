@@ -23,6 +23,7 @@ from osgeo import gdal
 
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
 from map_engraver.drawable.images.bitmap import Bitmap
+from tests.utils import svg_has_style_attr
 
 
 class TestCanvasTransform(unittest.TestCase):
@@ -56,7 +57,7 @@ class TestCanvasTransform(unittest.TestCase):
 
         with self.assertRaisesRegex(
                 RuntimeError,
-                'not recognized as a supported file format.'
+                'not recognized as( being in)? a supported file format.'
         ):
             transform_geotiff_to_crs_within_canvas(
                 input_file, canvas_mask, builder, output_file
@@ -204,15 +205,21 @@ class TestCanvasTransform(unittest.TestCase):
 
         with open(canvas_file, 'r') as file:
             data = file.read()
-            assert data.find(
+
+            assert svg_has_style_attr(
+                data, 'path', 'd',
                 'M -0.000432709 -0.000179234 '
                 'L 26.999834 0.000401775 '
                 'L 26.999823 31.499943 '
                 'L 0.0000793665 31.500624 Z '
                 'M -0.000432709 -0.000179234'
-            ) != -1
-            assert data.find(
-                'matrix('
-                '1.094261,-2.64178,2.64178,1.094261,18.938447,82.311553'
-                ')'
-            ) != -1
+            )
+
+            assert svg_has_style_attr(
+                data, 'path', 'transform',
+                'matrix\\('
+                '1.094261, ?-2.64178, ?2.64178, ?'
+                '1.094261, ?18.938447, ?82.311553'
+                '\\)',
+                escape=False
+            )

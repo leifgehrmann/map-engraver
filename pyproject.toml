@@ -18,10 +18,10 @@ pangocairocffi = "^0.7.0"
 [tool.poetry.group.gdal]
 optional = true
 
-[tool.poetry.group.gdal.dependencies]
 # We need to lock ourselves to 3.4.3 as that is the version that is supported
 # by GitHub Action Ubuntu environments. See .github/workflows/build.yml
-GDAL = "3.4.3"
+[tool.poetry.group.gdal.dependencies]
+gdal = "3.8.4"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.1.0"

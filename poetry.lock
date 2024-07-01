@@ -278,13 +278,13 @@ pyflakes = ">=3.2.0,<3.3.0"
 
 [[package]]
 name = "gdal"
-version = "3.4.3"
+version = "3.8.4"
 description = "GDAL: Geospatial Data Abstraction Library"
 category = "dev"
 optional = false
 python-versions = ">=3.6.0"
 files = [
-    {file = "GDAL-3.4.3.tar.gz", hash = "sha256:f4f4b0bb34073b164c5a05a1b0eb44af47349e5606eb7b75244c2167ac462f36"},
+    {file = "GDAL-3.8.4.tar.gz", hash = "sha256:7c51e0ae7a7ccf43ad9e4bf435176baa9276653dfa16fd167c3632f6e7275207"},
 ]
 
 [package.extras]
@@ -716,4 +716,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "755dfcf2f58b36ee243fcc7d1fb4555d117b91f98ac0d08b76e9209afc053b64"
+content-hash = "4da2cb97a8f8c3419bf66bb1f6b4bdf141090f88154a3b7aa11af58034c5df80"
