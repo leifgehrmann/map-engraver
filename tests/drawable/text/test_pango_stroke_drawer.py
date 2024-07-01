@@ -10,9 +10,10 @@ from map_engraver.canvas.canvas_coordinate import CanvasCoordinate as Cc
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.data.pango.layout import Layout
 from map_engraver.drawable.text.pango_stroke_drawer import PangoStrokeDrawer
+from tests.utils import svg_has_style_attr
 
 
-class TestPangoStokeDrawer(unittest.TestCase):
+class TestPangoStrokeDrawer(unittest.TestCase):
     def setUp(self):
         Path(__file__).parent.joinpath('output/')\
             .mkdir(parents=True, exist_ok=True)
@@ -52,24 +53,12 @@ class TestPangoStokeDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find(
-                '<g style'
-            ) == -1
-            assert data.find(
-                '<path style='
-            ) != -1
-            assert data.find(
-                'stroke-linecap:round'
-            ) != -1
-            assert data.find(
-                'stroke-linejoin:round'
-            ) != -1
-            assert data.find(
-                'stroke-width:0.5'
-            ) != -1
-            assert data.find(
-                'd="M'
-            ) != -1
-            assert data.find(
-                '" transform="matrix(1,0,0,1,10,10)"/>'
-            ) != -1
+            assert svg_has_style_attr(data, 'path', 'fill', 'none')
+            assert svg_has_style_attr(data, 'path', 'stroke-linecap', 'round')
+            assert svg_has_style_attr(data, 'path', 'stroke-linejoin', 'round')
+            assert svg_has_style_attr(data, 'path', 'stroke-width', '0.5')
+            assert svg_has_style_attr(data, 'path', 'd', 'M.*', escape=False)
+            assert svg_has_style_attr(
+                data, 'path', 'transform',
+                'matrix\\(1, *0, *0, *1, *10, *10\\)', escape=False
+            )

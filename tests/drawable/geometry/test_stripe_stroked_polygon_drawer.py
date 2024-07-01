@@ -11,6 +11,7 @@ from map_engraver.canvas.canvas_coordinate import CanvasCoordinate
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.drawable.geometry.stripe_stroked_polygon_drawer import \
     StripeStrokedPolygonDrawer
+from tests.utils import svg_has_style_attr, svg_count_style_attr
 
 
 class TestStripeStrokedPolygonDrawer(unittest.TestCase):
@@ -114,13 +115,15 @@ class TestStripeStrokedPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 70 30') != -1
-            assert data.find('M 70 70 L 30 70') != -1
-            assert data.find('M 30 40 L 70 40') != -1
-            assert data.find('M 30 50 L 70 50') != -1
-            assert data.find('M 30 60 L 70 60') != -1
-            assert data.count('stroke:rgb(0%,100%,0%)') == 5
-            assert data.count('stroke-width:1') == 5
+            assert svg_has_style_attr(data, 'path', 'd', 'M 30 30 L 70 30')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 70 70 L 30 70')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 30 40 L 70 40')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 30 50 L 70 50')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 30 60 L 70 60')
+            assert svg_count_style_attr(
+                data, 'path', 'stroke', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            ) == 5
+            assert svg_count_style_attr(data, 'path', 'stroke-width', '1') == 5
 
     def test_two_vertical_stripes(self):
         path = Path(__file__).parent.joinpath(
@@ -156,12 +159,16 @@ class TestStripeStrokedPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 70 L 30 30') != -1
-            assert data.find('M 50 30 L 50 70') != -1
-            assert data.find('stroke:rgb(0%,100%,0%)') != -1
-            assert data.find('stroke:rgb(0%,0%,100%)') != -1
-            assert data.find('stroke-width:1') != -1
-            assert data.find('stroke-width:2') != -1
+            assert svg_has_style_attr(data, 'path', 'd', 'M 30 70 L 30 30')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 50 30 L 50 70')
+            assert svg_has_style_attr(
+                data, 'path', 'stroke', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'stroke', 'rgb\\(0%, ?0%, ?100%\\)', escape=False
+            )
+            assert svg_has_style_attr(data, 'path', 'stroke-width', '1')
+            assert svg_has_style_attr(data, 'path', 'stroke-width', '2')
 
     def test_large_stripes(self):
         path = Path(__file__).parent.joinpath(
@@ -197,15 +204,21 @@ class TestStripeStrokedPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 44 70 L 44 30') != -1
-            assert data.find('M 58 70 L 58 30') != -1
-            assert data.find('M 37 70 L 37 30') != -1
-            assert data.find('M 51 70 L 51 30') != -1
-            assert data.find('M 65 70 L 65 30') != -1
-            assert data.find('stroke:rgb(0%,100%,0%)') != -1
-            assert data.find('stroke:rgb(0%,0%,100%)') != -1
-            assert data.find('stroke:rgb(0%,100%,0%)') < \
-                   data.find('stroke:rgb(0%,0%,100%)')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 44 70 L 44 30')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 58 70 L 58 30')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 37 70 L 37 30')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 51 70 L 51 30')
+            assert svg_has_style_attr(data, 'path', 'd', 'M 65 70 L 65 30')
+            assert svg_has_style_attr(
+                data, 'path', 'stroke', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'stroke', 'rgb\\(0%, ?0%, ?100%\\)', escape=False
+            )
+            assert (data.find('stroke:rgb(0%,100%,0%)') <
+                   data.find('stroke:rgb(0%,0%,100%)')) or \
+                   (data.find('stroke="rgb(0%, 100%, 0%)"') <
+                    data.find('stroke="rgb(0%, 0%, 100%)"'))
 
     def test_multi_polygons(self):
         path = Path(__file__).parent.joinpath(
@@ -260,9 +273,18 @@ class TestStripeStrokedPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.count('stroke:rgb(100%,100%,0%)') == 6
-            assert data.count('stroke:rgb(0%,0%,0%)') == 6
-            assert data.count('stroke:rgb(70%,0%,70%)') == 6
-            assert data.count('stroke-width:1') == 6
-            assert data.count('stroke-width:3') == 6
-            assert data.count('stroke-width:4') == 6
+            assert svg_count_style_attr(
+                data, 'path', 'stroke',
+                'rgb\\(100%, ?100%, ?0%\\)', escape=False
+            ) == 6
+            assert svg_count_style_attr(
+                data, 'path', 'stroke',
+                'rgb\\(0%, ?0%, ?0%\\)', escape=False
+            ) == 6
+            assert svg_count_style_attr(
+                data, 'path', 'stroke',
+                'rgb\\(70%, ?0%, ?70%\\)', escape=False
+            ) == 6
+            assert svg_count_style_attr(data, 'path', 'stroke-width', '1') == 6
+            assert svg_count_style_attr(data, 'path', 'stroke-width', '3') == 6
+            assert svg_count_style_attr(data, 'path', 'stroke-width', '4') == 6

@@ -7,6 +7,7 @@ from shapely.geometry import LineString, MultiLineString
 from map_engraver.canvas import CanvasBuilder
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.drawable.geometry.line_drawer import LineDrawer
+from tests.utils import svg_has_style_attr
 
 
 class TestLineDrawer(unittest.TestCase):
@@ -50,10 +51,15 @@ class TestLineDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 70 30 L 70 70 L 30 70') != -1
-            assert data.find('fill:none') != -1
-            assert data.find('stroke-width:1.5') != -1
-            assert data.find('stroke:rgb(0%,100%,0%);') != -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 70 30 L 70 70 L 30 70'
+            )
+            assert svg_has_style_attr(data, 'path', 'fill', 'none')
+            assert svg_has_style_attr(data, 'path', 'fill', 'none')
+            assert svg_has_style_attr(data, 'path', 'stroke-width', '1.5')
+            assert svg_has_style_attr(
+                data, 'path', 'stroke', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
 
     def test_multi_line_string(self):
         path = Path(__file__).parent.joinpath(
@@ -90,8 +96,14 @@ class TestLineDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 70 30 L 70 70 L 30 70') != -1
-            assert data.find('M 40 40 L 40 60 L 60 60 L 60 40') != -1
-            assert data.find('fill:none') != -1
-            assert data.find('stroke-width:1.5') != -1
-            assert data.find('stroke:rgb(100%,0%,0%);') != -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 70 30 L 70 70 L 30 70'
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 40 40 L 40 60 L 60 60 L 60 40'
+            )
+            assert svg_has_style_attr(data, 'path', 'fill', 'none')
+            assert svg_has_style_attr(data, 'path', 'stroke-width', '1.5')
+            assert svg_has_style_attr(
+                data, 'path', 'stroke', 'rgb\\(100%, ?0%, ?0%\\)', escape=False
+            )

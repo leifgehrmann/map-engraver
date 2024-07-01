@@ -33,12 +33,20 @@ class Canvas:
                 width,
                 height
             )
+            # In version 1.5 the document units are no longer easy to read via
+            # regular expressions. 1.4 uses the old format that has 'MediaBox'
+            # in the PDF output.
+            surface.restrict_to_version(cairo.PDF_VERSION_1_4)
         elif surface_type == 'svg':
             surface = cairo.SVGSurface(
                 self.path_as_posix,
                 width,
                 height
             )
+            # In cairo-1.17.8 the default document unit was changed to
+            # cairo.SVG_UNIT_USER, which can be ambiguous. Here we reset it
+            # back to cairo.SVG_UNIT_PT like older versions of cairo.
+            surface.set_document_unit(cairo.SVG_UNIT_PT)
         elif surface_type == 'png':
             surface = cairo.ImageSurface(
                 cairo.FORMAT_ARGB32,

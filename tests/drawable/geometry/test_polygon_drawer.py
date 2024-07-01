@@ -6,6 +6,7 @@ from shapely.geometry import Polygon, MultiPolygon
 from map_engraver.canvas import CanvasBuilder
 from map_engraver.canvas.canvas_unit import CanvasUnit as Cu
 from map_engraver.drawable.geometry.polygon_drawer import PolygonDrawer
+from tests.utils import svg_has_style_attr
 
 
 class TestPolygonDrawer(unittest.TestCase):
@@ -43,10 +44,14 @@ class TestPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30') != -1
-            assert data.find('fill:rgb(0%,100%,0%)') != -1
-            assert data.find('stroke:none') != -1
-            assert data.find('stroke-width:') == -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30'
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
+            assert not svg_has_style_attr(data, 'path', 'stroke')
+            assert not svg_has_style_attr(data, 'path', 'stroke-width')
 
     def test_only_stroke(self):
         path = Path(__file__).parent.joinpath(
@@ -79,10 +84,14 @@ class TestPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30') != -1
-            assert data.find('fill:none') != -1
-            assert data.find('stroke-width:1.5') != -1
-            assert data.find('stroke:rgb(0%,100%,0%);') != -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30'
+            )
+            assert svg_has_style_attr(data, 'path', 'fill', 'none')
+            assert svg_has_style_attr(data, 'path', 'stroke-width', '1.5')
+            assert svg_has_style_attr(
+                data, 'path', 'stroke', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
 
     def test_fill_preserve(self):
         path = Path(__file__).parent.joinpath(
@@ -116,10 +125,16 @@ class TestPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30') != -1
-            assert data.find('fill:rgb(100%,0%,0%)') != -1
-            assert data.find('stroke-width:2') != -1
-            assert data.find('stroke:rgb(0%,100%,0%);') != -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 70 30 L 70 70 L 30 70 Z M 30 30'
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'fill', 'rgb\\(100%, ?0%, ?0%\\)', escape=False
+            )
+            assert svg_has_style_attr(data, 'path', 'stroke-width', '2')
+            assert svg_has_style_attr(
+                data, 'path', 'stroke', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
 
     def test_multipolygons(self):
         path = Path(__file__).parent.joinpath(
@@ -161,8 +176,14 @@ class TestPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert data.find('M 30 30 L 40 30 L 40 70 L 30 70 Z M 30 30') != -1
-            assert data.find('M 60 30 L 70 30 L 70 70 L 60 70 Z M 60 30') != -1
-            assert data.find('fill:none') != -1
-            assert data.find('stroke-width:1.5') != -1
-            assert data.find('stroke:rgb(0%,100%,0%);') != -1
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 40 30 L 40 70 L 30 70 Z M 30 30'
+            )
+            assert svg_has_style_attr(
+                data, 'path', 'd', 'M 30 30 L 40 30 L 40 70 L 30 70 Z M 30 30'
+            )
+            assert svg_has_style_attr(data, 'path', 'fill', 'none')
+            assert svg_has_style_attr(data, 'path', 'stroke-width', '1.5')
+            assert svg_has_style_attr(
+                data, 'path', 'stroke', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
+            )
