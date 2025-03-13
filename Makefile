@@ -57,3 +57,12 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 	rm -fr .pytest_cache
+
+docker-build: ## Build a docker container for development and testing
+	docker build -t map-engraver:v1 .
+
+docker-it: ## Run a docker container in interactive mode.
+	docker run -it --rm \
+	-v `pwd`:/usr/src/map-engraver \
+	-w /usr/src/map-engraver \
+	map-engraver:v1
