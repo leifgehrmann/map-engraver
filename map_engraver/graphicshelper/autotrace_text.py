@@ -57,25 +57,30 @@ class AutotraceText:
         surface.finish()
 
         # Run autotrace on bitmap and convert to SVG, via the command line
-        subprocess.run([
-            "autotrace " +
-            "-centerline " +
-            "-color-count 2 " +
-            "-output-format svg " +
-            "-corner-threshold 170 " +
-            "-background-color FFFFFF " +
-            filename_input.as_posix() + " " +
-            "-output-file " + filename_output.as_posix()
-            ],
-            shell=True,
-            check=True,
-            # Todo: "SHELL" is the default shell for the user, not the current.
-            #       Ideally we should find a way to get the current shell
-            #       environment, as that is more likely where the autotrace
-            #       command will be in the user's path.
-            executable=os.environ.get('SHELL'),
-            capture_output=True
-        )
+        try:
+            subprocess.run([
+                "autotrace " +
+                "-centerline " +
+                "-color-count 2 " +
+                "-output-format svg " +
+                "-corner-threshold 170 " +
+                "-background-color FFFFFF " +
+                filename_input.as_posix() + " " +
+                "-output-file " + filename_output.as_posix()
+                ],
+                shell=True,
+                check=True,
+                # Todo: "SHELL" is the default shell for the user, not the current.
+                #       Ideally we should find a way to get the current shell
+                #       environment, as that is more likely where the autotrace
+                #       command will be in the user's path.
+                executable=os.environ.get('SHELL'),
+                capture_output=True
+            )
+        except subprocess.CalledProcessError:
+            # If this error happens, it's likely the program autotrace is not
+            # installed.
+            raise RuntimeError('Failed to run autotrace')
 
         os.remove(filename_input)
 
