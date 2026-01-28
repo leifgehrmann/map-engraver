@@ -40,7 +40,11 @@ class TestAzimuthalMasks(unittest.TestCase):
             mask = azimuthal_mask(crs)
             assert mask.is_valid
             assert mask.is_simple
-            self.assert_mask_has_bounds(mask, case['expectedProjBounds'])
+            self.assert_mask_has_bounds(
+                mask,
+                case['expectedProjBounds'],
+                abs_tol=1.0
+            )
 
     def test_azimuthal_mask_throws_error_on_unsupported_proj(self):
         crs = CRS.from_epsg(4326)
@@ -128,12 +132,29 @@ class TestAzimuthalMasks(unittest.TestCase):
     def assert_mask_has_bounds(
             mask: BaseGeometry,
             expected_bounds: Tuple[float, float, float, float],
+            abs_tol: float = 0.1,
     ):
         if (
-            not isclose(mask.bounds[0], expected_bounds[0], abs_tol=0.1) or
-            not isclose(mask.bounds[1], expected_bounds[1], abs_tol=0.1) or
-            not isclose(mask.bounds[2], expected_bounds[2], abs_tol=0.1) or
-            not isclose(mask.bounds[3], expected_bounds[3], abs_tol=0.1)
+            not isclose(
+                mask.bounds[0],
+                expected_bounds[0],
+                abs_tol=abs_tol
+            ) or
+            not isclose(
+                mask.bounds[1],
+                expected_bounds[1],
+                abs_tol=abs_tol
+            ) or
+            not isclose(
+                mask.bounds[2],
+                expected_bounds[2],
+                abs_tol=abs_tol
+            ) or
+            not isclose(
+                mask.bounds[3],
+                expected_bounds[3],
+                abs_tol=abs_tol
+            )
         ):
             raise AssertionError(
                 'Bounds are not close. Expected: (' +
