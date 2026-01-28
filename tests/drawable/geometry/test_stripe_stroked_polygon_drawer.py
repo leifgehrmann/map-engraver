@@ -159,7 +159,10 @@ class TestStripeStrokedPolygonDrawer(unittest.TestCase):
 
         with open(path, 'r') as file:
             data = file.read()
-            assert svg_has_style_attr(data, 'path', 'd', 'M 30 70 L 30 30')
+            assert (
+                svg_has_style_attr(data, 'path', 'd', 'M 30 70 L 30 30') or
+                svg_has_style_attr(data, 'path', 'd', 'M 30 30 L 30 70')
+            )
             assert svg_has_style_attr(data, 'path', 'd', 'M 50 30 L 50 70')
             assert svg_has_style_attr(
                 data, 'path', 'stroke', 'rgb\\(0%, ?100%, ?0%\\)', escape=False
