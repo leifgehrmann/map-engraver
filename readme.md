@@ -35,13 +35,38 @@ python3 map-engraver/map-engraver.py ./example/map.yml
 
 ## The new map-engraver
 
-These are the instructions for the NEW map-engraver:
+These are the developer instructions for the NEW map-engraver. They are to maintain the project, not actually to use the package.
 
 ### Installing
 
 1. Install poetry
 2. `poetry install`
 
-### Runnings tests
+#### Additional modules
+
+##### GeoTIFF processing wiht GDAL 
+
+To use functions like:
+
+* `transform_geotiff_to_crs_within_canvas`
+
+... the [GDAL library](https://gdal.org/en/stable/) and the python package GDAL must be installed:
+
+```
+brew install gdal
+poetry add gdal@3.8.4
+```
+
+##### Autotracing text
+
+To use `AutotraceText`, [autotrace](https://github.com/autotrace/autotrace) must be installed.
+
+```
+brew install autotrace
+```
+
+If `autotrace` can't be installed for whatever reason on the host machine, I've created [a version of autotrace](https://github.com/leifgehrmann/docker-autotrace) that can run in Docker.
+
+### Running tests
 
 1. `poetry run pytest --cov`
