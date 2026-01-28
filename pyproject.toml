@@ -6,14 +6,16 @@ authors = ["Leif Gehrmann <leif.gehrmann@gmail.com>"]
 license = "LGPL-3.0-only"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 cairocffi = "^1.7.1"
-Shapely = "^2.0.1"
+Shapely = "^2.1.2"
 CairoSVG = "^2.7.0"
-pyproj = "^3.6.1"
-Pillow = "^10.3.0"
-pangocffi = "^0.13.0"
+pyproj = "^3.7.2"
+Pillow = "^12.1.0"
+pangocffi = "^0.14.0"
 pangocairocffi = "^0.7.0"
+cffi = "^2.0.0"
+numpy = "^2.4.1"
 
 [tool.poetry.group.gdal]
 optional = true
